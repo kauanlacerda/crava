@@ -741,3 +741,12 @@ input:focus, select:focus { border-color: var(--blue); }
   top: calc(50% - 150px); text-align: center;
 }
 .confete { left: 50%; top: 50%; }
+
+/* artes NFT das insignias */
+.insignia-icon { overflow: hidden; }
+.insignia-art { width: 56px; height: 56px; object-fit: cover; border-radius: 50%; image-rendering: pixelated; display: block; }
+.insignia.locked .insignia-art { filter: grayscale(1) brightness(0.55); }
+
+/* celebracao mais longa */
+.celebra-mascote { animation-duration: 2.5s; }
+.celebra-texto { animation-duration: 2.5s; }

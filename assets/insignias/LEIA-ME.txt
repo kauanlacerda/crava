@@ -1,0 +1,8 @@
+Arte customizada das insignias (estilo NFT de macaco):
+solte um PNG quadrado aqui com o nome <id>.png e ele substitui o icone.
+
+IDs: maquina, semana, ferro, monstro, mes-ouro, pontual,
+brl-1k, brl-5k, brl-10k, brl-50k, brl-100k,
+usd-100, usd-500, gringo, usd-5k, usd-10k,
+rbx-10k, rbx-50k, robuxeiro, rbx-500k, rei-robux,
+triplo, dez-k, geral-50k, cem-k, geral-500k, geral-1m

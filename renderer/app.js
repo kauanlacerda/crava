@@ -145,13 +145,13 @@ function celebrar() {
     const tx = (Math.random() * 2 - 1) * 320;
     const ty = -(100 + Math.random() * 300);
     const rot = Math.random() * 720 - 360;
-    const dur = (0.8 + Math.random() * 0.6).toFixed(2);
+    const dur = (1.3 + Math.random() * 0.9).toFixed(2);
     const s = 7 + Math.random() * 9;
     html += `<div class="confete" style="background:${c};width:${s}px;height:${s * 0.62}px;--tx:${tx}px;--ty:${ty}px;--rot:${rot}deg;animation-duration:${dur}s"></div>`;
   }
   el.innerHTML = html;
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 1500);
+  setTimeout(() => el.remove(), 2700);
 }
 
 function streakVigente() {
@@ -449,30 +449,78 @@ const IC = {
   dolar: '<path d="M12 2v20"/><path d="M17 6.5c-.8-1.2-2.5-2-5-2-3 0-5 1.5-5 3.6 0 2.2 2 3 5 3.4 3.3.5 5 1.4 5 3.6 0 2.1-2 3.6-5 3.6-2.5 0-4.2-.8-5-2"/>'
 };
 
-// Categorias: dia, mês, prazo, dinheiro (R$/US$/Robux)
+// Categorias da coleção (cada insígnia pode ter arte própria em
+// assets/insignias/<id>.png — estilo NFT; sem arquivo, usa o ícone SVG)
+const CATEGORIAS_INSIGNIAS = [
+  { id: 'rotina', nome: 'ROTINA' },
+  { id: 'mes', nome: 'MÊS' },
+  { id: 'brl', nome: 'GANHOS EM R$' },
+  { id: 'usd', nome: 'GANHOS EM US$' },
+  { id: 'rbx', nome: 'GANHOS EM ROBUX' },
+  { id: 'geral', nome: 'GERAL — TODAS AS MOEDAS' }
+];
+
 const INSIGNIAS = [
-  { id: 'maquina', nome: 'Máquina', desc: '5 entregas num único dia', cor: 'var(--blue)', icon: IC.bolt,
+  // ---- ROTINA ----
+  { id: 'maquina', cat: 'rotina', nome: 'Máquina', desc: '5 entregas num único dia', cor: 'var(--blue)', icon: IC.bolt,
     check: () => Object.values(S.stats.historico).some(n => n >= 5) },
-  { id: 'semana', nome: 'Semana Cravada', desc: '7 dias de meta seguidos', cor: 'var(--flame)', icon: IC.flame,
+  { id: 'semana', cat: 'rotina', nome: 'Semana Cravada', desc: '7 dias de meta seguidos', cor: 'var(--flame)', icon: IC.flame,
     check: () => S.stats.maxStreak >= 7 },
-  { id: 'ferro', nome: 'Mês de Ferro', desc: '30 dias de meta seguidos', cor: 'var(--flame)', icon: IC.flame,
+  { id: 'ferro', cat: 'rotina', nome: 'Mês de Ferro', desc: '30 dias de meta seguidos', cor: 'var(--flame)', icon: IC.flame,
     check: () => S.stats.maxStreak >= 30 },
-  { id: 'monstro', nome: 'Mês Monstro', desc: '20 entregas num mês', cor: 'var(--blue)', icon: IC.calendario,
+  // ---- MÊS ----
+  { id: 'monstro', cat: 'mes', nome: 'Mês Monstro', desc: '20 entregas num mês', cor: 'var(--blue)', icon: IC.calendario,
     check: () => mesesComAtividade().some(m => entregasDoMes(m).length >= 20) },
-  { id: 'mes-ouro', nome: 'Mês de Ouro', desc: 'R$ 20.000 recebidos num mês (equiv.)', cor: 'var(--amber)', icon: IC.coin,
+  { id: 'mes-ouro', cat: 'mes', nome: 'Mês de Ouro', desc: 'R$ 20.000 recebidos num mês (equiv.)', cor: 'var(--amber)', icon: IC.coin,
     check: () => mesesComAtividade().some(m => ganhoEquivDoMes(m) >= 20000) },
-  { id: 'pontual', nome: 'Pontualidade', desc: 'Mês com 5+ entregas e zero atraso', cor: 'var(--green)', icon: IC.relogio,
+  { id: 'pontual', cat: 'mes', nome: 'Pontualidade', desc: 'Mês com 5+ entregas e zero atraso', cor: 'var(--green)', icon: IC.relogio,
     check: algumMesPontual },
-  { id: 'dez-k', nome: 'Primeiros 10k', desc: 'R$ 10.000 no total (equiv.)', cor: 'var(--green)', icon: IC.coin,
-    check: () => totalPagoBRLequiv() >= 10000 },
-  { id: 'cem-k', nome: 'Clube dos 100k', desc: 'R$ 100.000 no total (equiv.)', cor: 'var(--green)', icon: IC.coin,
-    check: () => totalPagoBRLequiv() >= 100000 },
-  { id: 'gringo', nome: 'Gringo', desc: 'US$ 1.000 recebidos no total', cor: 'var(--blue)', icon: IC.dolar,
+  // ---- GANHOS EM R$ ----
+  { id: 'brl-1k', cat: 'brl', nome: 'Primeiro Pila', desc: 'R$ 1.000 recebidos em R$', cor: 'var(--green)', icon: IC.coin,
+    check: () => totalMoedaPaga('BRL') >= 1000 },
+  { id: 'brl-5k', cat: 'brl', nome: 'Cofrinho Cheio', desc: 'R$ 5.000 recebidos em R$', cor: 'var(--green)', icon: IC.coin,
+    check: () => totalMoedaPaga('BRL') >= 5000 },
+  { id: 'brl-10k', cat: 'brl', nome: 'Dez Barão', desc: 'R$ 10.000 recebidos em R$', cor: 'var(--green)', icon: IC.coin,
+    check: () => totalMoedaPaga('BRL') >= 10000 },
+  { id: 'brl-50k', cat: 'brl', nome: 'Cinquentão', desc: 'R$ 50.000 recebidos em R$', cor: 'var(--green)', icon: IC.coin,
+    check: () => totalMoedaPaga('BRL') >= 50000 },
+  { id: 'brl-100k', cat: 'brl', nome: 'Clube dos 100k', desc: 'R$ 100.000 recebidos em R$', cor: 'var(--amber)', icon: IC.coroa,
+    check: () => totalMoedaPaga('BRL') >= 100000 },
+  // ---- GANHOS EM US$ ----
+  { id: 'usd-100', cat: 'usd', nome: 'Primeiro Dólar', desc: 'US$ 100 recebidos', cor: 'var(--blue)', icon: IC.dolar,
+    check: () => totalMoedaPaga('USD') >= 100 },
+  { id: 'usd-500', cat: 'usd', nome: 'Meio Grand', desc: 'US$ 500 recebidos', cor: 'var(--blue)', icon: IC.dolar,
+    check: () => totalMoedaPaga('USD') >= 500 },
+  { id: 'gringo', cat: 'usd', nome: 'Gringo', desc: 'US$ 1.000 recebidos', cor: 'var(--blue)', icon: IC.dolar,
     check: () => totalMoedaPaga('USD') >= 1000 },
-  { id: 'robuxeiro', nome: 'Robuxeiro', desc: '100.000 Robux recebidos', cor: '#2fd39c', icon: IC.robux,
+  { id: 'usd-5k', cat: 'usd', nome: 'Exportador', desc: 'US$ 5.000 recebidos', cor: 'var(--blue)', icon: IC.dolar,
+    check: () => totalMoedaPaga('USD') >= 5000 },
+  { id: 'usd-10k', cat: 'usd', nome: 'Dolarizado', desc: 'US$ 10.000 recebidos', cor: 'var(--amber)', icon: IC.coroa,
+    check: () => totalMoedaPaga('USD') >= 10000 },
+  // ---- GANHOS EM ROBUX ----
+  { id: 'rbx-10k', cat: 'rbx', nome: 'Primeiros Robux', desc: '10.000 Robux recebidos', cor: '#2fd39c', icon: IC.robux,
+    check: () => totalMoedaPaga('RBX') >= 10000 },
+  { id: 'rbx-50k', cat: 'rbx', nome: 'Bolso de Robux', desc: '50.000 Robux recebidos', cor: '#2fd39c', icon: IC.robux,
+    check: () => totalMoedaPaga('RBX') >= 50000 },
+  { id: 'robuxeiro', cat: 'rbx', nome: 'Robuxeiro', desc: '100.000 Robux recebidos', cor: '#2fd39c', icon: IC.robux,
     check: () => totalMoedaPaga('RBX') >= 100000 },
-  { id: 'rei-robux', nome: 'Rei dos Robux', desc: '1.000.000 Robux recebidos', cor: 'var(--amber)', icon: IC.coroa,
-    check: () => totalMoedaPaga('RBX') >= 1000000 }
+  { id: 'rbx-500k', cat: 'rbx', nome: 'Magnata do Robux', desc: '500.000 Robux recebidos', cor: '#2fd39c', icon: IC.robux,
+    check: () => totalMoedaPaga('RBX') >= 500000 },
+  { id: 'rei-robux', cat: 'rbx', nome: 'Rei dos Robux', desc: '1.000.000 Robux recebidos', cor: 'var(--amber)', icon: IC.coroa,
+    check: () => totalMoedaPaga('RBX') >= 1000000 },
+  // ---- GERAL (soma equivalente de todas as moedas) ----
+  { id: 'triplo', cat: 'geral', nome: 'Câmbio Triplo', desc: 'Recebeu em R$, US$ e Robux', cor: 'var(--flame)', icon: IC.bolt,
+    check: () => totalMoedaPaga('BRL') > 0 && totalMoedaPaga('USD') > 0 && totalMoedaPaga('RBX') > 0 },
+  { id: 'dez-k', cat: 'geral', nome: 'Faturador', desc: 'R$ 10.000 no total (equiv.)', cor: 'var(--green)', icon: IC.coin,
+    check: () => totalPagoBRLequiv() >= 10000 },
+  { id: 'geral-50k', cat: 'geral', nome: 'Empresa de Um', desc: 'R$ 50.000 no total (equiv.)', cor: 'var(--green)', icon: IC.coin,
+    check: () => totalPagoBRLequiv() >= 50000 },
+  { id: 'cem-k', cat: 'geral', nome: 'Seis Dígitos', desc: 'R$ 100.000 no total (equiv.)', cor: 'var(--amber)', icon: IC.coin,
+    check: () => totalPagoBRLequiv() >= 100000 },
+  { id: 'geral-500k', cat: 'geral', nome: 'Meio Milhão', desc: 'R$ 500.000 no total (equiv.)', cor: 'var(--amber)', icon: IC.coroa,
+    check: () => totalPagoBRLequiv() >= 500000 },
+  { id: 'geral-1m', cat: 'geral', nome: 'Milionário do Pixel', desc: 'R$ 1.000.000 no total (equiv.)', cor: 'var(--amber)', icon: IC.coroa,
+    check: () => totalPagoBRLequiv() >= 1000000 }
 ];
 const CADEADO = '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>';
 
@@ -496,22 +544,32 @@ function fmtMes(mes) {
   return `${nomes[+m - 1]}/${a}`;
 }
 
+function insigniaHTML(b, ganhas) {
+  const data = ganhas[b.id];
+  const ok = !!data;
+  return `
+    <div class="insignia ${ok ? '' : 'locked'}" ${ok ? `style="border-color:${b.cor}66"` : ''}>
+      <div class="insignia-icon">
+        <img class="insignia-art" src="../assets/insignias/${b.id}.png" alt=""
+          onerror="this.style.display='none';this.nextElementSibling.style.display=''">
+        <svg style="display:none" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${ok ? b.cor : 'var(--faint)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ok ? b.icon : CADEADO}</svg>
+      </div>
+      <div class="insignia-name">${b.nome}</div>
+      <div class="insignia-desc">${b.desc}</div>
+      ${ok ? `<div class="insignia-data">conquistada em ${data.split('-').reverse().join('/')}</div>` : ''}
+    </div>`;
+}
+
 function renderInsignias() {
   const ganhas = S.stats.insigniasGanhas || {};
-  let n = 0;
-  $('insigniasGrid').innerHTML = INSIGNIAS.map(b => {
-    const data = ganhas[b.id];
-    const ok = !!data;
-    if (ok) n++;
+  const n = INSIGNIAS.filter(b => ganhas[b.id]).length;
+  $('insigniasGrid').innerHTML = CATEGORIAS_INSIGNIAS.map(cat => {
+    const doCat = INSIGNIAS.filter(b => b.cat === cat.id);
+    if (!doCat.length) return '';
+    const nCat = doCat.filter(b => ganhas[b.id]).length;
     return `
-      <div class="insignia ${ok ? '' : 'locked'}" ${ok ? `style="border-color:${b.cor}66"` : ''}>
-        <div class="insignia-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${ok ? b.cor : 'var(--faint)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ok ? b.icon : CADEADO}</svg>
-        </div>
-        <div class="insignia-name">${b.nome}</div>
-        <div class="insignia-desc">${b.desc}</div>
-        ${ok ? `<div class="insignia-data">conquistada em ${data.split('-').reverse().join('/')}</div>` : ''}
-      </div>`;
+      <div class="section-label" style="margin-top:14px">${cat.nome} · ${nCat}/${doCat.length}</div>
+      <div class="insignias-grid" style="margin-top:9px">${doCat.map(b => insigniaHTML(b, ganhas)).join('')}</div>`;
   }).join('');
   $('insigniasCount').textContent = `· ${n} de ${INSIGNIAS.length}`;
   renderHistorico();
