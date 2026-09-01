@@ -447,7 +447,7 @@ function renderCofrePendente() {
     .filter(c => !c.confirmado);
   if (!pendentes.length) { $('cofreArea').innerHTML = ''; return; }
   $('cofreArea').innerHTML = pendentes.slice(0, 3).map(c => `
-    <div class="cobrador" style="border-color:rgba(47,211,156,0.3);background:rgba(47,211,156,0.06)">
+    <div class="cobrador" style="border-color:rgba(47,211,156,0.35);background:linear-gradient(rgba(47,211,156,0.08),rgba(47,211,156,0.08)),var(--panel)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="3"/><path d="M12 8V5"/><circle cx="12" cy="3.5" r="1.5"/><circle cx="16" cy="13" r="1"/></svg>
       <div class="cobrador-text" style="color:var(--green)">Cofre pendente${c.valor ? `: separa ${esc(c.valor)}` : ''}${c.titulo ? ` — ${esc(c.titulo)}` : ''} · desde ${c.data.split('-').reverse().join('/')}</div>
       <div class="cobrador-btn" style="background:var(--green)" onclick="separeiCofre(${c.idx})">Separei ✓</div>
