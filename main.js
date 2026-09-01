@@ -237,6 +237,12 @@ ipcMain.on('app:focar', () => {
 });
 ipcMain.handle('state:get', () => store.get());
 ipcMain.handle('state:set', (_e, s) => { store.set(s); broadcast(); atualizarIcones(); return true; });
+ipcMain.handle('state:enviado', (_e, carimbo) => {
+  const s = store.get();
+  s.stats.enviadoEm = carimbo;
+  store.setSemCarimbo(s);
+  return true;
+});
 ipcMain.on('main:show', () => { mainWin.show(); mainWin.focus(); });
 ipcMain.on('widget:toggle', toggleWidget);
 ipcMain.on('widget:hide', () => widgetWin && widgetWin.hide());

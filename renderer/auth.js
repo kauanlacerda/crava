@@ -143,6 +143,15 @@ function nuvemMaisNova(naNuvem) {
   return tNuvem > tLocal;
 }
 
+// Tem coisa feita neste PC que a nuvem ainda não viu? Comparar datas já cobre
+// o caso normal, mas isto é a rede de segurança: se algo foi salvo depois do
+// último envio bem-sucedido, esse trabalho não pode ser descartado por nada.
+function temTrabalhoNaoEnviado() {
+  const alterado = Date.parse(S?.stats?.atualizadoEm || '') || 0;
+  const enviado = Date.parse(S?.stats?.enviadoEm || '') || 0;
+  return alterado > enviado && (S?.jobs || []).length > 0;
+}
+
 async function sincronizar(primeiraVez) {
   if (!usuario || sincronizando) { pendente = true; return; }
   if (!window.S) { setTimeout(() => sincronizar(primeiraVez), 500); return; } // estado ainda carregando
@@ -173,8 +182,11 @@ async function sincronizar(primeiraVez) {
     }
 
     if (primeiraVez && !window.ZERANDO) {
-      if (maisRecente(S, naNuvem) === 'nuvem') { await aplicarNuvem(naNuvem); puxou = true; }
-    } else if (naNuvem && !window.ZERANDO && nuvemMaisNova(naNuvem)) {
+      if (!temTrabalhoNaoEnviado() && maisRecente(S, naNuvem) === 'nuvem') {
+        await aplicarNuvem(naNuvem);
+        puxou = true;
+      }
+    } else if (naNuvem && !window.ZERANDO && !temTrabalhoNaoEnviado() && nuvemMaisNova(naNuvem)) {
       // outro PC gravou depois de nós: puxa em vez de sobrescrever o trabalho dele
       await aplicarNuvem(naNuvem);
       puxou = true;
@@ -185,8 +197,12 @@ async function sincronizar(primeiraVez) {
     } else {
       if (!S.stats.atualizadoEm) S.stats.atualizadoEm = new Date().toISOString();
       if (!S.stats.donoId) S.stats.donoId = usuario.id;
+      const carimbo = S.stats.atualizadoEm;
       await enviarDados(S, navigator.platform || 'PC');
       await salvarPerfilNuvem(S.config.nome, S.config.usuario, null);
+      // só depois de subir de verdade: daqui pra trás está a salvo na nuvem
+      S.stats.enviadoEm = carimbo;
+      try { await window.api.marcarEnviado(carimbo); } catch { }
       statusSync(t('syncOk'));
     }
     jaSincronizou = true;
@@ -249,6 +265,7 @@ function agendarEnvio() {
   clearTimeout(timerEnvio);
   timerEnvio = setTimeout(() => sincronizar(false), 3000);
 }
+window.agendarEnvio = agendarEnvio;
 
 // ---------- boot ----------
 (async () => {

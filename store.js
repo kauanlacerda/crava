@@ -62,6 +62,19 @@ class Store {
 
   set(data) {
     this.data = data;
+    if (this.data && this.data.stats) this.data.stats.atualizadoEm = new Date().toISOString();
+    this._gravar();
+  }
+
+  // Anotações que não são alteração de conteúdo (ex.: 'isto já subiu pra
+  // nuvem') não podem renovar o carimbo, senão o app acharia que sempre há
+  // trabalho novo pra enviar e nunca mais aceitaria dados de outro PC.
+  setSemCarimbo(data) {
+    this.data = data;
+    this._gravar();
+  }
+
+  _gravar() {
     fs.writeFileSync(this.file, JSON.stringify(this.data, null, 2), 'utf8');
   }
 

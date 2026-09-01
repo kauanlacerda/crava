@@ -1,4 +1,16 @@
 {
+  "1.1.0": {
+    "pt": [
+      "Correção de perda de dados: pedidos anotados pelo Ctrl+Shift+N podiam sumir. Eles iam pro disco sem atualizar a marca de hora, e a sincronização os descartava achando que a nuvem estava mais nova. Se você usa a captura rápida, atualiza.",
+      "Rede de segurança: nada que você salvou e ainda não subiu pra nuvem pode ser descartado, aconteça o que acontecer com as datas.",
+      "O pedido capturado agora sobe em 3 segundos, em vez de esperar a sincronização de 5 minutos."
+    ],
+    "en": [
+      "Data-loss fix: jobs captured with Ctrl+Shift+N could disappear. They were written to disk without updating the change timestamp, so sync discarded them thinking the cloud was newer. If you use quick capture, update.",
+      "Safety net: anything you saved that has not reached the cloud yet can never be discarded, whatever the timestamps say.",
+      "A captured job now uploads in 3 seconds instead of waiting for the 5-minute sync."
+    ]
+  },
   "1.0.9": {
     "pt": [
       "Dá pra editar um trabalho: botão ✎ no card abre tudo pra mudar — título, cliente, valor, moeda, prazo e pagamento. Corrigir um valor digitado errado já acerta a carteira e o gráfico junto."

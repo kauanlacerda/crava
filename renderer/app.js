@@ -2815,7 +2815,12 @@ function migrarLiquidacao() {
   if (migrarLiquidacao()) await window.api.saveState(S);
   if (verificarInsignias()) await window.api.saveState(S);
   render();
-  window.api.onState((s) => { S = s; window.S = s; render(); });
+  window.api.onState((s) => {
+    S = s; window.S = s; render();
+    // mudanças vindas do processo principal (captura rápida, aviso de prazo)
+    // não passam pelo saveState do renderer, então o envio é agendado aqui
+    try { if (window.agendarEnvio) window.agendarEnvio(); } catch { }
+  });
   buscarCotacao();
   setInterval(buscarCotacao, 5 * 60 * 1000);
   window.addEventListener('online', () => buscarCotacao());
