@@ -19,7 +19,7 @@ function createMain() {
     webPreferences: { preload: path.join(__dirname, 'preload.js') }
   });
   mainWin.setMenuBarVisibility(false);
-  mainWin.loadFile('renderer/index.html');
+  mainWin.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   mainWin.once('ready-to-show', () => mainWin.show());
   // Fechar minimiza pra bandeja — o app continua vivo (widget, atalho, alertas)
   mainWin.on('close', (e) => {
@@ -35,7 +35,7 @@ function createWidget() {
     webPreferences: { preload: path.join(__dirname, 'preload.js') }
   });
   widgetWin.setAlwaysOnTop(true, 'screen-saver');
-  widgetWin.loadFile('renderer/widget.html');
+  widgetWin.loadFile(path.join(__dirname, 'renderer', 'widget.html'));
   widgetWin.on('close', (e) => {
     if (!isQuitting) { e.preventDefault(); widgetWin.hide(); }
   });
@@ -48,7 +48,7 @@ function createCapture() {
     alwaysOnTop: true, skipTaskbar: true, show: false,
     webPreferences: { preload: path.join(__dirname, 'preload.js') }
   });
-  captureWin.loadFile('renderer/capture.html');
+  captureWin.loadFile(path.join(__dirname, 'renderer', 'capture.html'));
   captureWin.on('blur', () => captureWin.hide());
   captureWin.on('close', (e) => {
     if (!isQuitting) { e.preventDefault(); captureWin.hide(); }

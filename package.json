@@ -1,16 +1,19 @@
 {
   "name": "crava",
   "productName": "Crava",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Foco e trabalhos para freelancers de GFX Roblox",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder --win --publish never",
+    "build:portatil": "electron-builder --win portable --publish never"
   },
   "author": "sak",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^33.2.0"
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
   },
   "allowScripts": {
     "electron@33.4.11": true
@@ -18,5 +21,52 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
     "gifenc": "^1.0.3"
+  },
+  "build": {
+    "appId": "com.sak.crava",
+    "productName": "Crava",
+    "copyright": "Copyright © 2026 sak",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "store.js",
+      "renderer/**/*",
+      "assets/**/*",
+      "!assets/croc/**",
+      "!**/*.map",
+      "!**/*.psd"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "artifactName": "Crava-${version}-instalador.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Crava",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true,
+      "perMachine": false
+    },
+    "portable": {
+      "artifactName": "Crava-${version}-portatil.${ext}"
+    }
   }
 }
