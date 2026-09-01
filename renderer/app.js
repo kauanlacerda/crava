@@ -217,7 +217,7 @@ function renderStats() {
       <div class="stat-segs">${segs}</div>
       <div class="stat-sub">${feitos >= meta ? 'meta batida — jogo liberado!' : `faltam ${meta - feitos} pro jogo liberar`}</div>
     </div>
-    <div class="stat-card solid-green">
+    <div class="stat-card solid-orange">
       <div class="arrow-badge">↗</div>
       <div class="stat-label">PRA RECEBER</div>
       <div class="stat-value">${recParts[0] || 'R$ 0'}</div>
@@ -228,9 +228,10 @@ function renderStats() {
       <div class="stat-value ${prox ? prazoClasse(prox.prazo) || 'c-amber' : ''}">${prox ? prazoTexto(prox.prazo) : '—'}</div>
       <div class="stat-sub">${prox ? esc(prox.titulo) : 'nenhum prazo aberto'}</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card solid-green">
+      <div class="arrow-badge">↗</div>
       <div class="stat-label">GANHO NO MÊS</div>
-      <div class="stat-value c-green">${MOEDA.BRL.fmt(gb)}</div>
+      <div class="stat-value">${MOEDA.BRL.fmt(gb)}</div>
       <div class="stat-sub">${gSubs.length ? '+ ' + gSubs.join(' · ') : 'só R$ até agora'}</div>
     </div>`;
 }
@@ -315,16 +316,20 @@ function jobRowHTML(j, num, dim) {
   acts.push(`<div class="mini-btn" onclick="excluir('${j.id}')">✕</div>`);
   return `
     <div class="job-row ${dim ? 'dim' : ''}">
-      ${num ? `<div class="job-num">${num}</div>` :
-        `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>`}
       <div class="job-main">
-        <div class="job-title">${esc(j.titulo)}</div>
-        <div class="job-client">${esc(j.cliente || '')} · ${PIPE_LABEL[j.status].toLowerCase()}</div>
+        ${num ? `<div class="job-num">${num}</div>` :
+          `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>`}
+        <div>
+          <div class="job-title">${esc(j.titulo)}</div>
+          <div class="job-client">${esc(j.cliente || '')} · ${PIPE_LABEL[j.status].toLowerCase()} · <span class="${prazoClasse(j.prazo)}">${prazoTexto(j.prazo) || 'sem prazo'}</span></div>
+        </div>
       </div>
-      <div class="badge-chip ${pcls} click" onclick="ciclarPagamento('${j.id}')">${ptxt}</div>
-      <div class="job-value">${fmtValor(j.valor)}</div>
-      <div class="job-due ${prazoClasse(j.prazo)}">${prazoTexto(j.prazo)}</div>
-      <div class="job-actions">${acts.join('')}</div>
+      <div class="job-foot">
+        <div class="badge-chip ${pcls} click" onclick="ciclarPagamento('${j.id}')">${ptxt}</div>
+        <div class="foot-spacer"></div>
+        <div class="job-value">${fmtValor(j.valor)}</div>
+        <div class="job-actions">${acts.join('')}</div>
+      </div>
     </div>`;
 }
 
@@ -334,11 +339,11 @@ function renderFila() {
   let html = '';
   if (fila.length) {
     html += `<div class="section-label">NA FILA · ${fila.length}</div>`;
-    html += fila.map((j, i) => jobRowHTML(j, i + 2, false)).join('');
+    html += `<div class="job-grid" style="margin-top:9px">${fila.map((j, i) => jobRowHTML(j, i + 2, false)).join('')}</div>`;
   }
   if (feitos.length) {
-    html += `<div class="section-label">CONCLUÍDOS HOJE · ${feitos.length}</div>`;
-    html += feitos.map(j => jobRowHTML(j, null, true)).join('');
+    html += `<div class="section-label" style="margin-top:12px">CONCLUÍDOS HOJE · ${feitos.length}</div>`;
+    html += `<div class="job-grid" style="margin-top:9px">${feitos.map(j => jobRowHTML(j, null, true)).join('')}</div>`;
   }
   if (!html) html = `<div class="empty-state"><div class="big">Dia limpo</div><div>Ctrl+Shift+N captura um pedido novo em 5 segundos.</div></div>`;
   $('filaArea').innerHTML = html;
@@ -365,7 +370,7 @@ function renderTodos() {
   let todos = [...S.jobs].sort((a, b) => (a.prazo || '9999') < (b.prazo || '9999') ? -1 : 1);
   if (busca) todos = todos.filter(j => `${j.titulo} ${j.cliente || ''}`.toLowerCase().includes(busca));
   $('listaTodos').innerHTML = todos.length
-    ? todos.map(j => jobRowHTML(j, null, j.status === 'aprovado' && j.pagamento === 'pago')).join('')
+    ? `<div class="job-grid">${todos.map(j => jobRowHTML(j, null, j.status === 'aprovado' && j.pagamento === 'pago')).join('')}</div>`
     : `<div class="empty-state"><div class="big">${busca ? 'Nada encontrado' : 'Nenhum trabalho ainda'}</div><div>${busca ? `nenhum trabalho bate com "${esc(busca)}"` : 'Aceita um pedido e ele aparece aqui.'}</div></div>`;
 }
 

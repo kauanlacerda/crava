@@ -473,3 +473,102 @@ input:focus, select:focus { border-color: var(--blue); }
 .insignia { border-radius: 18px; box-shadow: var(--shadow-soft); }
 .config-card { border-radius: 18px; box-shadow: var(--shadow-soft); }
 .share-bar { border-radius: 18px; }
+
+/* ================================================================
+   PASSE ESPACO + ESCALA + ANIMACOES
+   ================================================================ */
+
+/* respiro geral: conteudo afastado das bordas da janela */
+.app { padding: 8px 10px 8px 0; }
+.sidebar { margin: 12px 0 12px 12px; width: 248px; padding: 22px 14px; }
+.topbar { padding: 26px 30px 4px; }
+.main { padding: 20px 30px 22px; gap: 17px; }
+
+/* sidebar maior */
+.logo { padding-bottom: 20px; }
+.logo-mark { width: 38px; height: 38px; border-radius: 12px; }
+.logo-name { font-size: 19px; }
+.nav-item { font-size: 15px; padding: 12px 14px; gap: 13px; border-radius: 14px; }
+.nav-item svg { width: 19px; height: 19px; }
+.slots-card { padding: 14px; }
+.slots-title { font-size: 13px; }
+
+/* escala geral maior */
+.h-title { font-size: 34px; }
+.h-date { font-size: 13px; }
+.stat-card { padding: 22px; border-radius: 24px; }
+.stat-value { font-size: 34px; }
+.stat-label { font-size: 11.5px; }
+.stat-sub { font-size: 12.5px; }
+.search { padding: 13px 22px; }
+.search input { font-size: 14px; }
+.user-chip { padding: 8px 18px 8px 9px; }
+.user-avatar { width: 38px; height: 38px; font-size: 15px; }
+.user-name { font-size: 13px; }
+.active-card { padding: 26px; }
+.ac-title { font-size: 24px; }
+.ac-sub { font-size: 13px; }
+.btn { padding: 13px; font-size: 14px; border-radius: 15px; }
+.chip { padding: 12px 18px; border-radius: 16px; }
+.chip-value { font-size: 17px; }
+.section-label { font-size: 13px; }
+
+/* trabalhos em grade de 2 colunas (cards, nao barras esticadas) */
+.job-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.job-row { padding: 17px 19px; border-radius: 20px; gap: 12px; flex-wrap: wrap; }
+.job-title { font-size: 15px; }
+.job-client { font-size: 12px; }
+.job-value { width: auto; font-size: 14px; }
+.job-due { width: auto; }
+.job-main { flex-basis: 100%; order: -1; display: flex; align-items: center; gap: 11px; }
+.job-row .job-num { order: -2; }
+.job-foot { display: flex; align-items: center; gap: 9px; width: 100%; }
+.job-foot .job-value, .job-foot .job-due { margin-left: auto; }
+
+/* ---------- animacoes suaves ---------- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.94) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.view.open { animation: fadeUp 0.28s cubic-bezier(0.2, 0.8, 0.3, 1); }
+.overlay.open { animation: fadeIn 0.18s ease; }
+.overlay.open .modal { animation: popIn 0.24s cubic-bezier(0.2, 0.8, 0.3, 1); }
+.job-row, .stat-card, .active-card, .insignia { animation: fadeUp 0.3s cubic-bezier(0.2, 0.8, 0.3, 1) backwards; }
+.job-row:nth-child(2) { animation-delay: 0.04s; }
+.job-row:nth-child(3) { animation-delay: 0.08s; }
+.job-row:nth-child(4) { animation-delay: 0.12s; }
+.stat-card:nth-child(2) { animation-delay: 0.05s; }
+.stat-card:nth-child(3) { animation-delay: 0.1s; }
+.stat-card:nth-child(4) { animation-delay: 0.15s; }
+
+.seg, .pipe, .slot { transition: background 0.35s ease; }
+.nav-item, .badge-chip, .mini-btn, .cobrador-btn, .toggle, .fundo-opt { transition: all 0.16s ease; }
+.nav-item:hover { transform: translateX(2px); }
+.btn:active, .mini-btn:active, .cobrador-btn:active { transform: scale(0.96); }
+.user-avatar, .perfil-avatar { transition: transform 0.2s ease; }
+.user-chip:hover .user-avatar { transform: scale(1.08); }
+
+/* correcao: job-row em coluna (header + rodape), sem hacks de wrap */
+.job-row { flex-direction: column; align-items: stretch; gap: 12px; flex-wrap: nowrap; }
+.job-main { order: 0; flex-basis: auto; display: flex; align-items: center; gap: 11px; }
+.job-row .job-num { order: 0; }
+.job-foot { display: flex; align-items: center; gap: 8px; width: auto; }
+.job-foot .foot-spacer { flex-grow: 1; }
+.job-foot .job-value, .job-foot .job-due { margin-left: 0; }
+
+/* card solido laranja (Pra receber) */
+:root, :root[data-theme="escuro"] { --vivid-orange-a: #ffab3d; --vivid-orange-b: #ea7a10; }
+:root[data-theme="claro"] { --vivid-orange-a: #ffab3d; --vivid-orange-b: #ea7a10; }
+.stat-card.solid-orange {
+  background: linear-gradient(135deg, var(--vivid-orange-a), var(--vivid-orange-b));
+  border: none; box-shadow: 0 10px 26px rgba(234, 122, 16, 0.42);
+}
+.stat-card.solid-orange .stat-label { color: rgba(255, 255, 255, 0.87); }
+.stat-card.solid-orange .stat-value { color: #fff !important; }
+.stat-card.solid-orange .stat-sub { color: rgba(255, 255, 255, 0.92) !important; }
