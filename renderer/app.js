@@ -1202,7 +1202,7 @@ function renderCalendario() {
   let celulas = [];
   for (let i = 0; i < offset; i++) celulas.push(null);
   for (let d = 1; d <= diasNoMes; d++) celulas.push(d);
-  while (celulas.length % 7 !== 0) celulas.push(null);
+  while (celulas.length < 42) celulas.push(null); // sempre 6 semanas: altura fixa
 
   for (const d of celulas) {
     if (d === null) { grid += `<div class="cal-cell vazia"></div>`; continue; }
@@ -1402,7 +1402,7 @@ function dadosCal() {
   const celulas = [];
   for (let i = 0; i < offset; i++) celulas.push(null);
   for (let d = 1; d <= diasNoMes; d++) celulas.push(d);
-  while (celulas.length % 7 !== 0) celulas.push(null);
+  while (celulas.length < 42) celulas.push(null); // sempre 6 semanas: altura fixa
   return { ano, mes, nomeMes, ganhos, totalMes, totalAno, maxDia, melhorIdx, diasComLucro, melhorSeq, celulas };
 }
 
