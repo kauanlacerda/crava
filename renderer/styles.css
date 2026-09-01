@@ -929,3 +929,21 @@ input:focus, select:focus { border-color: var(--blue); }
   background: rgba(255, 255, 255, calc(0.07 * var(--celop, 1)));
   border-color: rgba(255, 255, 255, calc(0.12 * var(--celop, 1)));
 }
+
+/* botao do calendario flutuando no canto do card (so na interface) */
+.canvas-wrap { position: relative; width: max-content; }
+.cal-abrir {
+  position: absolute; right: 12px; bottom: 12px;
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 13px; border-radius: 12px; cursor: pointer;
+  background: rgba(10, 14, 22, 0.72); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.16); color: #eef2f9;
+  font-size: 12px; font-weight: 800;
+  transition: transform 0.15s, background 0.15s;
+}
+.cal-abrir:hover { transform: translateY(-2px); background: var(--blue); border-color: var(--blue); }
+
+/* modal do calendario: largo e confortavel */
+.modal-cal { width: min(1060px, 94vw); max-height: 92vh; overflow-y: auto; gap: 12px; }
+.modal-cal .cal-panel { border: none; box-shadow: none; padding: 6px 4px; }
+.modal-cal .share-bar { width: 100%; }

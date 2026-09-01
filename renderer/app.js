@@ -1269,7 +1269,7 @@ function iniciarCalGif() {
   pararCalGif();
   if (!calGifFrames || !calGifFrames.length) return;
   const tick = () => {
-    if ($('view-share').classList.contains('open')) {
+    if ($('ovCal').classList.contains('open')) {
       calGifIdx = (calGifIdx + 1) % calGifFrames.length;
       pintarFundoCal();
     }
@@ -1316,6 +1316,7 @@ function pintarFundoCal() {
     return;
   }
   painel.classList.add('com-fundo');
+  if (!painel.getBoundingClientRect().width) return; // modal fechado
   if (midia.tipo === 'gif' && calGifFrames && calGifFrames.length) {
     painel.style.backgroundImage = '';
     if (!cv) {
@@ -1545,6 +1546,15 @@ async function compartilharCalendario() {
   btn.textContent = txtOriginal;
 }
 $('btnCompartilharCal').onclick = compartilharCalendario;
+$('btnAbrirCal').onclick = () => {
+  $('ovCal').classList.add('open');
+  renderCalendario();          // redesenha já com o painel visível
+  iniciarCalGif();
+};
+$('btnFecharCal').onclick = () => { $('ovCal').classList.remove('open'); pararCalGif(); };
+$('ovCal').onclick = (e) => {
+  if (e.target === $('ovCal')) { $('ovCal').classList.remove('open'); pararCalGif(); }
+};
 
 // GIF animado: decodifica com ImageDecoder (nativo) e re-encoda com gifenc
 async function gerarGifAnimado() {
