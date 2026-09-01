@@ -1236,7 +1236,7 @@ function renderCalendario() {
       <span class="cal-sub-dir">no ano: <b class="c-green">R$ ${fmtNum(Math.round(totalAno))}</b></span>
     </div>
     <div class="cal-grid">${grid}</div>
-    <div class="cal-rodape">Melhor sequência no mês: <b>${melhorSeq}d</b>${maxDia > 0 ? ` · melhor dia: <b class="c-amber">+R$ ${fmtCompacto(maxDia)}</b>` : ''}</div>`;
+    <div class="cal-rodape"><span>Melhor sequência no mês: <b>${melhorSeq}d</b>${maxDia > 0 ? ` · melhor dia: <b class="c-amber">+R$ ${fmtCompacto(maxDia)}</b>` : ''}</span><span class="cal-marca"><img src="${spr('logo')}" alt=""><b>CRAVA</b></span></div>`;
   try { pintarFundoCal(); } catch { }
 }
 $('calPanel').onclick = (e) => {
@@ -1482,9 +1482,16 @@ function desenharCalCanvas(ctx, W, H, dc, fonteMidia, op) {
   const rodapeY = topo + (dc.celulas.length / 7) * (ch + gap) + 26;
   ctx.fillStyle = '#8b98a9'; ctx.font = F(600, 15);
   ctx.fillText(`Melhor sequência no mês: ${dc.melhorSeq}d${dc.maxDia > 0 ? '  ·  melhor dia: +R$ ' + fmtCompacto(dc.maxDia) : ''}`, pad, rodapeY);
-  ctx.fillStyle = '#5a6676'; ctx.textAlign = 'right'; ctx.font = F(700, 15);
-  const nome = S.config.nome || 'você';
-  ctx.fillText(`@${(S.config.usuario || nome).replace('@', '')} · feito com Crava`, W - pad, rodapeY);
+  ctx.font = "16px 'Press Start 2P', monospace"; ctx.textAlign = 'right';
+  ctx.fillStyle = '#e8edf4';
+  ctx.fillText('CRAVA', W - pad, rodapeY);
+  const wMarca = ctx.measureText('CRAVA').width;
+  if (HEAD_IMG.complete && HEAD_IMG.naturalWidth) {
+    ctx.imageSmoothingEnabled = false;
+    const lh = 32, lw = lh * HEAD_IMG.naturalWidth / HEAD_IMG.naturalHeight;
+    ctx.drawImage(HEAD_IMG, W - pad - wMarca - lw - 12, rodapeY - 24, lw, lh);
+    ctx.imageSmoothingEnabled = true;
+  }
   ctx.textAlign = 'left';
 }
 

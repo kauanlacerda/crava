@@ -917,3 +917,9 @@ input:focus, select:focus { border-color: var(--blue); }
 /* modo calor sobre o novo formato: encolhe em quadradinhos */
 .cal-grid.modo-calor .cal-cell { transform: scale(0.62); border-radius: 22px; }
 .cal-grid.modo-calor .cal-cell:hover:not(.vazia) { transform: scale(0.8); }
+
+/* marca no rodape do calendario */
+.cal-rodape { display: flex; justify-content: space-between; align-items: center; }
+.cal-marca { display: flex; align-items: center; gap: 8px; }
+.cal-marca img { width: 28px; height: auto; image-rendering: pixelated; }
+.cal-marca b { font-family: 'Press Start 2P', monospace; font-size: 12px; font-weight: 400; color: var(--text); letter-spacing: 0; }
