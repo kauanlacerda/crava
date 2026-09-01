@@ -84,3 +84,41 @@ no mês; progresso do dia = jobs que avançaram para entregue+ hoje vs meta.
 - OneDrive: projeto fica em C:\dev\cravado (fora do sync)
 - Nome "Cravado" é provisório e trocável
 - Cronômetro é informativo (não bloqueia nada) na v1
+
+---
+
+## Adendo v2 (2026-09-01, pós-design no canvas)
+
+Decisões tomadas durante as iterações de design (5 rodadas no canvas):
+
+1. **Pagamento é estado paralelo, não etapa.** Pipeline de trabalho:
+   Aceito → Fazendo → Entregue → Aprovado. Cada trabalho tem `pagamento:
+   nao_pago | aguardando | pago`, mudável a qualquer momento (clientes pagam
+   antes, durante ou depois). Marcar "pago" libera slot e dispara o cofre.
+2. **Multi-moeda:** valor = {quantia, moeda: BRL | USD | RBX}. Totais
+   separados por moeda; estimativa combinada em R$ via cotações manuais nas
+   configurações (US$→R$ e 1.000 Robux→R$). Sem cotação online na v1.
+3. **Cobrador de cliente:** trabalho entregue/aprovado com pagamento
+   "aguardando" há ≥2 dias gera aviso "cobra o fulano" com botão "Cobrei"
+   (silencia por 1 dia).
+4. **Temas:** escuro (padrão, paleta Cube) e claro (estilo Wiven), selecionáveis
+   nas configurações.
+5. **Insígnias** (no lugar de placas): Semana Cravada (7d streak), Primeiros
+   10k, Máquina (5 num dia), Poupador (10 cofres), Mês de Ferro (30d),
+   Clube dos 100k, Pontualidade, Sempre Cobrado.
+6. **Share card do mês** estilo GMGN/Axiom: faturamento grande, stats,
+   insígnias, @usuário, 4 fundos, mascote pixel art opcional, copiar imagem.
+7. **Contas e servidor (fase 1.5):** app será distribuído grátis a amigos.
+   Login email+senha, perfil com nome/@/foto. Backend proposto: Supabase
+   free tier (auth + Postgres). O dono precisa criar o projeto Supabase
+   (Claude não cria contas). Até lá, storage local com camada de abstração
+   pronta pra plugar o sync.
+8. **Instalador:** electron-builder NSIS (mesma família do instalador Tauri
+   do Locked In analisado — 7,4 MB, Nullsoft).
+
+### Ordem de construção
+- **Fase A (agora):** app Electron local completo — janela principal (tema
+  escuro/claro), widget, captura global, cofre, streak, recompensa, cobrador,
+  insígnias, configurações, notificações de prazo, bandeja.
+- **Fase B:** share card com mascote + exportar imagem; login/perfil +
+  Supabase; instalador NSIS.
