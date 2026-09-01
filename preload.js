@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('api', {
   baixarUpdate: () => ipcRenderer.invoke('update:baixar'),
   instalarUpdate: () => ipcRenderer.send('update:instalar'),
   versaoApp: () => ipcRenderer.invoke('update:versao'),
+  checarUpdate: () => ipcRenderer.invoke('update:checar'),
   onUpdate: (cb) => {
     ipcRenderer.on('update:disponivel', (_e, d) => cb('disponivel', d));
     ipcRenderer.on('update:progresso', (_e, d) => cb('progresso', d));

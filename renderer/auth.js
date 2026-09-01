@@ -259,3 +259,23 @@ function agendarEnvio() {
     if (el) el.textContent = 'v' + v;
   }).catch(() => { });
 })();
+
+// botão de verificar atualizações nas configurações
+(() => {
+  const b = document.getElementById('btnVerificarUpdate');
+  if (!b || !window.api.checarUpdate) return;
+  b.onclick = async () => {
+    const original = b.textContent;
+    b.textContent = t('aguarde');
+    const achou = await window.api.checarUpdate();
+    b.textContent = original;
+    if (!achou) {
+      const el = document.getElementById('versaoApp');
+      if (el) {
+        const v = el.textContent;
+        el.textContent = t('semUpdate');
+        setTimeout(() => { el.textContent = v; }, 4000);
+      }
+    }
+  };
+})();

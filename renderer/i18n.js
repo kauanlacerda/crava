@@ -2,6 +2,7 @@
 const I18N = {
   pt: {
     // nav / sidebar
+    verificarUpdate: 'Verificar atualizações', semUpdate: 'você já está na última versão ✓',
     updateTitulo: 'Nova versão disponível', updateVersao: 'versão', updateBaixar: 'Atualizar',
     updateBaixando: 'baixando…', updatePronto: 'Atualização pronta!',
     updateReinicia: 'o app reinicia e já volta atualizado', updateInstalar: 'Reiniciar agora',
@@ -156,6 +157,7 @@ const I18N = {
   },
 
   en: {
+    verificarUpdate: 'Check for updates', semUpdate: 'you are on the latest version ✓',
     updateTitulo: 'New version available', updateVersao: 'version', updateBaixar: 'Update',
     updateBaixando: 'downloading…', updatePronto: 'Update ready!',
     updateReinicia: 'the app restarts and comes back updated', updateInstalar: 'Restart now',

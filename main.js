@@ -210,6 +210,10 @@ ipcMain.on('update:instalar', () => {
   autoUpdater.quitAndInstall(false, true);
 });
 ipcMain.handle('update:versao', () => app.getVersion());
+ipcMain.handle('update:checar', async () => {
+  if (!app.isPackaged) return false;
+  try { const r = await autoUpdater.checkForUpdates(); return !!(r && r.updateInfo && r.updateInfo.version !== app.getVersion()); } catch { return false; }
+});
 
 // ---------- IPC ----------
 
