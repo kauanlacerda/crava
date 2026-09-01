@@ -622,14 +622,8 @@ $('btnSalvarPerfil').onclick = async () => {
   await salvar();
 };
 
-// ---------- Card do mês (share card estilo GMGN) ----------
-const FUNDOS = [
-  ['#0c1322', '#0f1d3a', '#12264e'],
-  ['#120a1e', '#1a0f2e', '#351b5e'],
-  ['#081710', '#0d2418', '#12503a'],
-  ['#1c0d05', '#2b1408', '#6e3d12']
-];
-let fundoSel = 0, mascoteOn = true;
+// ---------- Card do mês (share card estilo GMGN, fundo preto) ----------
+let mascoteOn = true;
 
 function rrect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -669,23 +663,24 @@ function atualizarSprites() {
   $('logoImg').src = spr('logo');
   $('metaImg').src = spr('metaModal');
   $('cofreImg').src = spr('cofre');
-  if (S.config.shareMidia && MEDIA_IMG.src !== S.config.shareMidia.dataURL) MEDIA_IMG.src = S.config.shareMidia.dataURL;
+  if (S.config.shareMidia && MEDIA_IMG.src !== S.config.shareMidia.dataURL) {
+    MEDIA_IMG.src = S.config.shareMidia.dataURL;
+    prepararGifPreview();
+  }
 }
 
 const CW = 1120, CH = 680;
 
 function drawFundo(ctx) {
-  const [c1, c2, c3] = FUNDOS[fundoSel];
-  const g = ctx.createLinearGradient(0, 0, CW, CH);
-  g.addColorStop(0, c1); g.addColorStop(0.7, c2); g.addColorStop(1, c3);
   rrect(ctx, 0, 0, CW, CH, 44);
-  ctx.fillStyle = g; ctx.fill();
+  ctx.fillStyle = '#060608';
+  ctx.fill();
 }
 
 // mídia como FUNDO do card (cover), com opacidade controlável
 function drawMediaLayer(ctx, fonte, alpha) {
-  const fw = fonte.naturalWidth || fonte.displayWidth || fonte.codedWidth;
-  const fh = fonte.naturalHeight || fonte.displayHeight || fonte.codedHeight;
+  const fw = fonte.naturalWidth || fonte.displayWidth || fonte.codedWidth || fonte.width;
+  const fh = fonte.naturalHeight || fonte.displayHeight || fonte.codedHeight || fonte.height;
   if (!fw || !fh) return;
   const esc = Math.max(CW / fw, CH / fh);
   const dw = fw * esc, dh = fh * esc;
@@ -792,8 +787,11 @@ function drawShareCard() {
   ctx.clearRect(0, 0, CW, CH);
   drawFundo(ctx);
   const midia = S.config.shareMidia;
-  const temMidia = !SKIP_MEDIA && midia && MEDIA_IMG.complete && MEDIA_IMG.naturalWidth;
-  if (temMidia) drawMediaLayer(ctx, MEDIA_IMG, (S.config.shareMidiaOp ?? 40) / 100);
+  const fonte = (midia && midia.tipo === 'gif' && gifFrames && gifFrames.length)
+    ? gifFrames[gifIdx]
+    : (MEDIA_IMG.complete && MEDIA_IMG.naturalWidth ? MEDIA_IMG : null);
+  const temMidia = !SKIP_MEDIA && midia && fonte;
+  if (temMidia) drawMediaLayer(ctx, fonte, (S.config.shareMidiaOp ?? 40) / 100);
   drawConteudo(ctx);
   if (temMidia && midia.tipo === 'gif') {
     rrect(ctx, CW - 122, 118, 60, 30, 9);
@@ -809,16 +807,6 @@ function drawShareCard() {
   $('btnCopiarCard').textContent = midia && midia.tipo === 'gif' ? 'Salvar GIF' : 'Copiar imagem';
 }
 
-// picker de fundo
-$('fundoPicker').innerHTML = FUNDOS.map((f, i) =>
-  `<div class="fundo-opt ${i === 0 ? 'sel' : ''}" data-i="${i}" style="background:linear-gradient(150deg,${f[1]},${f[2]})"></div>`).join('');
-$('fundoPicker').onclick = (e) => {
-  const i = e.target.dataset.i;
-  if (i === undefined) return;
-  fundoSel = +i;
-  document.querySelectorAll('.fundo-opt').forEach(x => x.classList.toggle('sel', x.dataset.i === i));
-  drawShareCard();
-};
 $('mascoteToggle').classList.add('on');
 $('mascoteToggle').onclick = () => {
   mascoteOn = !mascoteOn;
@@ -830,6 +818,50 @@ const MEDIA_IMG = new Image();
 MEDIA_IMG.onload = () => { if ($('view-share').classList.contains('open')) drawShareCard(); };
 let SKIP_MEDIA = false;
 
+// ---------- Preview animado do GIF dentro do app ----------
+let gifFrames = null, gifDelays = null, gifIdx = 0, gifTimer = null, gifPreparando = false;
+
+function pararGifPreview() {
+  if (gifTimer) { clearTimeout(gifTimer); gifTimer = null; }
+}
+function iniciarGifPreview() {
+  pararGifPreview();
+  if (!gifFrames || !gifFrames.length) return;
+  const tick = () => {
+    if ($('view-share').classList.contains('open')) {
+      gifIdx = (gifIdx + 1) % gifFrames.length;
+      drawShareCard();
+    }
+    gifTimer = setTimeout(tick, gifDelays[gifIdx]);
+  };
+  gifTimer = setTimeout(tick, gifDelays[0]);
+}
+async function prepararGifPreview() {
+  const midia = S.config.shareMidia;
+  pararGifPreview();
+  gifFrames = null; gifIdx = 0;
+  if (!midia || midia.tipo !== 'gif' || gifPreparando) return;
+  gifPreparando = true;
+  try {
+    const buf = await (await fetch(midia.dataURL)).arrayBuffer();
+    const dec = new ImageDecoder({ data: buf, type: 'image/gif' });
+    await dec.tracks.ready;
+    await dec.completed.catch(() => { });
+    const total = Math.min(dec.tracks.selectedTrack.frameCount || 1, 90);
+    const fr = [], dl = [];
+    for (let i = 0; i < total; i++) {
+      const { image, duration } = await dec.decode({ frameIndex: i });
+      fr.push(await createImageBitmap(image));
+      dl.push(Math.max(20, (duration || 70000) / 1000));
+      image.close();
+    }
+    gifFrames = fr; gifDelays = dl; gifIdx = 0;
+    iniciarGifPreview();
+    drawShareCard();
+  } catch { }
+  gifPreparando = false;
+}
+
 $('btnMidia').onclick = () => $('midiaInput').click();
 $('midiaInput').onchange = () => {
   const f = $('midiaInput').files[0];
@@ -840,6 +872,7 @@ $('midiaInput').onchange = () => {
     S.config.shareMidia = { tipo: f.type === 'image/gif' ? 'gif' : 'foto', dataURL: r.result };
     MEDIA_IMG.src = r.result;
     await salvar();
+    prepararGifPreview();
     drawShareCard();
   };
   r.readAsDataURL(f);
@@ -847,6 +880,8 @@ $('midiaInput').onchange = () => {
 };
 $('btnMidiaRemover').onclick = async () => {
   delete S.config.shareMidia;
+  pararGifPreview();
+  gifFrames = null;
   await salvar();
   drawShareCard();
 };
@@ -869,7 +904,7 @@ async function gerarGifAnimado() {
     await dec.tracks.ready;
     await dec.completed.catch(() => { });
     const total = dec.tracks.selectedTrack.frameCount || 1;
-    const passo = Math.ceil(total / 50); // no máx ~50 quadros no resultado
+    const passo = Math.ceil(total / 120); // até 120 quadros no resultado (liso)
 
     // camadas: fundo (gradiente) e conteúdo (textos etc, transparente)
     const fundoCv = document.createElement('canvas');
@@ -900,7 +935,7 @@ async function gerarGifAnimado() {
       const dados = mctx.getImageData(0, 0, outW, outH).data;
       const paleta = quantize(dados, 256);
       const idx = applyPalette(dados, paleta);
-      const delayMs = Math.max(30, Math.round(((duration || 100000) / 1000) * passo));
+      const delayMs = Math.max(20, Math.round(((duration || 70000) / 1000) * passo));
       enc.writeFrame(idx, outW, outH, { palette: paleta, delay: delayMs });
     }
     enc.finish();
