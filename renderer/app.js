@@ -1150,7 +1150,7 @@ $('midiaOpacidade').onchange = async () => { await salvar(); drawShareCard(); };
 
 // ---------- Calendário de lucro (estilo PnL da GMGN) ----------
 let calMes = hoje().slice(0, 7);
-let calModo = 'calor'; // 'calor' (mapa de calor) | 'valores'
+let calModo = 'valores'; // 'calor' (mapa de calor) | 'valores'
 
 function ganhoEquivDoDia(dia) {
   const c = S.config;
@@ -1172,17 +1172,21 @@ function renderCalendario() {
   const [ano, mes] = calMes.split('-').map(Number);
   const diasNoMes = new Date(ano, mes, 0).getDate();
   const offset = new Date(ano, mes - 1, 1).getDay(); // 0 = domingo
-  const nomeMes = new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const nomeMes = new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
 
-  // ganho por dia + máximo (pra escala do calor)
+  // ganho por dia, máximo, dias com lucro e melhor sequência
   const ganhos = [];
-  let totalMes = 0, maxDia = 0;
+  let totalMes = 0, maxDia = 0, melhorIdx = -1, diasComLucro = 0;
   for (let d = 1; d <= diasNoMes; d++) {
     const g = ganhoEquivDoDia(`${calMes}-${String(d).padStart(2, '0')}`);
     ganhos.push(g);
     totalMes += g;
-    if (g > maxDia) maxDia = g;
+    if (g > 0) diasComLucro++;
+    if (g > maxDia) { maxDia = g; melhorIdx = d; }
   }
+  let seq = 0, melhorSeq = 0;
+  for (const g of ganhos) { seq = g > 0 ? seq + 1 : 0; if (seq > melhorSeq) melhorSeq = seq; }
+
   const totalAno = S.jobs
     .filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 4) === String(ano))
     .reduce((a, j) => {
@@ -1193,50 +1197,48 @@ function renderCalendario() {
 
   const hj = hoje();
   const dows = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
-  let grid = dows.map(d => `<div class="cal-dow">${d}</div>`).join('') + `<div class="cal-dow">SEM.</div>`;
+  let grid = dows.map(d => `<div class="cal-dow">${d}</div>`).join('');
 
   let celulas = [];
   for (let i = 0; i < offset; i++) celulas.push(null);
   for (let d = 1; d <= diasNoMes; d++) celulas.push(d);
   while (celulas.length % 7 !== 0) celulas.push(null);
 
-  for (let linha = 0; linha < celulas.length / 7; linha++) {
-    let somaSemana = 0;
-    for (let col = 0; col < 7; col++) {
-      const d = celulas[linha * 7 + col];
-      if (d === null) { grid += `<div class="cal-cell vazia"></div>`; continue; }
-      const g = ganhos[d - 1];
-      somaSemana += g;
-      const ehHoje = `${calMes}-${String(d).padStart(2, '0')}` === hj;
-      const titulo = `title="${d}/${mes}: R$ ${fmtNum(Math.round(g))}"`;
-      // mesma célula nos dois modos (o CSS anima a troca); calor sempre pintado
-      const int = maxDia > 0 ? g / maxDia : 0;
-      const bg = g > 0 ? `background:rgba(47,211,156,${(0.12 + 0.78 * int).toFixed(2)})` : '';
-      const txt = int > 0.55 ? 'color:#04150e' : '';
-      grid += `<div class="cal-cell ${ehHoje ? 'hoje' : ''}" style="${bg}" ${titulo}>
-        <div class="cal-dia" style="${txt}">${d}</div>
-        <div class="cal-val ${g > 0 ? 'c-green' : ''}" style="${txt}">${g > 0 ? fmtCompacto(g) : '·'}</div>
-      </div>`;
-    }
-    grid += `<div class="cal-week">${somaSemana > 0 ? '+' + fmtCompacto(somaSemana) : '—'}</div>`;
+  for (const d of celulas) {
+    if (d === null) { grid += `<div class="cal-cell vazia"></div>`; continue; }
+    const g = ganhos[d - 1];
+    const ehHoje = `${calMes}-${String(d).padStart(2, '0')}` === hj;
+    const ehMelhor = d === melhorIdx && g > 0;
+    const int = maxDia > 0 ? g / maxDia : 0;
+    const bg = ehMelhor
+      ? 'background:rgba(245,183,78,0.22)'
+      : (g > 0 ? `background:rgba(47,211,156,${(0.07 + 0.30 * int).toFixed(2)})` : '');
+    grid += `<div class="cal-cell ${ehHoje ? 'hoje' : ''} ${ehMelhor ? 'melhor' : ''}" style="${bg}" title="${d}/${mes}: R$ ${fmtNum(Math.round(g))}">
+      <div class="cal-dia">${d}</div>
+      <div class="cal-val ${ehMelhor ? 'c-amber' : (g > 0 ? 'c-green' : 'sem-lucro')}">${g > 0 ? '+R$ ' + fmtCompacto(g) : ''}</div>
+    </div>`;
   }
 
   $('calPanel').innerHTML = `
     <div class="cal-head">
-      <div class="mini-btn" data-cal="prev">‹</div>
-      <div class="cal-titulo">${nomeMes}</div>
-      <div class="mini-btn" data-cal="next">›</div>
+      <div class="cal-titulo-app">Calendário de Lucro</div>
       <div style="flex-grow:1"></div>
-      <div class="tema-picker">
-        <div class="tema-opt ${calModo === 'calor' ? 'sel' : ''}" data-cal="calor">Calor</div>
+      <div class="mini-btn" data-cal="prev">‹</div>
+      <div class="cal-titulo">${nomeMes.replace('.', '')}</div>
+      <div class="mini-btn" data-cal="next">›</div>
+      <div class="tema-picker" style="margin-left:10px">
         <div class="tema-opt ${calModo === 'valores' ? 'sel' : ''}" data-cal="valores">Valores</div>
+        <div class="tema-opt ${calModo === 'calor' ? 'sel' : ''}" data-cal="calor">Calor</div>
       </div>
     </div>
-    <div class="cal-totais">
-      <span>no mês: <b class="c-green">R$ ${fmtNum(Math.round(totalMes))}</b></span>
-      <span>no ano: <b class="c-green">R$ ${fmtNum(Math.round(totalAno))}</b></span>
+    <div class="cal-total-grande">R$ ${fmtNum(Math.round(totalMes))}</div>
+    <div class="cal-linha"></div>
+    <div class="cal-sub">
+      <span class="c-green"><b>${diasComLucro}</b> / R$ ${fmtNum(Math.round(totalMes))}</span>
+      <span class="cal-sub-dir">no ano: <b class="c-green">R$ ${fmtNum(Math.round(totalAno))}</b></span>
     </div>
-    <div class="cal-grid ${calModo === 'calor' ? 'modo-calor' : ''}">${grid}</div>`;
+    <div class="cal-grid ${calModo === 'calor' ? 'modo-calor' : ''}">${grid}</div>
+    <div class="cal-rodape">Melhor sequência no mês: <b>${melhorSeq}d</b>${maxDia > 0 ? ` · melhor dia: <b class="c-amber">+R$ ${fmtCompacto(maxDia)}</b>` : ''}</div>`;
   try { pintarFundoCal(); } catch { }
 }
 $('calPanel').onclick = (e) => {

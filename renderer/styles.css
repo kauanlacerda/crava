@@ -878,3 +878,42 @@ input:focus, select:focus { border-color: var(--blue); }
 .cal-panel.com-fundo .cal-totais,
 .cal-panel.com-fundo .cal-dow { text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); }
 .cal-panel.com-fundo .cal-dia { text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5); }
+
+/* ================================================================
+   CALENDARIO MODELO GMGN — celulas largas cheias, folga nas bordas
+   ================================================================ */
+.cal-panel { padding: 22px 24px 18px; }
+.cal-titulo-app { font-family: 'Baloo 2', sans-serif; font-size: 18px; font-weight: 800; }
+.cal-titulo { min-width: 90px; font-size: 14px; }
+.cal-total-grande {
+  font-family: 'Baloo 2', sans-serif; font-size: 34px; font-weight: 800;
+  color: var(--green); margin: 10px 2px 6px; line-height: 1;
+}
+.cal-linha { height: 3px; border-radius: 2px; background: var(--green); opacity: 0.85; margin-bottom: 8px; }
+.cal-sub { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin: 0 2px 12px; color: var(--muted); }
+.cal-sub b { font-weight: 800; }
+.cal-sub-dir { color: var(--muted); }
+.cal-grid {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  justify-content: stretch;
+  gap: 8px;
+  padding: 0 2px;
+}
+.cal-cell {
+  height: 84px; aspect-ratio: auto;
+  position: relative; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.cal-cell .cal-dia {
+  position: absolute; top: 7px; left: 9px;
+  font-size: 11px; font-weight: 700; opacity: 0.75;
+}
+.cal-cell .cal-val { font-size: 15px; font-weight: 800; }
+.cal-val.sem-lucro { opacity: 0; }
+.cal-cell.melhor { border: 1px solid rgba(245, 183, 78, 0.5); }
+.cal-rodape { font-size: 12px; font-weight: 600; color: var(--muted); margin: 12px 2px 0; }
+.cal-rodape b { font-weight: 800; color: var(--text); }
+
+/* modo calor sobre o novo formato: encolhe em quadradinhos */
+.cal-grid.modo-calor .cal-cell { transform: scale(0.62); border-radius: 22px; }
+.cal-grid.modo-calor .cal-cell:hover:not(.vazia) { transform: scale(0.8); }
