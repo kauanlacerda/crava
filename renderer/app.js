@@ -209,18 +209,20 @@ function renderStats() {
   if (gu) gSubs.push(MOEDA.USD.fmt(gu));
   if (gr) gSubs.push(MOEDA.RBX.fmt(gr));
 
+  const glow = S.config.glowCards !== false;
+  const badge = glow ? '<div class="arrow-badge">↗</div>' : '';
   $('statRow').innerHTML = `
-    <div class="stat-card solid-blue">
-      <div class="arrow-badge">↗</div>
+    <div class="stat-card ${glow ? 'solid-blue' : ''}">
+      ${badge}
       <div class="stat-label">META DO DIA</div>
       <div class="stat-value">${feitos}<span style="opacity:0.7;font-size:18px"> / ${meta}</span></div>
       <div class="stat-segs">${segs}</div>
-      <div class="stat-sub">${feitos >= meta ? 'meta batida — jogo liberado!' : `faltam ${meta - feitos} pro jogo liberar`}</div>
+      <div class="stat-sub ${glow ? '' : (feitos >= meta ? 'c-green' : 'c-blue')}">${feitos >= meta ? 'meta batida — jogo liberado!' : `faltam ${meta - feitos} pro jogo liberar`}</div>
     </div>
-    <div class="stat-card solid-orange">
-      <div class="arrow-badge">↗</div>
+    <div class="stat-card ${glow ? 'solid-orange' : ''}">
+      ${badge}
       <div class="stat-label">PRA RECEBER</div>
-      <div class="stat-value">${recParts[0] || 'R$ 0'}</div>
+      <div class="stat-value ${glow ? '' : 'c-amber'}">${recParts[0] || 'R$ 0'}</div>
       <div class="stat-sub">${recParts.length > 1 ? '+ ' + recParts.slice(1).join(' · ') : `${recN} trabalho${recN === 1 ? '' : 's'} aguardando pgto`}</div>
     </div>
     <div class="stat-card">
@@ -228,10 +230,10 @@ function renderStats() {
       <div class="stat-value ${prox ? prazoClasse(prox.prazo) || 'c-amber' : ''}">${prox ? prazoTexto(prox.prazo) : '—'}</div>
       <div class="stat-sub">${prox ? esc(prox.titulo) : 'nenhum prazo aberto'}</div>
     </div>
-    <div class="stat-card solid-green">
-      <div class="arrow-badge">↗</div>
+    <div class="stat-card ${glow ? 'solid-green' : ''}">
+      ${badge}
       <div class="stat-label">GANHO NO MÊS</div>
-      <div class="stat-value">${MOEDA.BRL.fmt(gb)}</div>
+      <div class="stat-value ${glow ? '' : 'c-green'}">${MOEDA.BRL.fmt(gb)}</div>
       <div class="stat-sub">${gSubs.length ? '+ ' + gSubs.join(' · ') : 'só R$ até agora'}</div>
     </div>`;
 }
@@ -421,9 +423,15 @@ function renderConfig() {
   setIf('cfgCofre', S.config.cofrePct);
   setIf('cfgUSD', S.config.cotacaoUSD);
   setIf('cfgRBX', S.config.cotacaoRBX1k);
-  document.querySelectorAll('.tema-opt').forEach(el =>
+  document.querySelectorAll('#temaPicker .tema-opt').forEach(el =>
     el.classList.toggle('sel', el.dataset.tema === (S.config.tema || 'escuro')));
+  document.querySelectorAll('#glowPicker .tema-opt').forEach(el =>
+    el.classList.toggle('sel', el.dataset.glow === (S.config.glowCards !== false ? 'on' : 'off')));
 }
+$('glowPicker').onclick = async (e) => {
+  const g = e.target.dataset.glow;
+  if (g) { S.config.glowCards = g === 'on'; await salvar(); }
+};
 $('temaPicker').onclick = async (e) => {
   const t = e.target.dataset.tema;
   if (t) { S.config.tema = t; await salvar(); }

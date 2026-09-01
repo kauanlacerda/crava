@@ -11,6 +11,7 @@ const DEFAULTS = {
     cofrePct: 30,
     atalho: 'CommandOrControl+Shift+N',
     tema: 'escuro',
+    glowCards: true,
     cotacaoUSD: 5.4,
     cotacaoRBX1k: 28,
     nome: 'você'
