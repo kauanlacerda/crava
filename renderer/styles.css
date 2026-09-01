@@ -583,3 +583,10 @@ input:focus, select:focus { border-color: var(--blue); }
 .sidebar { margin: 26px 10px 26px 26px; }
 .topbar { padding: 28px 36px 6px 28px; }
 .main { padding: 20px 36px 30px 28px; }
+
+/* trabalhos em lista vertical (linhas inteiras, como o design), nao lado a lado */
+.job-grid { grid-template-columns: 1fr; gap: 10px; }
+.job-row { flex-direction: row; align-items: center; padding: 14px 20px; gap: 16px; }
+.job-main { flex-grow: 1; min-width: 0; }
+.job-foot { flex-shrink: 0; gap: 12px; }
+.job-foot .foot-spacer { display: none; }
