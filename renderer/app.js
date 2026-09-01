@@ -101,6 +101,10 @@ async function pausarRetomar(id) {
   await salvar();
 }
 // devolve o trabalho pra fila (o antigo "pausar")
+async function praFila(id) {
+  const j = S.jobs.find(x => x.id === id);
+  if (j) { j.status = 'aceito'; await salvar(); }
+}
 async function voltarFila(id) {
   const j = S.jobs.find(x => x.id === id);
   if (j) { acumularTempo(j); j.status = 'aceito'; j.pausado = false; await salvar(); }
@@ -123,6 +127,8 @@ async function avancar(id) {
     j.status = 'aprovado';
   } else if (j.status === 'aceito') {
     return tornarAtivo(id);
+  } else if (j.status === 'esperando') {
+    j.status = 'aceito';
   }
   await salvar();
 }
@@ -368,7 +374,7 @@ async function escolherFavorita(id) {
 }
 
 const PIPE = ['aceito', 'fazendo', 'entregue', 'aprovado'];
-const pipeLabel = () => ({ aceito: t('aceito'), fazendo: t('fazendo'), entregue: t('entregue'), aprovado: t('aprovado') });
+const pipeLabel = () => ({ esperando: t('esperandoPgto'), aceito: t('aceito'), fazendo: t('fazendo'), entregue: t('entregue'), aprovado: t('aprovado') });
 const pgtoChip = () => ({
   nao_pago: [t('naoPago'), 'bc-faint'],
   aguardando: [t('aguardandoPgto'), 'bc-amber'],
@@ -547,8 +553,8 @@ const COLUNAS_PGTO = [
 
 // as colunas seguem SÓ a etapa do trabalho; o pagamento é um selo no card
 const COLUNAS_TRAB = [
-  { id: 'esperando_pgto', i18n: 'colEsperandoPgto', cor: 'var(--amber)', filtro: j => j.status === 'aceito' && recebidoDe(j) <= 0 },
-  { id: 'fila', i18n: 'colFila', cor: 'var(--muted)', filtro: j => j.status === 'aceito' && recebidoDe(j) > 0 },
+  { id: 'esperando_pgto', i18n: 'colEsperandoPgto', cor: 'var(--amber)', filtro: j => j.status === 'esperando' },
+  { id: 'fila', i18n: 'colFila', cor: 'var(--muted)', filtro: j => j.status === 'aceito' },
   { id: 'fazendo', i18n: 'colFazendo', cor: 'var(--blue)', filtro: j => j.status === 'fazendo' },
   { id: 'entregue', i18n: 'colEntregue', cor: 'var(--green)', filtro: j => j.status === 'entregue' || j.status === 'aprovado' }
 ];
@@ -574,6 +580,7 @@ function cardKanbanHTML(j) {
   const total = Number(j.valor.q), rec = recebidoDe(j);
 
   const acts = [];
+  if (j.status === 'esperando') acts.push(`<div class="mini-btn primary" onclick="event.stopPropagation();praFila('${j.id}')">${t('btnPraFila')}</div>`);
   if (j.status === 'aceito') acts.push(`<div class="mini-btn primary" onclick="event.stopPropagation();tornarAtivo('${j.id}')">${t('btnCravar')}</div>`);
   if (j.status === 'fazendo') acts.push(`<div class="mini-btn primary" onclick="event.stopPropagation();avancar('${j.id}')">${t('btnMarcarEntregue')}</div>`);
   if (j.status === 'entregue') acts.push(`<div class="mini-btn" onclick="event.stopPropagation();avancar('${j.id}')">${t('btnAprovado')}</div>`);
@@ -690,14 +697,8 @@ function ligarDragDrop() {
 async function moverPara(id, coluna) {
   const j = S.jobs.find(x => x.id === id);
   if (!j) return;
-  if (coluna === 'esperando_pgto') {
-    acumularTempo(j); j.status = 'aceito'; j.pausado = false;
-    if (recebidoDe(j) > 0) { await salvar(); return abrirRecebimento(id); } // já tem dinheiro: ajusta
-  }
-  else if (coluna === 'fila') {
-    acumularTempo(j); j.status = 'aceito'; j.pausado = false;
-    if (recebidoDe(j) <= 0) { await salvar(); return abrirRecebimento(id); } // entra na fila ao receber
-  }
+  if (coluna === 'esperando_pgto') { acumularTempo(j); j.status = 'esperando'; j.pausado = false; }
+  else if (coluna === 'fila') { acumularTempo(j); j.status = 'aceito'; j.pausado = false; }
   else if (coluna === 'fazendo') { return tornarAtivo(id); }
   else if (coluna === 'entregue') {
     if (j.status === 'fazendo') return avancar(id);   // conta a entrega e celebra
@@ -2361,11 +2362,18 @@ document.addEventListener('keydown', (e) => {
 function esc(s) { return String(s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
 
 // expõe ações pros onclick inline
-Object.assign(window, { tornarAtivo, pausarRetomar, voltarFila, avancar, ciclarPagamento, excluir, cobrei, separeiCofre, escolherFavorita, abrirLiquidacao, alternarVerTodos, abrirRecebimento });
+Object.assign(window, { tornarAtivo, pausarRetomar, voltarFila, avancar, ciclarPagamento, excluir, cobrei, separeiCofre, escolherFavorita, abrirLiquidacao, alternarVerTodos, abrirRecebimento, praFila });
 
 // ---------- Boot ----------
 function migrarLiquidacao() {
   let mudou = false;
+  if (!S.stats.migrouEsperando) {
+    for (const j of S.jobs) {
+      if (j.status === 'aceito' && recebidoDe(j) <= 0) j.status = 'esperando';
+    }
+    S.stats.migrouEsperando = true;
+    mudou = true;
+  }
   for (const j of S.jobs) {
     if (typeof j.recebido !== 'number') {
       j.recebido = j.pagamento === 'pago' ? Number(j.valor.q) : 0;
