@@ -1,4 +1,16 @@
 {
+  "1.2.1": {
+    "pt": [
+      "Correção de perda de dados: ao abrir o app, a decisão de quem vence entre o seu PC e a nuvem usava a hora em que a linha foi escrita no servidor. Como qualquer envio renova essa hora — inclusive o envio de um estado antigo — um retrato velho podia vencer trabalho recente e apagá-lo. Agora vale a hora em que os dados foram alterados, o mesmo critério da sincronização automática.",
+      "O card com GIF de fundo não pisca mais. A foto do perfil era recarregada a cada quadro, umas 14 vezes por segundo, e pintava fora de sincronia.",
+      "O app agora registra cada decisão de sincronização em %APPDATA%Cravasync.log — se algo sumir, dá pra saber o que aconteceu."
+    ],
+    "en": [
+      "Data-loss fix: when opening the app, deciding between your PC and the cloud used the time the row was written on the server. Since any upload refreshes that time — including uploading an old state — a stale snapshot could beat recent work and erase it. Now it uses when the data actually changed, the same rule as automatic sync.",
+      "The card with a GIF background no longer flickers. The profile photo was reloaded every frame, about 14 times a second, painting out of sync.",
+      "The app now records every sync decision in %APPDATA%Cravasync.log — if something disappears, you can see what happened."
+    ]
+  },
   "1.2.0": {
     "pt": [
       "Tutorial de seis telas na primeira abertura, e cada passo leva você até a aba que está explicando. Dá pra rever em Configurações.",

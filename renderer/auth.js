@@ -80,9 +80,15 @@ $$('btnOffline').onclick = () => {
 
 // ---------- sincronização ----------
 function maisRecente(local, nuvem) {
-  // decide qual estado vale: compara a última alteração conhecida
+  // Compara QUANDO OS DADOS FORAM ALTERADOS, não quando a linha foi escrita no
+  // servidor. A coluna atualizado_em é renovada por qualquer envio — inclusive
+  // o envio de um retrato velho — e isso fazia um estado antigo ganhar de um
+  // trabalho recente ao abrir o app. É o mesmo critério da sincronização
+  // periódica; usar dois critérios diferentes era a raiz do problema.
   const tLocal = local?.stats?.atualizadoEm ? Date.parse(local.stats.atualizadoEm) : 0;
-  const tNuvem = nuvem?.atualizado_em ? Date.parse(nuvem.atualizado_em) : 0;
+  const tNuvem = nuvem?.payload?.stats?.atualizadoEm
+    ? Date.parse(nuvem.payload.stats.atualizadoEm)
+    : (nuvem?.atualizado_em ? Date.parse(nuvem.atualizado_em) : 0);
   const vazioNuvem = !nuvem?.payload || !Object.keys(nuvem.payload).length || !(nuvem.payload.jobs || []).length;
   const vazioLocal = !(local?.jobs || []).length;
   // vazio porque nunca foi usado (instalação nova) é diferente de vazio de
@@ -161,6 +167,11 @@ async function sincronizar(primeiraVez) {
     const naNuvem = await baixarDados();
     let puxou = false;
 
+    const resumo = (e) => `jobs=${(e?.jobs || []).length} alterado=${e?.stats?.atualizadoEm || '-'}`;
+    const log = (txt) => { try { window.api.syncLog(txt); } catch { } };
+    log(`sync(${primeiraVez ? 'login' : 'periodico'}) local[${resumo(S)} enviado=${S?.stats?.enviadoEm || '-'}] ` +
+        `nuvem[${naNuvem ? resumo(naNuvem.payload) : 'vazia'}] naoEnviado=${temTrabalhoNaoEnviado()}`);
+
     // Os dados guardados neste PC são de outra conta? Então não são desta
     // pessoa e não podem subir pra nuvem dela. Sem isso, criar uma conta nova
     // num PC emprestado copiava os trabalhos do dono anterior pra dentro dela.
@@ -193,6 +204,7 @@ async function sincronizar(primeiraVez) {
     }
 
     if (puxou) {
+      log('  -> PUXOU da nuvem (o local foi substituido)');
       statusSync(t('syncPuxou'));
     } else {
       if (!S.stats.atualizadoEm) S.stats.atualizadoEm = new Date().toISOString();
@@ -203,6 +215,7 @@ async function sincronizar(primeiraVez) {
       // só depois de subir de verdade: daqui pra trás está a salvo na nuvem
       S.stats.enviadoEm = carimbo;
       try { await window.api.marcarEnviado(carimbo); } catch { }
+      log('  -> enviou o local pra nuvem');
       statusSync(t('syncOk'));
     }
     jaSincronizou = true;

@@ -398,6 +398,11 @@ function renderUser() {
   if (document.activeElement !== $('pfUser')) $('pfUser').value = S.config.usuario || '';
 
   // insígnia de destaque ao lado do nome
+  const foto = S.config.foto || '';
+  if (fotoAplicada !== foto) {
+    fotoAplicada = foto;
+    if (foto) FOTO_IMG.src = foto; else FOTO_IMG.removeAttribute('src');
+  }
   const fav = S.config.insigniaFavorita;
   const ganhas = S.stats.insigniasGanhas || {};
   if (fav && ganhas[fav]) {
@@ -1205,6 +1210,18 @@ HEAD_IMG.onload = () => { if ($('view-share').classList.contains('open')) drawSh
 MASCOTE_IMG.onload = () => { if ($('view-share').classList.contains('open')) drawShareCard(); };
 document.fonts.ready.then(() => { if ($('view-share').classList.contains('open')) drawShareCard(); });
 
+// O navegador normaliza img.src (espaço vira %20, acento vira código), então
+// comparar com o caminho cru dava sempre "mudou" — e a cada redesenho o GIF
+// recomeçava do zero. Guardando o que foi aplicado, a comparação é honesta.
+let midiaAplicada = '', calMidiaAplicada = '', fotoAplicada = '';
+
+// A foto do avatar era recriada a cada desenho do card. Com um GIF de fundo o
+// card é redesenhado ~14x por segundo, então eram 14 imagens novas por segundo,
+// cada uma pintando o avatar depois — fora de sincronia com o quadro. É o que
+// fazia o card piscar. Uma imagem só, carregada uma vez, resolve.
+const FOTO_IMG = new Image();
+FOTO_IMG.onload = () => { if ($('view-share').classList.contains('open')) drawShareCard(); };
+
 function atualizarSprites() {
   const big = spr('shareBig'), head = spr('shareHead');
   if (!MASCOTE_IMG.src.includes(big.replace('../', ''))) MASCOTE_IMG.src = big;
@@ -1216,14 +1233,28 @@ function atualizarSprites() {
   if (S.config.calMidia && S.config.calMidia.path) validarMidiaLocal('calMidia');
   if (S.config.shareMidia) {
     const alvo = midiaSrc(S.config.shareMidia);
-    if (alvo && MEDIA_IMG.src !== alvo) {
+    if (alvo && midiaAplicada !== alvo) {
+      midiaAplicada = alvo;
       MEDIA_IMG.src = alvo;
       prepararGifPreview();
     }
+  } else {
+    midiaAplicada = '';
   }
   if (S.config.calMidia) {
     const alvoCal = midiaSrc(S.config.calMidia);
-    if (alvoCal && CAL_MEDIA_IMG.src !== alvoCal) { CAL_MEDIA_IMG.src = alvoCal; prepararCalGif(); }
+    if (alvoCal && calMidiaAplicada !== alvoCal) {
+      calMidiaAplicada = alvoCal;
+      CAL_MEDIA_IMG.src = alvoCal;
+      prepararCalGif();
+    }
+  } else {
+    calMidiaAplicada = '';
+  }
+  const foto = S.config.foto || '';
+  if (fotoAplicada !== foto) {
+    fotoAplicada = foto;
+    if (foto) FOTO_IMG.src = foto; else FOTO_IMG.removeAttribute('src');
   }
   const fav = S.config.insigniaFavorita;
   if (fav && !FAV_IMG.src.includes(`insignias/${fav}.png`)) FAV_IMG.src = `../assets/insignias/${fav}.png`;
@@ -1338,16 +1369,12 @@ function drawConteudo(ctx) {
   const QR = [[0, 0], [1, 0], [3, 0], [1, 1], [2, 1], [0, 2], [2, 2], [3, 2], [0, 3], [1, 3], [3, 3]];
   for (const [qx, qy] of QR) ctx.fillRect(CW - 132 + 12 + qx * 14, ay - 4 + 12 + qy * 14, 11, 11);
 
-  // avatar com foto (async por cima)
-  if (S.config.foto) {
-    const img = new Image();
-    img.onload = () => {
-      ctx.save();
-      ctx.beginPath(); ctx.arc(88, ay + 32, 32, 0, 7); ctx.clip();
-      ctx.drawImage(img, 56, ay, 64, 64);
-      ctx.restore();
-    };
-    img.src = S.config.foto;
+  // avatar: desenhado na hora, no mesmo quadro do resto
+  if (S.config.foto && FOTO_IMG.complete && FOTO_IMG.naturalWidth) {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(88, ay + 32, 32, 0, 7); ctx.clip();
+    ctx.drawImage(FOTO_IMG, 56, ay, 64, 64);
+    ctx.restore();
   }
 }
 
@@ -1440,9 +1467,12 @@ async function midiaBuffer(midia) {
 
 async function prepararGifPreview() {
   const midia = S.config.shareMidia;
+  // a decisão vem antes de mexer nos quadros: uma chamada durante o preparo
+  // apagava o que já estava rodando e deixava o card sem imagem
+  if (gifPreparando) return;
   pararGifPreview();
   gifFrames = null; gifIdx = 0;
-  if (!midia || midia.tipo !== 'gif' || gifPreparando) return;
+  if (!midia || midia.tipo !== 'gif') return;
   gifPreparando = true;
   try {
     const buf = await midiaBuffer(midia);
@@ -1473,7 +1503,8 @@ $('midiaInput').onchange = () => {
   const instalar = async (p) => {
     if (!p) { alert('Não consegui salvar a mídia.'); return; }
     S.config.shareMidia = { tipo: ehGif ? 'gif' : 'foto', path: p };
-    MEDIA_IMG.src = midiaSrc(S.config.shareMidia);
+    midiaAplicada = midiaSrc(S.config.shareMidia);
+    MEDIA_IMG.src = midiaAplicada;
     await salvar();
     prepararGifPreview();
     drawShareCard();
@@ -1491,6 +1522,7 @@ $('midiaInput').onchange = () => {
 };
 $('btnMidiaRemover').onclick = async () => {
   delete S.config.shareMidia;
+  midiaAplicada = '';
   window.api.clearMidia();
   pararGifPreview();
   gifFrames = null;

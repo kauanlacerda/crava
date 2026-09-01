@@ -239,6 +239,18 @@ ipcMain.on('app:focar', () => {
 });
 ipcMain.handle('state:get', () => store.get());
 ipcMain.handle('state:set', (_e, s) => { store.set(s); broadcast(); atualizarIcones(); return true; });
+// Registro das decisões de sincronização. Quando algo some, é isto que diz o
+// que aconteceu, em vez de deixar a gente adivinhar.
+ipcMain.on('sync:log', (_e, linha) => {
+  try {
+    const fs2 = require('fs');
+    const arq = path.join(app.getPath('userData'), 'sync.log');
+    let antigo = '';
+    try { antigo = fs2.readFileSync(arq, 'utf8'); } catch { }
+    const linhas = (antigo + new Date().toISOString() + ' ' + linha + '\n').split('\n');
+    fs2.writeFileSync(arq, linhas.slice(-400).join('\n'), 'utf8');
+  } catch { }
+});
 ipcMain.handle('state:enviado', (_e, carimbo) => {
   const s = store.get();
   s.stats.enviadoEm = carimbo;
