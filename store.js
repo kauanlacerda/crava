@@ -7,6 +7,7 @@ const path = require('path');
 const DEFAULTS = {
   config: {
     metaDiaria: 5,
+    metaMensal: 15000,
     slots: 3,
     cofrePct: 30,
     atalho: 'CommandOrControl+Shift+N',

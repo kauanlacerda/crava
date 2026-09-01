@@ -47,6 +47,10 @@ function ganhoMes(moeda) {
     .filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 7) === mes && j.valor.m === moeda)
     .reduce((a, j) => a + Number(j.valor.q), 0);
 }
+function ganhoMesEquiv() {
+  const c = S.config;
+  return ganhoMes('BRL') + ganhoMes('USD') * c.cotacaoUSD + (ganhoMes('RBX') / 1000) * c.cotacaoRBX1k;
+}
 function totalPagoBRLequiv() {
   const c = S.config;
   return S.jobs.filter(j => j.pagamento === 'pago').reduce((a, j) => {
@@ -167,6 +171,16 @@ function render() {
   // chips
   const st = streakVigente();
   $('chipStreak').textContent = `${st} ${st === 1 ? 'dia' : 'dias'}`;
+
+  // meta do mês (barra do header)
+  const equiv = ganhoMesEquiv(), metaM = S.config.metaMensal || 15000;
+  const pct = Math.min(100, Math.round(equiv / metaM * 100));
+  $('mmValor').textContent = `${MOEDA.BRL.fmt(Math.round(equiv))} / ${MOEDA.BRL.fmt(metaM)}`;
+  $('mmFill').style.width = pct + '%';
+  $('mmFill').classList.toggle('cheia', pct >= 100);
+  $('mmSub').textContent = pct >= 100
+    ? `meta do mês batida! 🏆 (${pct}%)`
+    : `${pct}% — faltam ${MOEDA.BRL.fmt(Math.round(metaM - equiv))}`;
 
   // slots
   const occ = ocupados(), tot = S.config.slots;
@@ -417,6 +431,7 @@ function renderInsignias() {
 function renderConfig() {
   const setIf = (id, v) => { if (document.activeElement !== $(id)) $(id).value = v; };
   setIf('cfgMeta', S.config.metaDiaria);
+  setIf('cfgMetaMensal', S.config.metaMensal || 15000);
   setIf('cfgSlots', S.config.slots);
   setIf('cfgCofre', S.config.cofrePct);
   setIf('cfgUSD', S.config.cotacaoUSD);
@@ -430,6 +445,7 @@ $('temaPicker').onclick = async (e) => {
 };
 $('btnSalvarConfig').onclick = async () => {
   S.config.metaDiaria = Math.max(1, +$('cfgMeta').value || 5);
+  S.config.metaMensal = Math.max(0, +$('cfgMetaMensal').value || 15000);
   S.config.slots = Math.max(1, +$('cfgSlots').value || 3);
   S.config.cofrePct = Math.min(90, Math.max(0, +$('cfgCofre').value || 30));
   S.config.cotacaoUSD = +$('cfgUSD').value || 5.4;
