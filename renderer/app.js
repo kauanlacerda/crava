@@ -316,6 +316,33 @@ function renderUser() {
   $('perfilSubShow').textContent = `${user} · GFX designer`;
   if (document.activeElement !== $('pfNome')) $('pfNome').value = nome === 'você' ? '' : nome;
   if (document.activeElement !== $('pfUser')) $('pfUser').value = S.config.usuario || '';
+
+  // insígnia de destaque ao lado do nome
+  const fav = S.config.insigniaFavorita;
+  const ganhas = S.stats.insigniasGanhas || {};
+  if (fav && ganhas[fav]) {
+    $('userBadge').src = `../assets/insignias/${fav}.png`;
+    $('userBadge').style.display = '';
+    const b = INSIGNIAS.find(x => x.id === fav);
+    $('userBadge').title = b ? b.nome : '';
+  } else {
+    $('userBadge').style.display = 'none';
+  }
+  renderFavPicker(ganhas, fav);
+}
+
+function renderFavPicker(ganhas, fav) {
+  const desbloq = INSIGNIAS.filter(b => ganhas[b.id]);
+  $('favPicker').innerHTML = desbloq.length
+    ? desbloq.map(b => `
+        <div class="fav-opt ${b.id === fav ? 'sel' : ''}" title="${b.nome}" onclick="escolherFavorita('${b.id}')">
+          <img src="../assets/insignias/${b.id}.png" alt="">
+        </div>`).join('')
+    : `<div class="config-sub">Nenhuma insígnia desbloqueada ainda — crava uns trabalhos primeiro!</div>`;
+}
+async function escolherFavorita(id) {
+  S.config.insigniaFavorita = S.config.insigniaFavorita === id ? '' : id;
+  await salvar();
 }
 
 const PIPE = ['aceito', 'fazendo', 'entregue', 'aprovado'];
@@ -933,6 +960,15 @@ function drawConteudo(ctx) {
   ctx.fillStyle = '#fff'; ctx.font = F(800, 26); ctx.textAlign = 'center';
   ctx.fillText(nome[0].toUpperCase(), 88, ay + 42); ctx.textAlign = 'left';
   ctx.fillStyle = '#eef2f9'; ctx.font = F(800, 26); ctx.fillText(nome, 136, ay + 26);
+  // insígnia de destaque ao lado do nome
+  if (S.config.insigniaFavorita && (S.stats.insigniasGanhas || {})[S.config.insigniaFavorita]
+      && FAV_IMG.complete && FAV_IMG.naturalWidth) {
+    const nw = ctx.measureText(nome).width;
+    ctx.imageSmoothingEnabled = false;
+    const fh = 40, fw = fh * FAV_IMG.naturalWidth / FAV_IMG.naturalHeight;
+    ctx.drawImage(FAV_IMG, 136 + nw + 14, ay - 6, fw, fh);
+    ctx.imageSmoothingEnabled = true;
+  }
   ctx.fillStyle = '#9fb0d0'; ctx.font = F(600, 21); ctx.fillText(`${user} · GFX pra Roblox`, 136, ay + 56);
 
   ctx.fillStyle = '#9fb0d0'; ctx.font = F(700, 18); ctx.textAlign = 'right';
@@ -988,6 +1024,8 @@ $('mascoteToggle').onclick = () => {
   drawShareCard();
 };
 // ---------- Mídia personalizada no card (foto/gif, estilo GMGN) ----------
+const FAV_IMG = new Image();
+FAV_IMG.onload = () => { if ($('view-share').classList.contains('open')) drawShareCard(); };
 const MEDIA_IMG = new Image();
 MEDIA_IMG.onload = () => { if ($('view-share').classList.contains('open')) drawShareCard(); };
 let SKIP_MEDIA = false;
@@ -1165,7 +1203,7 @@ document.addEventListener('keydown', (e) => {
 function esc(s) { return String(s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
 
 // expõe ações pros onclick inline
-Object.assign(window, { tornarAtivo, pausarRetomar, voltarFila, avancar, ciclarPagamento, excluir, cobrei, separeiCofre });
+Object.assign(window, { tornarAtivo, pausarRetomar, voltarFila, avancar, ciclarPagamento, excluir, cobrei, separeiCofre, escolherFavorita });
 
 // ---------- Boot ----------
 (async () => {
