@@ -243,6 +243,7 @@ function render() {
   renderTodos();
   renderInsignias();
   renderConfig();
+  renderCalendario();
 }
 
 // ---------- Stat cards (fileira do topo, como no design) ----------
@@ -1142,6 +1143,114 @@ $('midiaOpacidade').oninput = () => {
   drawShareCard();
 };
 $('midiaOpacidade').onchange = async () => { await salvar(); drawShareCard(); };
+
+// ---------- Calendário de lucro (estilo PnL da GMGN) ----------
+let calMes = hoje().slice(0, 7);
+let calModo = 'calor'; // 'calor' (mapa de calor) | 'valores'
+
+function ganhoEquivDoDia(dia) {
+  const c = S.config;
+  return S.jobs
+    .filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 10) === dia)
+    .reduce((a, j) => {
+      if (j.valor.m === 'BRL') return a + Number(j.valor.q);
+      if (j.valor.m === 'USD') return a + Number(j.valor.q) * c.cotacaoUSD;
+      return a + (Number(j.valor.q) / 1000) * c.cotacaoRBX1k;
+    }, 0);
+}
+function fmtCompacto(v) {
+  if (v >= 1000000) return (v / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'M';
+  if (v >= 1000) return (v / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'k';
+  return Math.round(v).toString();
+}
+
+function renderCalendario() {
+  const [ano, mes] = calMes.split('-').map(Number);
+  const diasNoMes = new Date(ano, mes, 0).getDate();
+  const offset = new Date(ano, mes - 1, 1).getDay(); // 0 = domingo
+  const nomeMes = new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+  // ganho por dia + máximo (pra escala do calor)
+  const ganhos = [];
+  let totalMes = 0, maxDia = 0;
+  for (let d = 1; d <= diasNoMes; d++) {
+    const g = ganhoEquivDoDia(`${calMes}-${String(d).padStart(2, '0')}`);
+    ganhos.push(g);
+    totalMes += g;
+    if (g > maxDia) maxDia = g;
+  }
+  const totalAno = S.jobs
+    .filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 4) === String(ano))
+    .reduce((a, j) => {
+      if (j.valor.m === 'BRL') return a + Number(j.valor.q);
+      if (j.valor.m === 'USD') return a + Number(j.valor.q) * S.config.cotacaoUSD;
+      return a + (Number(j.valor.q) / 1000) * S.config.cotacaoRBX1k;
+    }, 0);
+
+  const hj = hoje();
+  const dows = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+  let grid = dows.map(d => `<div class="cal-dow">${d}</div>`).join('') + `<div class="cal-dow">SEM.</div>`;
+
+  let celulas = [];
+  for (let i = 0; i < offset; i++) celulas.push(null);
+  for (let d = 1; d <= diasNoMes; d++) celulas.push(d);
+  while (celulas.length % 7 !== 0) celulas.push(null);
+
+  for (let linha = 0; linha < celulas.length / 7; linha++) {
+    let somaSemana = 0;
+    for (let col = 0; col < 7; col++) {
+      const d = celulas[linha * 7 + col];
+      if (d === null) { grid += `<div class="cal-cell vazia"></div>`; continue; }
+      const g = ganhos[d - 1];
+      somaSemana += g;
+      const ehHoje = `${calMes}-${String(d).padStart(2, '0')}` === hj;
+      const titulo = `title="${d}/${mes}: R$ ${fmtNum(Math.round(g))}"`;
+      if (calModo === 'calor') {
+        const int = maxDia > 0 ? g / maxDia : 0;
+        const bg = g > 0 ? `background:rgba(47,211,156,${(0.10 + 0.75 * int).toFixed(2)})` : '';
+        const txt = int > 0.55 ? 'color:#04150e;font-weight:800' : '';
+        grid += `<div class="cal-cell ${ehHoje ? 'hoje' : ''}" style="${bg};${txt}" ${titulo}><div class="cal-dia">${d}</div></div>`;
+      } else {
+        grid += `<div class="cal-cell ${ehHoje ? 'hoje' : ''}" ${titulo}>
+          <div class="cal-dia">${d}</div>
+          <div class="cal-val ${g > 0 ? 'c-green' : ''}">${g > 0 ? fmtCompacto(g) : '·'}</div>
+        </div>`;
+      }
+    }
+    grid += `<div class="cal-week">${somaSemana > 0 ? '+' + fmtCompacto(somaSemana) : '—'}</div>`;
+  }
+
+  $('calPanel').innerHTML = `
+    <div class="cal-head">
+      <div class="mini-btn" data-cal="prev">‹</div>
+      <div class="cal-titulo">${nomeMes}</div>
+      <div class="mini-btn" data-cal="next">›</div>
+      <div style="flex-grow:1"></div>
+      <div class="tema-picker">
+        <div class="tema-opt ${calModo === 'calor' ? 'sel' : ''}" data-cal="calor">Calor</div>
+        <div class="tema-opt ${calModo === 'valores' ? 'sel' : ''}" data-cal="valores">Valores</div>
+      </div>
+    </div>
+    <div class="cal-totais">
+      <span>no mês: <b class="c-green">R$ ${fmtNum(Math.round(totalMes))}</b></span>
+      <span>no ano: <b class="c-green">R$ ${fmtNum(Math.round(totalAno))}</b></span>
+    </div>
+    <div class="cal-grid">${grid}</div>`;
+}
+$('calPanel').onclick = (e) => {
+  const acao = e.target.dataset.cal;
+  if (!acao) return;
+  if (acao === 'prev' || acao === 'next') {
+    let [a, m] = calMes.split('-').map(Number);
+    m += acao === 'next' ? 1 : -1;
+    if (m === 0) { m = 12; a--; }
+    if (m === 13) { m = 1; a++; }
+    calMes = `${a}-${String(m).padStart(2, '0')}`;
+  } else {
+    calModo = acao;
+  }
+  renderCalendario();
+};
 
 // GIF animado: decodifica com ImageDecoder (nativo) e re-encoda com gifenc
 async function gerarGifAnimado() {
