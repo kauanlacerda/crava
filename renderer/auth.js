@@ -85,8 +85,11 @@ function maisRecente(local, nuvem) {
   const tNuvem = nuvem?.atualizado_em ? Date.parse(nuvem.atualizado_em) : 0;
   const vazioNuvem = !nuvem?.payload || !Object.keys(nuvem.payload).length || !(nuvem.payload.jobs || []).length;
   const vazioLocal = !(local?.jobs || []).length;
+  // vazio porque nunca foi usado (instalação nova) é diferente de vazio de
+  // propósito (o usuário zerou). O carimbo de hora separa os dois casos.
+  const instalacaoNova = !local?.stats?.atualizadoEm;
   if (vazioNuvem && !vazioLocal) return 'local';
-  if (!vazioNuvem && vazioLocal) return 'nuvem';
+  if (!vazioNuvem && vazioLocal && instalacaoNova) return 'nuvem';
   return tNuvem > tLocal ? 'nuvem' : 'local';
 }
 
@@ -98,6 +101,29 @@ async function aoEntrar() {
   atualizarCardConta();
 }
 
+// Traz o estado da nuvem pra cá.
+async function aplicarNuvem(naNuvem) {
+  const p = naNuvem.payload;
+  S = {
+    config: { ...S.config, ...(p.config || {}) },
+    jobs: p.jobs || [],
+    stats: { ...S.stats, ...(p.stats || {}) }
+  };
+  await window.api.saveState(S);
+  render();
+}
+
+// Quem escreveu na nuvem carimbou stats.atualizadoEm junto. Comparar com o
+// NOSSO carimbo diz se outro PC mexeu depois da última vez que gravamos aqui.
+// De propósito não uso a coluna atualizado_em do servidor: ela vem do relógio
+// do banco, e se o relógio deste PC estiver atrasado a nuvem pareceria sempre
+// mais nova — o app ficaria puxando por cima do que você acabou de fazer.
+function nuvemMaisNova(naNuvem) {
+  const tNuvem = Date.parse(naNuvem?.payload?.stats?.atualizadoEm || '') || 0;
+  const tLocal = Date.parse(S?.stats?.atualizadoEm || '') || 0;
+  return tNuvem > tLocal;
+}
+
 async function sincronizar(primeiraVez) {
   if (!usuario || sincronizando) { pendente = true; return; }
   if (!window.S) { setTimeout(() => sincronizar(primeiraVez), 500); return; } // estado ainda carregando
@@ -105,24 +131,25 @@ async function sincronizar(primeiraVez) {
   statusSync(t('syncEnviando'));
   try {
     const naNuvem = await baixarDados();
-    if (primeiraVez) {
-      const lado = maisRecente(S, naNuvem);
-      if (lado === 'nuvem') {
-        const p = naNuvem.payload;
-        S = {
-          config: { ...S.config, ...(p.config || {}) },
-          jobs: p.jobs || [],
-          stats: { ...S.stats, ...(p.stats || {}) }
-        };
-        await window.api.saveState(S);
-        render();
-      }
+    let puxou = false;
+
+    if (primeiraVez && !window.ZERANDO) {
+      if (maisRecente(S, naNuvem) === 'nuvem') { await aplicarNuvem(naNuvem); puxou = true; }
+    } else if (naNuvem && !window.ZERANDO && nuvemMaisNova(naNuvem)) {
+      // outro PC gravou depois de nós: puxa em vez de sobrescrever o trabalho dele
+      await aplicarNuvem(naNuvem);
+      puxou = true;
     }
-    if (!S.stats.atualizadoEm) S.stats.atualizadoEm = new Date().toISOString();
-    await enviarDados(S, navigator.platform || 'PC');
-    await salvarPerfilNuvem(S.config.nome, S.config.usuario, null);
+
+    if (puxou) {
+      statusSync(t('syncPuxou'));
+    } else {
+      if (!S.stats.atualizadoEm) S.stats.atualizadoEm = new Date().toISOString();
+      await enviarDados(S, navigator.platform || 'PC');
+      await salvarPerfilNuvem(S.config.nome, S.config.usuario, null);
+      statusSync(t('syncOk'));
+    }
     jaSincronizou = true;
-    statusSync(t('syncOk'));
   } catch (e) {
     console.warn('sync falhou:', e);
     statusSync(t('syncErro'));

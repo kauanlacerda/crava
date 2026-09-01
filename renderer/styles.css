@@ -1508,3 +1508,12 @@ input:focus, select:focus { border-color: var(--blue); }
 }
 .cofre-mov:hover .cofre-x { opacity: 1; }
 .cofre-x:hover { color: var(--red); background: rgba(240, 86, 78, 0.1); }
+
+/* A insígnia bloqueada vive em opacity .5, mas a animação de entrada leva
+   todas até 1 — no fim ela caía de volta e isso lia como um piscar.
+   Dando um keyframe próprio, ela sobe direto até .5 e fica lá. */
+@keyframes fadeUpTravada {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 0.5; transform: translateY(0); }
+}
+.insignia.locked { animation-name: fadeUpTravada; }

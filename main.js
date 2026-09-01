@@ -225,6 +225,10 @@ ipcMain.handle('update:checar', async () => {
 
 // ---------- IPC ----------
 
+// Manutenção: 'electron . --zerar-tudo' zera trabalhos e histórico e sobe o
+// estado vazio, limpando a nuvem junto. Sem isso a nuvem sempre vence, porque
+// cada abertura renova o carimbo de hora dela.
+ipcMain.handle('app:zerar-pedido', () => process.argv.includes('--zerar-tudo'));
 ipcMain.handle('state:get', () => store.get());
 ipcMain.handle('state:set', (_e, s) => { store.set(s); broadcast(); atualizarIcones(); return true; });
 ipcMain.on('main:show', () => { mainWin.show(); mainWin.focus(); });

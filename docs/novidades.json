@@ -1,4 +1,16 @@
 {
+  "1.0.6": {
+    "pt": [
+      "Sinal em Pix já conta como dinheiro na conta. Antes, receber metade adiantado contava como zero até o pagamento fechar — o trabalho continua em COBRAR pela parte que falta.",
+      "As insígnias bloqueadas não piscam mais ao entrar na aba.",
+      "Sincronização entre PCs mais segura: se outro computador mexeu depois de você, o app puxa em vez de sobrescrever o trabalho dele."
+    ],
+    "en": [
+      "A Pix deposit now counts as money in the account. Getting half upfront used to count as zero until the payment closed — the job stays in COBRAR for the remaining part.",
+      "Locked badges no longer flicker when you open the tab.",
+      "Safer sync between computers: if another machine saved after you, the app pulls instead of overwriting its work."
+    ]
+  },
   "1.0.5": {
     "pt": [
       "Aba do Cofre: um card grande com o total guardado, o histórico de tudo que entrou e saiu, e botões pra guardar à mão ou retirar. O total desce quando você tira.",

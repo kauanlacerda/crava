@@ -60,7 +60,7 @@ function ganhoMes(moeda) {
 }
 function totalPagoBRLequiv() {
   const c = S.config;
-  return S.jobs.filter(j => j.pagamento === 'pago').reduce((a, j) => {
+  return S.jobs.filter(j => j.pagamento === 'pago' || j.liquidado).reduce((a, j) => {
     if (j.liquidado) return a + realizadoBRL(j);
     if (j.valor.m === 'BRL') return a + Number(j.valor.q);
     if (j.valor.m === 'USD') return a + Number(j.valor.q) * taxaUSD();
@@ -230,6 +230,11 @@ function abrirCofre(j) {
   $('cofreValor').textContent = `${t('cofreSepara')} ${fmtValor({ q: guardar, m: j.valor.m })} (${pct}%)`;
   $('ovCofre').classList.add('open');
 }
+// Abre o cofre pelo valor que ACABOU de entrar (num sinal, só a parcela).
+function abrirCofreDe(j, quanto) {
+  abrirCofre({ titulo: j.titulo, valor: { q: quanto, m: j.valor.m } });
+}
+
 function novoCofre(confirmado) {
   return {
     data: hoje(),
@@ -1527,13 +1532,25 @@ $('recebConfirmar').onclick = async () => {
     delete j.pagoEm; delete j.liquidado; delete j.liquidadoEm; delete j.liquidadoBRL;
   } else if (v < total) {
     j.pagamento = 'aguardando';
-    delete j.liquidado; delete j.liquidadoEm; delete j.liquidadoBRL;
+    if (j.valor.m === 'BRL') {
+      // Pix cai na hora: o que já entrou conta como dinheiro na conta, mesmo
+      // faltando o resto. A data fica na do primeiro recebimento, pra não
+      // empurrar o mês do sinal pro mês em que a segunda metade chegar.
+      j.liquidado = true;
+      if (!j.liquidadoEm) j.liquidadoEm = new Date().toISOString();
+      j.liquidadoBRL = v;
+      if (v > antes) { await salvar(); abrirCofreDe(j, v - antes); return; }
+    } else {
+      delete j.liquidado; delete j.liquidadoEm; delete j.liquidadoBRL;
+    }
   } else {
     j.pagamento = 'pago';
     if (!j.pagoEm) j.pagoEm = new Date().toISOString();
     if (j.valor.m === 'BRL') {
-      j.liquidado = true; j.liquidadoEm = j.pagoEm; j.liquidadoBRL = total;
-      if (antes < total) { await salvar(); abrirCofre(j); return; }
+      j.liquidado = true;
+      if (!j.liquidadoEm) j.liquidadoEm = j.pagoEm;
+      j.liquidadoBRL = total;
+      if (antes < total) { await salvar(); abrirCofreDe(j, total - antes); return; }
     } else if (!j.liquidado) {
       j.liquidado = false;
       if (antes < total) { await salvar(); abrirLiquidacao(j.id); return; }
@@ -1581,7 +1598,8 @@ $('liqConfirmar').onclick = async () => {
 
 // totais da carteira
 function recebidoLiquido() {
-  return S.jobs.filter(j => j.pagamento === 'pago' && j.liquidado)
+  // inclui sinais em R$: o dinheiro já está na conta mesmo faltando o resto
+  return S.jobs.filter(j => j.liquidado)
     .reduce((a, j) => a + Number(j.liquidadoBRL || 0), 0);
 }
 function pendenteLiquidar() {
@@ -2660,6 +2678,19 @@ function migrarLiquidacao() {
 (async () => {
   S = await window.api.getState();
   window.S = S;
+
+  if (window.api.zerarPedido && await window.api.zerarPedido()) {
+    S.jobs = [];
+    S.stats = {
+      streak: 0, maxStreak: 0, ultimoDiaMeta: '', recompensaMostrada: '',
+      historico: {}, cofres: [], cofreRetiradas: [], notificados: {},
+      insigniasGanhas: {}, versaoVista: S.stats.versaoVista || ''
+    };
+    S.config.insigniaFavorita = '';
+    window.ZERANDO = true;          // a sincronização não pode trazer de volta
+    await window.api.saveState(S);
+    console.warn('[zerar] estado local limpo — subindo pra nuvem');
+  }
   if (migrarLiquidacao()) await window.api.saveState(S);
   if (verificarInsignias()) await window.api.saveState(S);
   render();
