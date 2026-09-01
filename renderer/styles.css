@@ -643,45 +643,84 @@ input:focus, select:focus { border-color: var(--blue); }
 .mes-vazio { color: var(--faint); font-weight: 700; }
 
 /* ================================================================
-   TEMA GATO LARANJA — base laranja, escuro e claro
-   (o tema azul/macaco continua sendo o conjunto padrao acima)
+   CORES DO MASCOTE — macaco em 6 cores; muda accent do app inteiro
+   (azul é o padrão definido lá em cima)
    ================================================================ */
-:root[data-mascote="gato"] {
-  /* escuro laranja (padrao do tema gato) */
-  --bg: #131008;
-  --panel: #1b160d;
-  --panel2: #241d10;
-  --panel-dim: #18130b;
-  --border: #2b2313;
-  --border2: #3a2f1a;
-  --border-dim: #251e11;
-  --blue: #ff9a3d;
-  --blue-bg: #2f2410;
-  --blue-border: #9a6426;
-  --blue-glow: rgba(255, 154, 61, 0.14);
-  --vivid-blue-a: #ffab4d;
-  --vivid-blue-b: #e86f0e;
-  --vivid-green-a: #2fd97a;
-  --vivid-green-b: #16a34a;
-  --vivid-orange-a: #ffd34d;
-  --vivid-orange-b: #eaa210;
+:root[data-cor="vermelho"] { --blue: #ff6b5e; --blue-bg: #2e1615; --blue-border: #8a3a34; --blue-glow: rgba(240, 86, 78, 0.14); --vivid-blue-a: #ff7b6e; --vivid-blue-b: #d33b30; }
+:root[data-theme="claro"][data-cor="vermelho"] { --blue: #dc2626; --blue-bg: #feecec; --blue-border: #f5b0ab; --blue-glow: rgba(220, 38, 38, 0.10); }
+
+:root[data-cor="verde"] { --blue: #2fd39c; --blue-bg: #10281e; --blue-border: #1f7a5c; --blue-glow: rgba(47, 211, 156, 0.14); --vivid-blue-a: #34e0a1; --vivid-blue-b: #0f9d68; }
+:root[data-theme="claro"][data-cor="verde"] { --blue: #059669; --blue-bg: #e7f8f1; --blue-border: #a7dcc7; --blue-glow: rgba(5, 150, 105, 0.10); }
+
+:root[data-cor="roxo"] { --blue: #a06bff; --blue-bg: #241a38; --blue-border: #5b3d99; --blue-glow: rgba(160, 107, 255, 0.14); --vivid-blue-a: #b28aff; --vivid-blue-b: #7c3aed; }
+:root[data-theme="claro"][data-cor="roxo"] { --blue: #7c3aed; --blue-bg: #f3edff; --blue-border: #d0bcf5; --blue-glow: rgba(124, 58, 237, 0.10); }
+
+:root[data-cor="laranja"] { --blue: #ff9a3d; --blue-bg: #2f2410; --blue-border: #9a6426; --blue-glow: rgba(255, 154, 61, 0.14); --vivid-blue-a: #ffab4d; --vivid-blue-b: #e86f0e; }
+:root[data-theme="claro"][data-cor="laranja"] { --blue: #e2700c; --blue-bg: #fdf0df; --blue-border: #f5c894; --blue-glow: rgba(226, 112, 12, 0.10); }
+
+:root[data-cor="branco"] { --blue: #eef2f7; --blue-bg: #2a303a; --blue-border: #6b7686; --blue-glow: rgba(255, 255, 255, 0.12); --vivid-blue-a: #ffffff; --vivid-blue-b: #c6cede; --btn-on-accent: #0b0e13; }
+:root[data-theme="claro"][data-cor="branco"] { --blue: #475569; --blue-bg: #eef1f5; --blue-border: #c3ccd8; --blue-glow: rgba(71, 85, 105, 0.10); --btn-on-accent: #ffffff; }
+:root[data-cor="branco"]:not([data-theme="claro"]) .stat-card.solid-blue .stat-value { color: #0b0e13 !important; }
+:root[data-cor="branco"]:not([data-theme="claro"]) .stat-card.solid-blue .stat-label { color: rgba(11, 14, 19, 0.65); }
+:root[data-cor="branco"]:not([data-theme="claro"]) .stat-card.solid-blue .stat-sub { color: rgba(11, 14, 19, 0.75) !important; }
+:root[data-cor="branco"]:not([data-theme="claro"]) .stat-card.solid-blue .seg { background: rgba(11, 14, 19, 0.18); }
+:root[data-cor="branco"]:not([data-theme="claro"]) .stat-card.solid-blue .seg.done { background: #0b0e13; }
+:root[data-cor="branco"]:not([data-theme="claro"]) .stat-card.solid-blue .arrow-badge { background: rgba(11, 14, 19, 0.15); color: #0b0e13; }
+
+/* avatar e sombras acompanham a cor */
+.user-avatar, .perfil-avatar { background: linear-gradient(135deg, var(--vivid-blue-a), var(--vivid-blue-b)); }
+.btn-primary { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.30); }
+.stat-card.solid-blue { box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35); }
+
+/* seletor de cor nas configs */
+.cor-picker { display: flex; gap: 9px; }
+.cor-opt {
+  width: 27px; height: 27px; border-radius: 50%; cursor: pointer;
+  border: 2px solid transparent; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s;
 }
-:root[data-theme="claro"][data-mascote="gato"] {
-  --bg: #faf4ea;
-  --panel: #ffffff;
-  --panel2: #faf5ec;
-  --panel-dim: #fdfaf4;
-  --border: #efe3d0;
-  --border2: #e6d7bf;
-  --border-dim: #f3ead9;
-  --blue: #e2700c;
-  --blue-bg: #fdf0df;
-  --blue-border: #f5c894;
-  --blue-glow: rgba(226, 112, 12, 0.10);
+.cor-opt:hover { transform: scale(1.15); }
+.cor-opt.sel { border-color: var(--text); }
+
+/* ================================================================
+   CELEBRACAO (estilo Duolingo) ao concluir uma tarefa
+   ================================================================ */
+.celebra {
+  position: fixed; inset: 0; z-index: 70; pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
 }
-:root[data-mascote="gato"] .btn-primary { box-shadow: 0 6px 16px rgba(234, 122, 16, 0.35); }
-:root[data-mascote="gato"] .stat-card.solid-blue { box-shadow: 0 10px 26px rgba(232, 111, 14, 0.42); }
-:root[data-mascote="gato"] .user-avatar,
-:root[data-mascote="gato"] .perfil-avatar {
-  background: linear-gradient(135deg, #ffab4d, #e86f0e);
+.celebra-mascote {
+  width: 130px; height: auto; image-rendering: pixelated;
+  animation: celebra-pulo 1.4s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+@keyframes celebra-pulo {
+  0% { opacity: 0; transform: translateY(60px) scale(0.4); }
+  18% { opacity: 1; transform: translateY(-30px) scale(1.15); }
+  32% { transform: translateY(0) scale(0.96); }
+  45% { transform: translateY(-14px) scale(1.05); }
+  58% { transform: translateY(0) scale(1); }
+  82% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(8px) scale(0.9); }
+}
+.celebra-texto {
+  position: absolute; margin-top: -130px;
+  font-family: 'Baloo 2', sans-serif; font-size: 30px; font-weight: 800;
+  color: var(--green); text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  animation: celebra-txt 1.4s ease forwards;
+}
+@keyframes celebra-txt {
+  0% { opacity: 0; transform: translateY(20px) scale(0.6); }
+  25% { opacity: 1; transform: translateY(0) scale(1.1); }
+  40% { transform: scale(1); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-16px); }
+}
+.confete {
+  position: absolute; border-radius: 2px; opacity: 0;
+  animation: confete-voa cubic-bezier(0.15, 0.6, 0.4, 1) forwards;
+}
+@keyframes confete-voa {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(var(--rot)); }
 }

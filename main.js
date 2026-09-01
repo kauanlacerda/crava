@@ -87,8 +87,9 @@ function toggleWidget() {
 // icone da janela/bandeja acompanha o mascote escolhido
 function atualizarIcones() {
   try {
-    const m = store.get().config.mascote === 'gato' ? 'icon-gato.png' : 'icon-azul.png';
-    const img = nativeImage.createFromPath(path.join(__dirname, 'assets', m));
+    const cores = ['azul', 'vermelho', 'verde', 'roxo', 'laranja', 'branco'];
+    const c = cores.includes(store.get().config.cor) ? store.get().config.cor : 'azul';
+    const img = nativeImage.createFromPath(path.join(__dirname, 'assets', `icon-${c}.png`));
     if (tray) tray.setImage(img.resize({ width: 16, height: 16 }));
     if (mainWin && !mainWin.isDestroyed()) mainWin.setIcon(img);
   } catch { /* segue com o icone padrao */ }

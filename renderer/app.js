@@ -86,6 +86,7 @@ async function avancar(id) {
     delete j.fazendoDesde;
     const dia = hoje();
     S.stats.historico[dia] = (S.stats.historico[dia] || 0) + 1;
+    celebrar();
     checarMeta();
   } else if (j.status === 'entregue') {
     j.status = 'aprovado';
@@ -131,6 +132,28 @@ function checarMeta() {
   }
 }
 
+// ---------- Celebração (estilo Duolingo) ----------
+function celebrar() {
+  const cores = ['#339dff', '#2fd39c', '#f5b74e', '#ff8fa3', '#a06bff', '#ff6b5e'];
+  const frases = ['Mandou bem!', 'Cravou!', 'Mais uma!', 'Boa!', 'É isso!'];
+  const el = document.createElement('div');
+  el.className = 'celebra';
+  let html = `<img class="celebra-mascote" src="${spr('metaModal')}" alt="">`;
+  html += `<div class="celebra-texto">${frases[Math.floor(Math.random() * frases.length)]}</div>`;
+  for (let i = 0; i < 30; i++) {
+    const c = cores[i % cores.length];
+    const tx = (Math.random() * 2 - 1) * 320;
+    const ty = -(100 + Math.random() * 300);
+    const rot = Math.random() * 720 - 360;
+    const dur = (0.8 + Math.random() * 0.6).toFixed(2);
+    const s = 7 + Math.random() * 9;
+    html += `<div class="confete" style="background:${c};width:${s}px;height:${s * 0.62}px;--tx:${tx}px;--ty:${ty}px;--rot:${rot}deg;animation-duration:${dur}s"></div>`;
+  }
+  el.innerHTML = html;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1500);
+}
+
 function streakVigente() {
   if (S.stats.ultimoDiaMeta === hoje() || S.stats.ultimoDiaMeta === ontem()) return S.stats.streak;
   return 0;
@@ -161,7 +184,7 @@ $('metaFechar').onclick = () => $('ovMeta').classList.remove('open');
 // ---------- Render ----------
 function render() {
   document.documentElement.dataset.theme = S.config.tema || 'escuro';
-  document.documentElement.dataset.mascote = S.config.mascote || 'azul';
+  document.documentElement.dataset.cor = S.config.cor || 'azul';
   atualizarSprites();
 
   // saudação e data
@@ -540,16 +563,16 @@ function renderConfig() {
     el.classList.toggle('sel', el.dataset.tema === (S.config.tema || 'escuro')));
   document.querySelectorAll('#glowPicker .tema-opt').forEach(el =>
     el.classList.toggle('sel', el.dataset.glow === (S.config.glowCards !== false ? 'on' : 'off')));
-  document.querySelectorAll('#mascotePicker .tema-opt').forEach(el =>
-    el.classList.toggle('sel', el.dataset.mascote === (S.config.mascote || 'azul')));
+  document.querySelectorAll('#corPicker .cor-opt').forEach(el =>
+    el.classList.toggle('sel', el.dataset.cor === (S.config.cor || 'azul')));
 }
 $('glowPicker').onclick = async (e) => {
   const g = e.target.dataset.glow;
   if (g) { S.config.glowCards = g === 'on'; await salvar(); }
 };
-$('mascotePicker').onclick = async (e) => {
-  const m = e.target.dataset.mascote;
-  if (m) { S.config.mascote = m; await salvar(); }
+$('corPicker').onclick = async (e) => {
+  const c = e.target.dataset.cor;
+  if (c) { S.config.cor = c; await salvar(); }
 };
 $('temaPicker').onclick = async (e) => {
   const t = e.target.dataset.tema;
@@ -618,28 +641,19 @@ function rrect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// ---------- Mascotes por tema ----------
-const SPRITES = {
-  azul: {
-    logo: '../assets/macaco/macaco-02.png',
-    shareHead: '../assets/macaco/macaco-02.png',
-    shareBig: '../assets/macaco/macaco-03.png',
-    metaModal: '../assets/macaco/macaco-03.png',
-    cofre: '../assets/macaco/macaco-06.png',
-    espiar: '../assets/macaco/macaco-01.png'
-  },
-  gato: {
-    logo: '../assets/gato/gato-01.png',
-    shareHead: '../assets/gato/gato-01.png',
-    shareBig: '../assets/gato/gato-14.png',
-    metaModal: '../assets/gato/gato-14.png',
-    cofre: '../assets/gato/gato-19.png',
-    espiar: '../assets/gato/gato-20.png'
-  }
+// ---------- Mascote (macaco) na cor escolhida ----------
+const CORES_MASCOTE = ['azul', 'vermelho', 'verde', 'roxo', 'laranja', 'branco'];
+const SLOTS = {
+  logo: 'macaco-02.png',
+  shareHead: 'macaco-02.png',
+  shareBig: 'macaco-03.png',
+  metaModal: 'macaco-03.png',
+  cofre: 'macaco-06.png',
+  espiar: 'macaco-01.png'
 };
 function spr(slot) {
-  const m = S && S.config.mascote === 'gato' ? 'gato' : 'azul';
-  return SPRITES[m][slot];
+  const c = S && CORES_MASCOTE.includes(S.config.cor) ? S.config.cor : 'azul';
+  return `../assets/macaco/${c}/${SLOTS[slot]}`;
 }
 
 const MASCOTE_IMG = new Image();

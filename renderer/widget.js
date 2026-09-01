@@ -1,13 +1,11 @@
 let S = null;
 const hoje = () => new Date().toISOString().slice(0, 10);
 
-const SPR_W = {
-  azul: { vazio: '../assets/macaco/macaco-05.png', meta: '../assets/macaco/macaco-06.png', ativo: '../assets/macaco/macaco-02.png' },
-  gato: { vazio: '../assets/gato/gato-16.png', meta: '../assets/gato/gato-14.png', ativo: '../assets/gato/gato-18.png' }
-};
+const SLOTS_W = { vazio: 'macaco-05.png', meta: 'macaco-06.png', ativo: 'macaco-02.png' };
+const CORES_W = ['azul', 'vermelho', 'verde', 'roxo', 'laranja', 'branco'];
 function sprW(slot) {
-  const m = S && S.config.mascote === 'gato' ? 'gato' : 'azul';
-  return SPR_W[m][slot];
+  const c = S && CORES_W.includes(S.config.cor) ? S.config.cor : 'azul';
+  return `../assets/macaco/${c}/${SLOTS_W[slot]}`;
 }
 
 function fmtTimer(ms) {
