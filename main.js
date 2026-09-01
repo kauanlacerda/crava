@@ -332,6 +332,9 @@ ipcMain.on('sync:log', (_e, linha) => {
     fs2.writeFileSync(arq, linhas.slice(-400).join('\n'), 'utf8');
   } catch { }
 });
+// Grava sem acordar as janelas. Serve pra coisa que não muda o que se vê —
+// a cotação do dólar, por exemplo, que se atualiza sozinha a cada 5 minutos.
+ipcMain.handle('state:set-quieto', (_e, s) => { store.set(s); atualizarIcones(); return true; });
 ipcMain.handle('state:enviado', (_e, carimbo) => {
   const s = store.get();
   s.stats.enviadoEm = carimbo;

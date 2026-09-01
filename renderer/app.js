@@ -103,6 +103,7 @@ async function salvar() {
   await window.api.saveState(S);
   render();
 }
+// a gravação silenciosa não passa pelo broadcast, então não gera render nenhum
 
 // As listas com rolagem são refeitas por innerHTML a cada render, o que jogava
 // a rolagem de volta pro topo a cada clique. Guardamos e devolvemos o scroll.
@@ -2226,6 +2227,7 @@ function pintarCotacao() {
 
 async function buscarCotacao() {
   ultimaBusca = Date.now();
+  let mudouTaxa = false;
   // enquanto a nova não chega, usa a última que ficou guardada
   if (!cotacaoUSDonline && S && S.config && S.config.cotacaoUSDauto) {
     cotacaoUSDonline = Number(S.config.cotacaoUSDauto);
@@ -2239,21 +2241,26 @@ async function buscarCotacao() {
     const taxa = j && j.rates && Number(j.rates.BRL);
     if (!taxa) throw new Error('resposta inválida');
 
-    const mudou = Math.abs(taxa - (Number(S.config.cotacaoUSDauto) || 0)) >= 0.01;
+    mudouTaxa = Math.abs(taxa - (Number(S.config.cotacaoUSDauto) || 0)) >= 0.01;
     cotacaoUSDonline = taxa;
     cotacaoAoVivo = true;
     cotacaoQuando = new Date().toISOString();
 
-    if (mudou) {
+    if (mudouTaxa) {
       S.config.cotacaoUSDauto = taxa;
       S.config.cotacaoUSDautoEm = cotacaoQuando;
-      try { await window.api.saveState(S); } catch { }
+      // gravação silenciosa: guardar a cotação não é motivo pra acordar as
+      // outras janelas e refazer a tela
+      try { await window.api.saveStateQuieto(S); } catch { }
     }
   } catch {
     cotacaoAoVivo = false; // offline: segue com a última guardada
   }
   pintarCotacao();
-  try { render(); } catch { }
+  // só redesenha o que depende da taxa, e só se a aba estiver aberta
+  if (mudouTaxa) {
+    try { if (viewAberta('share')) { renderCarteira(); renderMoedas(); renderDinheiro(); desenharViz(); } } catch { }
+  }
 }
 function paraBRL(q, m) {
   if (m === 'BRL') return q;
@@ -3153,7 +3160,20 @@ function migrarLiquidacao() {
   if (migrarLiquidacao()) await window.api.saveState(S);
   if (verificarInsignias()) await window.api.saveState(S);
   render();
+  // Assinatura do que a tela mostra. Carimbos de sincronização mudam a cada
+  // gravação sem mudar nada visível — se entrassem na conta, todo salvamento
+  // de rotina viraria um redesenho.
+  const assinatura = (e) => {
+    if (!e) return '';
+    const { atualizadoEm, enviadoEm, ...resto } = e.stats || {};
+    try { return JSON.stringify([e.jobs, e.config, resto]); } catch { return String(Math.random()); }
+  };
+  let ultimaAssinatura = assinatura(S);
+
   window.api.onState(async (s) => {
+    const nova = assinatura(s);
+    if (nova === ultimaAssinatura) { S = s; window.S = s; return; } // nada visível mudou
+    ultimaAssinatura = nova;
     S = s; window.S = s; render();
     // pedido capturado com "Salvar e cravar": a regra de 1 ativo é aplicada aqui
     if (S.stats.cravarPendente) {
@@ -3175,5 +3195,17 @@ function migrarLiquidacao() {
   window.addEventListener('focus', () => {
     if (Date.now() - ultimaBusca > 5 * 60 * 1000) buscarCotacao();
   });
-  setInterval(render, 60 * 1000); // atualiza prazos e saudação
+  // marca o que na tela depende do relógio: o dia (prazos, "hoje") e a faixa
+  // da saudação. Enquanto isso não muda, a tela fica parada.
+  const carimboRelogio = () => {
+    const h = new Date().getHours();
+    return hoje() + (h < 12 ? '|m' : h < 18 ? '|t' : '|n');
+  };
+  let ultimoCarimbo = carimboRelogio();
+  setInterval(() => {
+    const c = carimboRelogio();
+    if (c === ultimoCarimbo) return;   // nada mudou: não encosta na tela
+    ultimoCarimbo = c;
+    render();
+  }, 60 * 1000);
 })();

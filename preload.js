@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer, webUtils } = require('electron');
 contextBridge.exposeInMainWorld('api', {
   getState: () => ipcRenderer.invoke('state:get'),
   saveState: (s) => ipcRenderer.invoke('state:set', s),
+  saveStateQuieto: (s) => ipcRenderer.invoke('state:set-quieto', s),
   zerarPedido: () => ipcRenderer.invoke('app:zerar-pedido'),
   focarJanela: () => ipcRenderer.send('app:focar'),
   marcarEnviado: (c) => ipcRenderer.invoke('state:enviado', c),
