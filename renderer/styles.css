@@ -952,3 +952,25 @@ input:focus, select:focus { border-color: var(--blue); }
 .share-wrap > .share-col:last-child { flex: 0 0 auto; min-width: 0; }
 .share-wrap > .share-col { width: max-content; }
 .share-wrap > .share-col .share-bar { width: 100%; }
+
+/* ---- respiro no modal do calendario ---- */
+.modal-cal { padding: 26px; gap: 16px; }
+.modal-cal .cal-panel { padding: 20px 22px 18px; }
+.modal-cal .cal-grid { padding: 0 6px 6px; gap: 10px; }
+.modal-cal .cal-head { margin-bottom: 4px; }
+.modal-cal .cal-total-grande { margin: 14px 4px 8px; }
+.modal-cal .cal-linha { margin: 0 4px 10px; }
+.modal-cal .cal-sub { margin: 0 4px 16px; }
+.modal-cal .cal-rodape { margin: 16px 4px 2px; }
+.modal-cal .share-bar { padding: 12px 18px; }
+
+/* ---- opacidade REAL das celulas: o desfoque some junto ---- */
+.cal-panel.com-fundo .cal-cell:not(.vazia) {
+  backdrop-filter: blur(calc(14px * var(--celop, 1))) saturate(calc(1 + 0.4 * var(--celop, 1)));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, calc(0.08 * var(--celop, 1)));
+}
+.cal-panel.com-fundo .cal-week {
+  backdrop-filter: blur(calc(14px * var(--celop, 1))) saturate(calc(1 + 0.4 * var(--celop, 1)));
+  background: rgba(255, 255, 255, calc(0.07 * var(--celop, 1)));
+  border-color: rgba(255, 255, 255, calc(0.12 * var(--celop, 1)));
+}
