@@ -244,6 +244,7 @@ function render() {
   renderInsignias();
   renderConfig();
   renderCalendario();
+  try { desenharViz(); } catch { }
 }
 
 // ---------- Stat cards (fileira do topo, como no design) ----------
@@ -1147,6 +1148,177 @@ $('midiaOpacidade').oninput = () => {
   drawShareCard();
 };
 $('midiaOpacidade').onchange = async () => { await salvar(); drawShareCard(); };
+
+
+// ---------- Visualizer de lucro mensal (stream graph) ----------
+let vizMeses = 8;
+
+function ganhoEquivPeriodo(de, ate) {
+  const c = S.config;
+  return S.jobs.filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 10) >= de && j.pagoEm.slice(0, 10) <= ate)
+    .reduce((a, j) => {
+      if (j.valor.m === 'BRL') return a + Number(j.valor.q);
+      if (j.valor.m === 'USD') return a + Number(j.valor.q) * c.cotacaoUSD;
+      return a + (Number(j.valor.q) / 1000) * c.cotacaoRBX1k;
+    }, 0);
+}
+function diaMenos(n) {
+  return new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
+}
+function serieMensal(n) {
+  const hojeD = new Date();
+  const out = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const dt = new Date(hojeD.getFullYear(), hojeD.getMonth() - i, 1);
+    const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+    out.push({
+      key,
+      nome: dt.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''),
+      valor: ganhoEquivDoMes(key)
+    });
+  }
+  return out;
+}
+
+// curva suave por pontos médios
+function curva(ctx, pts) {
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length - 1; i++) {
+    const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2;
+    ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
+  }
+  ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
+}
+
+function desenharViz() {
+  const cv = $('vizCanvas'); if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const F = (w, sz, fam) => `${w} ${sz}px ${fam || 'Manrope'}, sans-serif`;
+
+  rrect(ctx, 0, 0, W, H, 36);
+  ctx.fillStyle = '#0b0e13'; ctx.fill();
+  ctx.save();
+  rrect(ctx, 0, 0, W, H, 36); ctx.clip();
+
+  const serie = serieMensal(vizMeses);
+  const max = Math.max(...serie.map(m => m.valor), 1);
+
+  // ---- topo: título + estatísticas ----
+  const pad = 44;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#e8edf4'; ctx.font = F(700, 26, "'Baloo 2'");
+  ctx.fillText('Lucro', pad, 58);
+
+  const semana = ganhoEquivPeriodo(diaMenos(6), hoje());
+  const semanaAnt = ganhoEquivPeriodo(diaMenos(13), diaMenos(7));
+  const mesAtual = ganhoEquivDoMes(hoje().slice(0, 7));
+  const mesAnt = serie.length > 1 ? serie[serie.length - 2].valor : 0;
+  const anoKey = hoje().slice(0, 4);
+  const ano = S.jobs.filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 4) === anoKey)
+    .reduce((a, j) => {
+      if (j.valor.m === 'BRL') return a + Number(j.valor.q);
+      if (j.valor.m === 'USD') return a + Number(j.valor.q) * S.config.cotacaoUSD;
+      return a + (Number(j.valor.q) / 1000) * S.config.cotacaoRBX1k;
+    }, 0);
+
+  const variacao = (atual, ant) => {
+    if (!ant) return atual > 0 ? '+100%' : '—';
+    const v = Math.round((atual - ant) / ant * 100);
+    return (v >= 0 ? '+' : '') + v + '%';
+  };
+  const cols = [
+    ['Semana', semana, variacao(semana, semanaAnt), 'vs. semana passada'],
+    ['Mês', mesAtual, variacao(mesAtual, mesAnt), 'vs. mês passado'],
+    ['Ano', ano, '', String(anoKey)]
+  ];
+  let cx = pad;
+  const larg = (W - pad * 2) / 3;
+  for (const [rot, val, dif, sub] of cols) {
+    ctx.fillStyle = '#8b98a9'; ctx.font = F(700, 19);
+    ctx.fillText(rot, cx, 108);
+    ctx.fillStyle = '#e8edf4'; ctx.font = F(800, 40, "'Baloo 2'");
+    const txt = 'R$ ' + fmtCompacto(val);
+    ctx.fillText(txt, cx, 154);
+    if (dif) {
+      const w = ctx.measureText(txt).width;
+      ctx.fillStyle = dif.startsWith('-') ? '#f0564e' : '#2fd39c';
+      ctx.font = F(800, 18);
+      ctx.fillText(dif, cx + w + 12, 150);
+    }
+    ctx.fillStyle = '#5a6676'; ctx.font = F(600, 16);
+    ctx.fillText(sub, cx, 180);
+    cx += larg;
+  }
+
+  // ---- stream graph ----
+  const topo = 232, base = H - 78;
+  const meio = (topo + base) / 2;
+  const maxMeia = (base - topo) / 2;
+  const passo = (W - pad * 2) / Math.max(1, serie.length - 1);
+  const xs = serie.map((_, i) => pad + i * passo);
+  const norm = serie.map(m => 0.10 + 0.90 * (m.valor / max));
+
+  const camadas = [
+    { esc: 1.00, cor: '#1b2a6b', alpha: 0.95 },
+    { esc: 0.78, cor: '#3b3bd8', alpha: 0.95 },
+    { esc: 0.56, cor: '#2f7ff0', alpha: 0.95 },
+    { esc: 0.34, cor: '#25c8e8', alpha: 0.95 },
+    { esc: 0.16, cor: '#2fd39c', alpha: 1 }
+  ];
+  for (const c of camadas) {
+    const cima = xs.map((x, i) => [x, meio - maxMeia * norm[i] * c.esc]);
+    const baixo = xs.map((x, i) => [x, meio + maxMeia * norm[i] * c.esc]).reverse();
+    ctx.beginPath();
+    curva(ctx, cima);
+    ctx.lineTo(baixo[0][0], baixo[0][1]);
+    curva(ctx, baixo);
+    ctx.closePath();
+    const g = ctx.createLinearGradient(pad, 0, W - pad, 0);
+    g.addColorStop(0, c.cor + '00');
+    g.addColorStop(0.12, c.cor);
+    g.addColorStop(1, c.cor);
+    ctx.globalAlpha = c.alpha;
+    ctx.fillStyle = g;
+    if (c.esc <= 0.16) { ctx.shadowColor = 'rgba(47,211,156,0.75)'; ctx.shadowBlur = 40; }
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  }
+
+  // ---- marcadores nos meses com lucro ----
+  const destaques = serie
+    .map((m, i) => ({ ...m, i }))
+    .filter(m => m.valor > 0)
+    .sort((a, b) => b.valor - a.valor)
+    .slice(0, 3)
+    .sort((a, b) => a.i - b.i);
+  ctx.textAlign = 'center';
+  for (const d of destaques) {
+    const x = xs[d.i];
+    const topoY = meio - maxMeia * norm[d.i];
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, topoY); ctx.lineTo(x, meio + maxMeia * norm[d.i]); ctx.stroke();
+    const rot = 'R$ ' + fmtCompacto(d.valor);
+    ctx.font = F(800, 19);
+    const w = ctx.measureText(rot).width + 28;
+    rrect(ctx, x - w / 2, topoY - 40, w, 32, 16);
+    ctx.fillStyle = '#0b0e13'; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#eef2f9';
+    ctx.fillText(rot, x, topoY - 18);
+  }
+
+  // ---- meses na base ----
+  ctx.fillStyle = '#5a6676'; ctx.font = F(700, 17);
+  for (let i = 0; i < serie.length; i++) ctx.fillText(serie[i].nome, xs[i], H - 34);
+  ctx.textAlign = 'left';
+  ctx.restore();
+}
+
+$('vizMenos').onclick = () => { vizMeses = Math.max(4, vizMeses - 2); desenharViz(); };
+$('vizMais').onclick = () => { vizMeses = Math.min(14, vizMeses + 2); desenharViz(); };
+$('btnCopiarViz').onclick = () => window.api.copyImage($('vizCanvas').toDataURL('image/png'));
 
 // ---------- Calendário de lucro (estilo PnL da GMGN) ----------
 let calMes = hoje().slice(0, 7);
