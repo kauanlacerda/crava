@@ -974,3 +974,15 @@ input:focus, select:focus { border-color: var(--blue); }
   background: rgba(255, 255, 255, calc(0.07 * var(--celop, 1)));
   border-color: rgba(255, 255, 255, calc(0.12 * var(--celop, 1)));
 }
+
+/* painel 16:9: mais largo, celulas com tamanho fixo centralizadas */
+.modal-cal { width: min(1400px, 96vw); }
+.modal-cal .cal-panel { aspect-ratio: 16 / 9; display: flex; flex-direction: column; }
+.modal-cal .cal-grid {
+  grid-template-columns: repeat(7, 150px);
+  justify-content: center;
+  gap: 12px;
+  flex-grow: 1;
+  align-content: center;
+}
+.modal-cal .cal-cell { height: 86px; }

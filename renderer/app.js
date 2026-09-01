@@ -1431,7 +1431,9 @@ function desenharCalCanvas(ctx, W, H, dc, fonteMidia, op) {
     ctx.fillRect(0, 0, W, H);
     ctx.restore();
   }
-  const pad = 44;
+  const gap = 12, cw = 150, ch = 92;
+  const gridX = Math.round((W - (cw * 7 + gap * 6)) / 2);
+  const pad = gridX;
   ctx.textAlign = 'left';
   ctx.fillStyle = '#e8edf4'; ctx.font = F(700, 24, "'Baloo 2'");
   ctx.fillText('Calendário de Lucro', pad, 62);
@@ -1449,10 +1451,9 @@ function desenharCalCanvas(ctx, W, H, dc, fonteMidia, op) {
   ctx.fillStyle = '#8b98a9'; ctx.textAlign = 'right';
   ctx.fillText(`no ano: R$ ${fmtNum(Math.round(dc.totalAno))}`, W - pad, 180); ctx.textAlign = 'left';
 
-  const gap = 10, cw = (W - pad * 2 - gap * 6) / 7, ch = 92;
   const dows = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
   ctx.font = F(800, 13); ctx.fillStyle = '#5a6676'; ctx.textAlign = 'center';
-  for (let c = 0; c < 7; c++) ctx.fillText(dows[c], pad + c * (cw + gap) + cw / 2, 214);
+  for (let c = 0; c < 7; c++) ctx.fillText(dows[c], gridX + c * (cw + gap) + cw / 2, 214);
   ctx.textAlign = 'left';
 
   const topo = 228;
@@ -1461,7 +1462,7 @@ function desenharCalCanvas(ctx, W, H, dc, fonteMidia, op) {
     const d = dc.celulas[i];
     if (d === null) continue;
     const lin = Math.floor(i / 7), col = i % 7;
-    const x = pad + col * (cw + gap), y = topo + lin * (ch + gap);
+    const x = gridX + col * (cw + gap), y = topo + lin * (ch + gap);
     const g = dc.ganhos[d - 1];
     const int = dc.maxDia > 0 ? g / dc.maxDia : 0;
     const ehMelhor = d === dc.melhorIdx && g > 0;
@@ -1513,7 +1514,8 @@ async function compartilharCalendario() {
   try {
     const dc = dadosCal();
     const linhas = dc.celulas.length / 7;
-    const W = 1120, H = 228 + linhas * 102 + 48;
+    const H = 228 + linhas * 104 + 56;
+    const W = Math.round(H * 16 / 9); // 16:9
     const cv = document.createElement('canvas');
     cv.width = W; cv.height = H;
     const ctx = cv.getContext('2d');
