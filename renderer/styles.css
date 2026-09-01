@@ -778,3 +778,7 @@ input:focus, select:focus { border-color: var(--blue); }
 .cobrador {
   background: linear-gradient(var(--amber-banner-bg), var(--amber-banner-bg)), var(--panel);
 }
+
+/* colunas alinhadas nas listas de trabalho: chip e valor com largura fixa */
+.job-foot .badge-chip { min-width: 132px; text-align: center; }
+.job-foot .job-value { width: 110px; text-align: right; }
