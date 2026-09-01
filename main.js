@@ -217,6 +217,7 @@ ipcMain.handle('midia:import', (_e, caminho, ehGif, slot = 'card') => {
     return p;
   } catch { return null; }
 });
+ipcMain.handle('midia:existe', (_e, p) => { try { return require('fs').existsSync(p); } catch { return false; } });
 ipcMain.handle('midia:read', (_e, p) => {
   try { return require('fs').readFileSync(p); } catch { return null; }
 });

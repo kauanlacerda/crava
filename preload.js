@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('api', {
   pathDoArquivo: (file) => { try { return webUtils.getPathForFile(file); } catch { return null; } },
   importMidia: (caminho, ehGif, slot) => ipcRenderer.invoke('midia:import', caminho, ehGif, slot),
   readMidia: (p) => ipcRenderer.invoke('midia:read', p),
+  midiaExiste: (p) => ipcRenderer.invoke('midia:existe', p),
   clearMidia: (slot) => ipcRenderer.send('midia:clear', slot),
   quit: () => ipcRenderer.send('app:quit')
 });

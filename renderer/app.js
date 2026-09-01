@@ -1023,11 +1023,32 @@ $('searchInput').oninput = () => {
 
 // ---------- Perfil ----------
 $('btnFoto').onclick = () => $('fotoInput').click();
+// reduz a foto pra 256px antes de guardar: a foto vai junto em toda
+// sincronização, então uma imagem de 5 MB deixaria tudo lento
+function reduzirFoto(dataURL, lado = 256) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const cv = document.createElement('canvas');
+      cv.width = cv.height = lado;
+      const ctx = cv.getContext('2d');
+      const escala = Math.max(lado / img.width, lado / img.height);
+      const w = img.width * escala, h = img.height * escala;
+      ctx.drawImage(img, (lado - w) / 2, (lado - h) / 2, w, h);
+      resolve(cv.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => resolve(dataURL);
+    img.src = dataURL;
+  });
+}
 $('fotoInput').onchange = () => {
   const f = $('fotoInput').files[0];
   if (!f) return;
   const r = new FileReader();
-  r.onload = async () => { S.config.foto = r.result; await salvar(); };
+  r.onload = async () => {
+    S.config.foto = await reduzirFoto(r.result);
+    await salvar();
+  };
   r.readAsDataURL(f);
 };
 $('btnSalvarPerfil').onclick = async () => {
@@ -1079,6 +1100,8 @@ function atualizarSprites() {
   $('logoImg').src = spr('logo');
   $('metaImg').src = spr('metaModal');
   $('cofreImg').src = spr('cofre');
+  if (S.config.shareMidia && S.config.shareMidia.path) validarMidiaLocal('shareMidia');
+  if (S.config.calMidia && S.config.calMidia.path) validarMidiaLocal('calMidia');
   if (S.config.shareMidia) {
     const alvo = midiaSrc(S.config.shareMidia);
     if (alvo && MEDIA_IMG.src !== alvo) {
@@ -1272,6 +1295,23 @@ function iniciarGifPreview() {
   };
   gifTimer = setTimeout(tick, gifDelays[0]);
 }
+// se o arquivo do fundo não existe neste PC (veio da nuvem de outra máquina),
+// limpa a referência em vez de deixar um fundo quebrado
+const midiaChecada = {};
+async function validarMidiaLocal(campo) {
+  const m = S.config[campo];
+  if (!m || !m.path || midiaChecada[m.path]) return;
+  midiaChecada[m.path] = true;
+  try {
+    const existe = await window.api.midiaExiste(m.path);
+    if (!existe) {
+      delete S.config[campo];
+      await window.api.saveState(S);
+      render();
+    }
+  } catch { }
+}
+
 // mídia pode estar em arquivo (novo, aguenta 15 MB) ou dataURL (legado)
 function midiaSrc(midia) {
   if (midia.path) return 'file:///' + midia.path.replace(/\\/g, '/');
