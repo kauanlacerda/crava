@@ -3,6 +3,7 @@ let S = null; // estado completo {config, jobs, stats}
 
 const $ = (id) => document.getElementById(id);
 const hoje = () => new Date().toISOString().slice(0, 10);
+const loc = () => (IDIOMA === 'en' ? 'en-US' : 'pt-BR');
 const ontem = () => new Date(Date.now() - 864e5).toISOString().slice(0, 10);
 
 const MOEDA = {
@@ -121,12 +122,15 @@ async function ciclarPagamento(id) {
   j.pagamento = ordem[(ordem.indexOf(j.pagamento) + 1) % 3];
   if (j.pagamento === 'pago') {
     j.pagoEm = new Date().toISOString();
-    abrirCofre(j);
+    if (j.valor.m === 'BRL') { j.liquidado = true; j.liquidadoEm = j.pagoEm; j.liquidadoBRL = Number(j.valor.q); abrirCofre(j); }
+    else j.liquidado = false; // robux/dólar: só vira dinheiro depois da venda/conversão
+  } else {
+    delete j.liquidado; delete j.liquidadoEm; delete j.liquidadoBRL;
   }
   await salvar();
 }
 async function excluir(id) {
-  if (!confirm('Excluir esse trabalho?')) return;
+  if (!confirm(t('excluirConfirma'))) return;
   S.jobs = S.jobs.filter(x => x.id !== id);
   await salvar();
 }
@@ -144,8 +148,8 @@ function checarMeta() {
     S.stats.ultimoDiaMeta = hoje();
     if (S.stats.recompensaMostrada !== hoje()) {
       S.stats.recompensaMostrada = hoje();
-      $('metaDetalhe').textContent = `${S.config.metaDiaria} de ${S.config.metaDiaria} concluídos hoje.`;
-      $('metaStreak').textContent = `Streak: ${S.stats.streak} ${S.stats.streak === 1 ? 'dia' : 'dias seguidos'}`;
+      $('metaDetalhe').textContent = `${S.config.metaDiaria} ${t('deConcluidos')} ${S.config.metaDiaria} ${t('concluidosHoje')}.`;
+      $('metaStreak').textContent = `${t('streakDe')} ${S.stats.streak} ${S.stats.streak === 1 ? t('dia') : t('diasSeguidos')}`;
       $('ovMeta').classList.add('open');
     }
   }
@@ -184,8 +188,8 @@ function abrirCofre(j) {
   cofreJob = j;
   const pct = S.config.cofrePct;
   const guardar = Number(j.valor.q) * pct / 100;
-  $('cofreDetalhe').textContent = `${j.titulo} · entrou ${fmtValor(j.valor)}`;
-  $('cofreValor').textContent = `Separa ${fmtValor({ q: guardar, m: j.valor.m })} (${pct}%)`;
+  $('cofreDetalhe').textContent = `${j.titulo} · ${t('cofreEntrou')} ${fmtValor(j.valor)}`;
+  $('cofreValor').textContent = `${t('cofreSepara')} ${fmtValor({ q: guardar, m: j.valor.m })} (${pct}%)`;
   $('ovCofre').classList.add('open');
 }
 function novoCofre(confirmado) {
@@ -216,23 +220,25 @@ $('metaFechar').onclick = () => $('ovMeta').classList.remove('open');
 
 // ---------- Render ----------
 function render() {
+  IDIOMA = S.config.idioma === 'en' ? 'en' : 'pt';
+  aplicarIdiomaHTML();
   document.documentElement.dataset.theme = S.config.tema || 'escuro';
   document.documentElement.dataset.cor = S.config.cor || 'azul';
   atualizarSprites();
 
   // saudação e data
   const h = new Date().getHours();
-  const sauda = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+  const sauda = h < 12 ? t('bomDia') : h < 18 ? t('boaTarde') : t('boaNoite');
   $('saudacao').textContent = `${sauda}, ${S.config.nome || 'você'}`;
-  $('dataHoje').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+  $('dataHoje').textContent = new Date().toLocaleDateString(loc(), { weekday: 'long', day: 'numeric', month: 'long' });
 
   // chips
   const st = streakVigente();
-  $('chipStreak').textContent = `${st} ${st === 1 ? 'dia' : 'dias'}`;
+  $('chipStreak').textContent = `${st} ${st === 1 ? t('dia') : t('dias')}`;
 
   // slots
   const occ = ocupados(), tot = S.config.slots;
-  $('slotsCount').textContent = `${occ} de ${tot}`;
+  $('slotsCount').textContent = `${occ} ${t('slotsDe')} ${tot} ${t('slots')}`;
   $('slotsBar').innerHTML = Array.from({ length: tot }, (_, i) =>
     `<div class="slot ${i < occ ? 'on' : ''}"></div>`).join('');
 
@@ -280,27 +286,27 @@ function renderStats() {
   $('statRow').innerHTML = `
     <div class="stat-card ${glow ? 'solid-blue' : ''}">
       ${badge}
-      <div class="stat-label">META DO DIA</div>
+      <div class="stat-label">${t('statMeta')}</div>
       <div class="stat-value">${feitos}<span style="opacity:0.7;font-size:18px"> / ${meta}</span></div>
       <div class="stat-segs">${segs}</div>
-      <div class="stat-sub ${glow ? '' : (feitos >= meta ? 'c-green' : 'c-blue')}">${feitos >= meta ? 'meta batida — jogo liberado!' : `faltam ${meta - feitos} pro jogo liberar`}</div>
+      <div class="stat-sub ${glow ? '' : (feitos >= meta ? 'c-green' : 'c-blue')}">${feitos >= meta ? t('metaBatidaSub') : `${t('faltam')} ${meta - feitos} ${t('proJogo')}`}</div>
     </div>
     <div class="stat-card ${glow ? 'solid-orange' : ''}">
       ${badge}
-      <div class="stat-label">PRA RECEBER</div>
+      <div class="stat-label">${t('statReceber')}</div>
       <div class="stat-value ${glow ? '' : 'c-amber'}">${recParts[0] || 'R$ 0'}</div>
-      <div class="stat-sub">${recParts.length > 1 ? '+ ' + recParts.slice(1).join(' · ') : `${recN} trabalho${recN === 1 ? '' : 's'} aguardando pgto`}</div>
+      <div class="stat-sub">${recParts.length > 1 ? '+ ' + recParts.slice(1).join(' · ') : `${recN} ${recN === 1 ? t('trabalho') : t('trabalhos')} ${t('aguardandoPgtoSub')}`}</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">PRAZO MAIS PRÓXIMO</div>
+      <div class="stat-label">${t('statPrazo')}</div>
       <div class="stat-value ${prox ? prazoClasse(prox.prazo) || 'c-amber' : ''}">${prox ? prazoTexto(prox.prazo) : '—'}</div>
-      <div class="stat-sub">${prox ? esc(prox.titulo) : 'nenhum prazo aberto'}</div>
+      <div class="stat-sub">${prox ? esc(prox.titulo) : t('nenhumPrazo')}</div>
     </div>
     <div class="stat-card ${glow ? 'solid-green' : ''}">
       ${badge}
-      <div class="stat-label">GANHO NO MÊS</div>
+      <div class="stat-label">${t('statGanho')}</div>
       <div class="stat-value ${glow ? '' : 'c-green'}">${MOEDA.BRL.fmt(gb)}</div>
-      <div class="stat-sub">${gSubs.length ? '+ ' + gSubs.join(' · ') : 'só R$ até agora'}</div>
+      <div class="stat-sub">${gSubs.length ? '+ ' + gSubs.join(' · ') : t('soReais')}</div>
     </div>`;
 }
 
@@ -318,7 +324,7 @@ function renderUser() {
   $('perfilAvatar').textContent = S.config.foto ? '' : nome[0].toUpperCase();
   $('perfilAvatar').style.cssText = avatarStyle();
   $('perfilNomeShow').textContent = nome;
-  $('perfilSubShow').textContent = `${user} · GFX designer`;
+  $('perfilSubShow').textContent = `${user} · ${t('designer')}`;
   if (document.activeElement !== $('pfNome')) $('pfNome').value = nome === 'você' ? '' : nome;
   if (document.activeElement !== $('pfUser')) $('pfUser').value = S.config.usuario || '';
 
@@ -343,7 +349,7 @@ function renderFavPicker(ganhas, fav) {
         <div class="fav-opt ${b.id === fav ? 'sel' : ''}" title="${b.nome}" onclick="escolherFavorita('${b.id}')">
           <img src="../assets/insignias/${b.id}.png" alt="">
         </div>`).join('')
-    : `<div class="config-sub">Nenhuma insígnia desbloqueada ainda — crava uns trabalhos primeiro!</div>`;
+    : `<div class="config-sub">${t('semInsignias')}</div>`;
 }
 async function escolherFavorita(id) {
   S.config.insigniaFavorita = S.config.insigniaFavorita === id ? '' : id;
@@ -351,19 +357,19 @@ async function escolherFavorita(id) {
 }
 
 const PIPE = ['aceito', 'fazendo', 'entregue', 'aprovado'];
-const PIPE_LABEL = { aceito: 'ACEITO', fazendo: 'FAZENDO', entregue: 'ENTREGUE', aprovado: 'APROVADO' };
-const PGTO_CHIP = {
-  nao_pago: ['Não pago', 'bc-faint'],
-  aguardando: ['Aguardando pgto', 'bc-amber'],
-  pago: ['Pago', 'bc-green']
-};
+const pipeLabel = () => ({ aceito: t('aceito'), fazendo: t('fazendo'), entregue: t('entregue'), aprovado: t('aprovado') });
+const pgtoChip = () => ({
+  nao_pago: [t('naoPago'), 'bc-faint'],
+  aguardando: [t('aguardandoPgto'), 'bc-amber'],
+  pago: [t('pago'), 'bc-green']
+});
 
 function pipelineHTML(j) {
   const idx = PIPE.indexOf(j.status);
   return `<div class="pipeline">${PIPE.map((_, i) =>
       `<div class="pipe ${i < idx ? 'done' : i === idx ? 'now' : ''}"></div>`).join('')}</div>
     <div class="pipe-labels">${PIPE.map((p, i) =>
-      `<div class="pipe-label ${i < idx ? 'done' : i === idx ? 'now' : ''}">${PIPE_LABEL[p]}</div>`).join('')}</div>`;
+      `<div class="pipe-label ${i < idx ? 'done' : i === idx ? 'now' : ''}">${pipeLabel()[p]}</div>`).join('')}</div>`;
 }
 
 function renderAtivo() {
@@ -373,42 +379,44 @@ function renderAtivo() {
     $('activeArea').innerHTML = `
       <div class="active-card" style="justify-content:center">
         <div class="empty-state" style="padding:18px 0">
-          <div class="big">Nenhum trabalho ativo</div>
-          <div>${prox ? 'Escolhe um da fila e crava nele.' : 'Fila vazia — captura um pedido novo com Ctrl+Shift+N.'}</div>
-          ${prox ? `<div class="btn btn-primary" style="margin-top:6px;padding:10px 22px" onclick="tornarAtivo('${prox.id}')">Começar: ${esc(prox.titulo)}</div>` : ''}
+          <div class="big">${t('nenhumAtivo')}</div>
+          <div>${prox ? t('escolheFila') : t('filaVazia')}</div>
+          ${prox ? `<div class="btn btn-primary" style="margin-top:6px;padding:10px 22px" onclick="tornarAtivo('${prox.id}')">${t('comecar')}: ${esc(prox.titulo)}</div>` : ''}
         </div>
       </div>`;
     return;
   }
-  const [ptxt, pcls] = PGTO_CHIP[j.pagamento];
-  const btnLabel = j.status === 'fazendo' ? 'Marcar entregue' : 'Marcar aprovado';
+  const [ptxt, pcls] = pgtoChip()[j.pagamento];
+  const btnLabel = j.status === 'fazendo' ? t('btnMarcarEntregue') : t('btnMarcarAprovado');
   $('activeArea').innerHTML = `
     <div class="active-card">
       <div class="ac-left">
-        <div class="ac-tag"><div class="dot"></div><div class="ac-tag-text">TRABALHO ATIVO</div></div>
-        <div><div class="ac-title">${esc(j.titulo)}</div><div class="ac-sub">${esc(j.cliente || 'sem cliente')}</div></div>
+        <div class="ac-tag"><div class="dot"></div><div class="ac-tag-text">${t('trabalhoAtivo')}</div></div>
+        <div><div class="ac-title">${esc(j.titulo)}</div><div class="ac-sub">${esc(j.cliente || t('semCliente'))}</div></div>
         ${pipelineHTML(j)}
       </div>
       <div class="ac-right">
-        <div class="kv"><div class="kv-k">Valor</div><div class="kv-v">${fmtValor(j.valor)}</div></div>
-        <div class="kv"><div class="kv-k">Prazo</div><div class="kv-v ${prazoClasse(j.prazo)}" style="font-size:12px">${prazoTexto(j.prazo) || '—'}</div></div>
-        <div class="kv"><div class="kv-k">Pagamento</div><div class="badge-chip ${pcls} click" onclick="ciclarPagamento('${j.id}')">${ptxt}</div></div>
+        <div class="kv"><div class="kv-k">${t('valor')}</div><div class="kv-v">${fmtValor(j.valor)}</div></div>
+        <div class="kv"><div class="kv-k">${t('prazo')}</div><div class="kv-v ${prazoClasse(j.prazo)}" style="font-size:12px">${prazoTexto(j.prazo) || '—'}</div></div>
+        <div class="kv"><div class="kv-k">${t('pagamento')}</div><div class="badge-chip ${pcls} click" onclick="ciclarPagamento('${j.id}')">${ptxt}</div></div>
         <div class="ac-spacer"></div>
+        ${precisaLiquidar(j) ? `<div class="btn btn-green" onclick="abrirLiquidacao('${j.id}')" style="margin-bottom:6px">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</div>` : ''}
         <div class="btn btn-primary" onclick="avancar('${j.id}')">✓ ${btnLabel}</div>
         <div class="btn-row">
-          ${j.pagamento !== 'pago' ? `<div class="btn btn-green" onclick="ciclarPagamento('${j.id}')" style="font-size:12px">Recebi o pgto</div>` : ''}
-          <div class="btn btn-ghost" onclick="pausarRetomar('${j.id}')" style="font-size:12px">${j.pausado ? '▶ Retomar' : '⏸ Pausar'}</div>
-          <div class="btn btn-ghost" onclick="voltarFila('${j.id}')" style="font-size:12px;max-width:70px" title="Devolver pra fila">Fila</div>
+          ${j.pagamento !== 'pago' ? `<div class="btn btn-green" onclick="ciclarPagamento('${j.id}')" style="font-size:12px">${t('btnRecebiPgto')}</div>` : ''}
+          <div class="btn btn-ghost" onclick="pausarRetomar('${j.id}')" style="font-size:12px">${j.pausado ? t('btnRetomar') : t('btnPausar')}</div>
+          <div class="btn btn-ghost" onclick="voltarFila('${j.id}')" style="font-size:12px;max-width:70px" title="${t('btnDevolverFila')}">${t('btnFila')}</div>
         </div>
       </div>
     </div>`;
 }
 
 function jobRowHTML(j, num, dim) {
-  const [ptxt, pcls] = PGTO_CHIP[j.pagamento];
+  const [ptxt, pcls] = pgtoChip()[j.pagamento];
   const acts = [];
-  if (j.status === 'aceito') acts.push(`<div class="mini-btn primary" onclick="tornarAtivo('${j.id}')">Cravar</div>`);
-  if (j.status === 'entregue') acts.push(`<div class="mini-btn" onclick="avancar('${j.id}')">Aprovado ✓</div>`);
+  if (j.status === 'aceito') acts.push(`<div class="mini-btn primary" onclick="tornarAtivo('${j.id}')">${t('btnCravar')}</div>`);
+  if (j.status === 'entregue') acts.push(`<div class="mini-btn" onclick="avancar('${j.id}')">${t('btnAprovado')}</div>`);
+  if (precisaLiquidar(j)) acts.push(`<div class="mini-btn liquidar" onclick="abrirLiquidacao('${j.id}')">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</div>`);
   acts.push(`<div class="mini-btn" onclick="excluir('${j.id}')">✕</div>`);
   return `
     <div class="job-row ${dim ? 'dim' : ''}">
@@ -417,7 +425,7 @@ function jobRowHTML(j, num, dim) {
           `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>`}
         <div>
           <div class="job-title">${esc(j.titulo)}</div>
-          <div class="job-client">${esc(j.cliente || '')} · ${PIPE_LABEL[j.status].toLowerCase()} · <span class="${prazoClasse(j.prazo)}">${prazoTexto(j.prazo) || 'sem prazo'}</span></div>
+          <div class="job-client">${esc(j.cliente || '')} · ${pipeLabel()[j.status].toLowerCase()} · <span class="${prazoClasse(j.prazo)}">${prazoTexto(j.prazo) || t('semPrazo')}</span></div>
         </div>
       </div>
       <div class="job-foot">
@@ -441,18 +449,18 @@ function renderFila() {
   const pagos = feitosHoje.filter(j => j.pagamento === 'pago');
   let html = '';
   if (fila.length) {
-    html += `<div class="section-label">NA FILA · ${fila.length}</div>`;
+    html += `<div class="section-label">${t('naFila')} · ${fila.length}</div>`;
     html += `<div class="job-grid" style="margin-top:9px">${fila.map((j, i) => jobRowHTML(j, i + 2, false)).join('')}</div>`;
   }
   if (esperandoPgto.length) {
-    html += `<div class="section-label" style="margin-top:12px">CONCLUÍDOS HOJE — ESPERANDO PAGAMENTO · ${esperandoPgto.length}</div>`;
+    html += `<div class="section-label" style="margin-top:12px">${t('concluidosEsperando')} · ${esperandoPgto.length}</div>`;
     html += `<div class="job-grid" style="margin-top:9px">${esperandoPgto.map(j => jobRowHTML(j, null, false)).join('')}</div>`;
   }
   if (pagos.length) {
-    html += `<div class="section-label" style="margin-top:12px">CONCLUÍDOS HOJE — PAGOS ✓ · ${pagos.length}</div>`;
+    html += `<div class="section-label" style="margin-top:12px">${t('concluidosPagos')} · ${pagos.length}</div>`;
     html += `<div class="job-grid" style="margin-top:9px">${pagos.map(j => jobRowHTML(j, null, true)).join('')}</div>`;
   }
-  if (!html) html = `<div class="empty-state"><img src="${spr('espiar')}" alt="" style="width:64px;height:auto;image-rendering:pixelated;opacity:0.85"><div class="big">Dia limpo</div><div>Ctrl+Shift+N captura um pedido novo em 5 segundos.</div></div>`;
+  if (!html) html = `<div class="empty-state"><img src="${spr('espiar')}" alt="" style="width:64px;height:auto;image-rendering:pixelated;opacity:0.85"><div class="big">${t('diaLimpo')}</div><div>${t('capturaDica')}</div></div>`;
   $('filaArea').innerHTML = html;
 }
 
@@ -465,10 +473,10 @@ function renderCofrePendente() {
   $('cofreArea').innerHTML = pendentes.slice(0, 3).map(c => `
     <div class="cobrador" style="border-color:rgba(47,211,156,0.35);background:linear-gradient(rgba(47,211,156,0.08),rgba(47,211,156,0.08)),var(--panel)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="3"/><path d="M12 8V5"/><circle cx="12" cy="3.5" r="1.5"/><circle cx="16" cy="13" r="1"/></svg>
-      <div class="cobrador-text" style="color:var(--green)">Cofre pendente${c.valor ? `: separa ${esc(c.valor)}` : ''}${c.titulo ? ` — ${esc(c.titulo)}` : ''} · desde ${c.data.split('-').reverse().join('/')}</div>
-      <div class="cobrador-btn" style="background:var(--green)" onclick="separeiCofre(${c.idx})">Separei ✓</div>
+      <div class="cobrador-text" style="color:var(--green)">${t('cofrePendente')}${c.valor ? `: ${t('cofreSepara2')} ${esc(c.valor)}` : ''}${c.titulo ? ` — ${esc(c.titulo)}` : ''} · ${t('desde')} ${c.data.split('-').reverse().join('/')}</div>
+      <div class="cobrador-btn" style="background:var(--green)" onclick="separeiCofre(${c.idx})">${t('btnSeparei')}</div>
     </div>`).join('') +
-    (pendentes.length > 3 ? `<div class="section-label">+ ${pendentes.length - 3} cofres pendentes</div>` : '');
+    (pendentes.length > 3 ? `<div class="section-label">+ ${pendentes.length - 3} ${t('maisCofres')}</div>` : '');
 }
 
 function renderCobrador() {
@@ -483,7 +491,7 @@ function renderCobrador() {
     <div class="cobrador">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
       <div class="cobrador-text">${esc(alvo.titulo)} está entregue há ${dias} dias sem pagamento. Cobra ${esc(alvo.cliente || 'o cliente')}.</div>
-      <div class="cobrador-btn" onclick="cobrei('${alvo.id}')">Cobrei</div>
+      <div class="cobrador-btn" onclick="cobrei('${alvo.id}')">${t('btnCobrei')}</div>
     </div>`;
 }
 
@@ -560,12 +568,12 @@ const IC = {
 // Categorias da coleção (cada insígnia pode ter arte própria em
 // assets/insignias/<id>.png — estilo NFT; sem arquivo, usa o ícone SVG)
 const CATEGORIAS_INSIGNIAS = [
-  { id: 'rotina', nome: 'ROTINA' },
-  { id: 'mes', nome: 'MÊS' },
-  { id: 'brl', nome: 'GANHOS EM R$' },
-  { id: 'usd', nome: 'GANHOS EM US$' },
-  { id: 'rbx', nome: 'GANHOS EM ROBUX' },
-  { id: 'geral', nome: 'GERAL — TODAS AS MOEDAS' }
+  { id: 'rotina', nome: 'ROTINA', i18n: 'catRotina' },
+  { id: 'mes', nome: 'MÊS', i18n: 'catMes' },
+  { id: 'brl', nome: 'GANHOS EM R$', i18n: 'catBrl' },
+  { id: 'usd', nome: 'GANHOS EM US$', i18n: 'catUsd' },
+  { id: 'rbx', nome: 'GANHOS EM ROBUX', i18n: 'catRbx' },
+  { id: 'geral', nome: 'GERAL — TODAS AS MOEDAS', i18n: 'catGeral' }
 ];
 
 const INSIGNIAS = [
@@ -691,7 +699,7 @@ function verificarInsignias() {
     if (!S.stats.insigniasGanhas[b.id] && b.check()) {
       S.stats.insigniasGanhas[b.id] = hoje();
       mudou = true;
-      try { new Notification('Insígnia desbloqueada! 🏅', { body: b.nome }); } catch { }
+      try { new Notification(t('insigniaDesbloqueada'), { body: nomeInsignia(b) }); } catch { }
     }
   }
   return mudou;
@@ -713,9 +721,9 @@ function insigniaHTML(b, ganhas) {
           onerror="this.style.display='none';this.nextElementSibling.style.display=''">
         <svg style="display:none" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${ok ? b.cor : 'var(--faint)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ok ? b.icon : CADEADO}</svg>
       </div>
-      <div class="insignia-name">${b.nome}</div>
-      <div class="insignia-desc">${b.desc}</div>
-      ${ok ? `<div class="insignia-data">conquistada em ${data.split('-').reverse().join('/')}</div>` : ''}
+      <div class="insignia-name">${nomeInsignia(b)}</div>
+      <div class="insignia-desc">${descInsignia(b)}</div>
+      ${ok ? `<div class="insignia-data">${t('conquistadaEm')} ${data.split('-').reverse().join('/')}</div>` : ''}
     </div>`;
 }
 
@@ -727,10 +735,10 @@ function renderInsignias() {
     if (!doCat.length) return '';
     const nCat = doCat.filter(b => ganhas[b.id]).length;
     return `
-      <div class="section-label" style="margin-top:14px">${cat.nome} · ${nCat}/${doCat.length}</div>
+      <div class="section-label" style="margin-top:14px">${t(cat.i18n)} · ${nCat}/${doCat.length}</div>
       <div class="insignias-grid" style="margin-top:9px">${doCat.map(b => insigniaHTML(b, ganhas)).join('')}</div>`;
   }).join('');
-  $('insigniasCount').textContent = `· ${n} de ${INSIGNIAS.length}`;
+  $('insigniasCount').textContent = `· ${n} ${t('de')} ${INSIGNIAS.length}`;
   renderHistorico();
 }
 
@@ -739,7 +747,7 @@ function renderHistorico() {
   const meses = mesesComAtividade();
   const ganhas = S.stats.insigniasGanhas || {};
   if (!meses.length) { $('historicoMeses').innerHTML = ''; return; }
-  $('historicoMeses').innerHTML = `<div class="section-label" style="margin-top:16px">HISTÓRICO POR MÊS</div>` +
+  $('historicoMeses').innerHTML = `<div class="section-label" style="margin-top:16px">${t('historicoMes')}</div>` +
     meses.map(mes => {
       const doMes = entregasDoMes(mes);
       const atrasos = doMes.filter(j => j.prazo && j.entregueEm.slice(0, 10) > j.prazo).length;
@@ -756,9 +764,9 @@ function renderHistorico() {
         <div class="mes-row">
           <div class="mes-nome">${fmtMes(mes)}</div>
           <div class="mes-stats">
-            <span><b>${doMes.length}</b> entrega${doMes.length === 1 ? '' : 's'}</span>
-            <span class="${atrasos ? 'c-red' : 'c-green'}"><b>${atrasos}</b> atraso${atrasos === 1 ? '' : 's'}</span>
-            <span class="c-green">${partes.length ? partes.join(' · ') : 'nada recebido'}</span>
+            <span><b>${doMes.length}</b> ${doMes.length === 1 ? t('entrega') : t('entregas')}</span>
+            <span class="${atrasos ? 'c-red' : 'c-green'}"><b>${atrasos}</b> ${atrasos === 1 ? t('atraso') : t('atrasos')}</span>
+            <span class="c-green">${partes.length ? partes.join(' · ') : t('nadaRecebido')}</span>
           </div>
           <div class="mes-insignias">${insMes.map(b =>
             `<span class="mes-badge" style="border-color:${b.cor}66;color:${b.cor}" title="${b.desc}">
@@ -780,9 +788,15 @@ function renderConfig() {
     el.classList.toggle('sel', el.dataset.tema === (S.config.tema || 'escuro')));
   document.querySelectorAll('#glowPicker .tema-opt').forEach(el =>
     el.classList.toggle('sel', el.dataset.glow === (S.config.glowCards !== false ? 'on' : 'off')));
+  document.querySelectorAll('#idiomaPicker .tema-opt').forEach(el =>
+    el.classList.toggle('sel', el.dataset.idioma === (S.config.idioma || 'pt')));
   document.querySelectorAll('#corPicker .cor-opt').forEach(el =>
     el.classList.toggle('sel', el.dataset.cor === (S.config.cor || 'azul')));
 }
+$('idiomaPicker').onclick = async (e) => {
+  const i = e.target.dataset.idioma;
+  if (i) { S.config.idioma = i; await salvar(); }
+};
 $('glowPicker').onclick = async (e) => {
   const g = e.target.dataset.glow;
   if (g) { S.config.glowCards = g === 'on'; await salvar(); }
@@ -939,7 +953,7 @@ function drawConteudo(ctx) {
 
   // faturamento
   const gb = ganhoMes('BRL'), gu = ganhoMes('USD'), gr = ganhoMes('RBX');
-  ctx.fillStyle = '#9fb0d0'; ctx.font = F(700, 24); ctx.fillText('FATUREI', 56, 190);
+  ctx.fillStyle = '#9fb0d0'; ctx.font = F(700, 24); ctx.fillText(t('faturei'), 56, 190);
   ctx.fillStyle = '#34d399'; ctx.font = F(800, 84);
   ctx.fillText(MOEDA.BRL.fmt(gb), 52, 272);
   const subs = [];
@@ -963,10 +977,10 @@ function drawConteudo(ctx) {
   const nIns = Object.keys(S.stats.insigniasGanhas || {}).length;
   const mx = S.stats.maxStreak;
   const stats = [
-    ['TRABALHOS', String(trab), '#eef2f9'],
-    ['MAIOR STREAK', `${mx} ${mx === 1 ? 'dia' : 'dias'}`, '#fbbf24'],
-    ['TICKET MÉDIO', `R$ ${fmtNum(ticket)}`, '#eef2f9'],
-    ['INSÍGNIAS', String(nIns), '#34d399']
+    [t('trabalhosCard'), String(trab), '#eef2f9'],
+    [t('maiorStreak'), `${mx} ${mx === 1 ? t('dia') : t('dias')}`, '#fbbf24'],
+    [t('ticketMedio'), `R$ ${fmtNum(ticket)}`, '#eef2f9'],
+    [t('insigniasCard'), String(nIns), '#34d399']
   ];
   let sx = 56;
   for (const [lab, val, cor] of stats) {
@@ -997,7 +1011,7 @@ function drawConteudo(ctx) {
   ctx.fillStyle = '#9fb0d0'; ctx.font = F(600, 21); ctx.fillText(`${user} · GFX pra Roblox`, 136, ay + 56);
 
   ctx.fillStyle = '#9fb0d0'; ctx.font = F(700, 18); ctx.textAlign = 'right';
-  ctx.fillText('feito com', CW - 152, ay + 22);
+  ctx.fillText(t('feitoCom'), CW - 152, ay + 22);
   ctx.fillText('Crava', CW - 152, ay + 46); ctx.textAlign = 'left';
   rrect(ctx, CW - 132, ay - 4, 76, 76, 14); ctx.fillStyle = '#eef2f9'; ctx.fill();
   ctx.fillStyle = '#0c1322';
@@ -1039,7 +1053,7 @@ function drawShareCard() {
   $('btnMidiaRemover').style.display = midia ? '' : 'none';
   $('opacidadeWrap').style.display = midia ? '' : 'none';
   if (document.activeElement !== $('midiaOpacidade')) $('midiaOpacidade').value = S.config.shareMidiaOp ?? 40;
-  $('btnCopiarCard').textContent = midia && midia.tipo === 'gif' ? 'Salvar GIF' : 'Copiar imagem';
+  $('btnCopiarCard').textContent = midia && midia.tipo === 'gif' ? t('salvarGif') : t('copiarImagem');
 }
 
 $('mascoteToggle').classList.add('on');
@@ -1154,6 +1168,59 @@ $('midiaOpacidade').onchange = async () => { await salvar(); drawShareCard(); };
 
 
 
+
+// ---------- Liquidação: moeda estrangeira virando R$ ----------
+let liqJob = null;
+function precisaLiquidar(j) {
+  return j.pagamento === 'pago' && j.valor.m !== 'BRL' && !j.liquidado;
+}
+function estimativaBRL(j) {
+  if (j.valor.m === 'USD') return Number(j.valor.q) * (typeof taxaUSD === 'function' ? taxaUSD() : S.config.cotacaoUSD);
+  return (Number(j.valor.q) / 1000) * S.config.cotacaoRBX1k;
+}
+function abrirLiquidacao(id) {
+  const j = S.jobs.find(x => x.id === id);
+  if (!j) return;
+  liqJob = j;
+  $('liqTitulo').textContent = j.valor.m === 'RBX' ? t('liqVendi') : t('liqCaiu');
+  $('liqDetalhe').textContent = `${j.titulo} · ${fmtValor(j.valor)}`;
+  $('liqValor').value = Math.round(estimativaBRL(j) * 100) / 100;
+  $('ovLiq').classList.add('open');
+  setTimeout(() => $('liqValor').select(), 60);
+}
+$('liqCancelar').onclick = () => { $('ovLiq').classList.remove('open'); liqJob = null; };
+$('liqConfirmar').onclick = async () => {
+  if (!liqJob) return;
+  const v = parseFloat($('liqValor').value) || 0;
+  liqJob.liquidado = true;
+  liqJob.liquidadoEm = new Date().toISOString();
+  liqJob.liquidadoBRL = v;
+  $('ovLiq').classList.remove('open');
+  // o cofre agora é sobre o dinheiro que realmente entrou
+  cofreJob = { titulo: liqJob.titulo, valor: { q: v, m: 'BRL' } };
+  const pct = S.config.cofrePct;
+  $('cofreDetalhe').textContent = `${liqJob.titulo} · ${t('cofreEntrou')} ${MOEDA.BRL.fmt(v)}`;
+  $('cofreValor').textContent = `${t('cofreSepara')} ${MOEDA.BRL.fmt(v * pct / 100)} (${pct}%)`;
+  $('ovCofre').classList.add('open');
+  liqJob = null;
+  await salvar();
+};
+
+// totais da carteira
+function recebidoLiquido() {
+  return S.jobs.filter(j => j.pagamento === 'pago' && j.liquidado)
+    .reduce((a, j) => a + Number(j.liquidadoBRL || 0), 0);
+}
+function pendenteLiquidar() {
+  const out = { USD: 0, RBX: 0, equiv: 0 };
+  for (const j of S.jobs) {
+    if (!precisaLiquidar(j)) continue;
+    out[j.valor.m] += Number(j.valor.q);
+    out.equiv += estimativaBRL(j);
+  }
+  return out;
+}
+
 // ================= CARTEIRA · MOEDAS · CONVERSOR =================
 
 // valor de um cofre em R$ equivalente (novos guardam q/m; antigos, só texto)
@@ -1171,36 +1238,46 @@ function totalGuardado() {
 }
 
 // ---------- Carteira ----------
-let carteiraFrente = 0; // 0 = guardado, 1 = livre
+let carteiraFrente = 0;
 function renderCarteira() {
-  const recebido = totalPagoBRLequiv();
+  const recebido = recebidoLiquido();
   const guardado = totalGuardado();
   const livre = Math.max(0, recebido - guardado);
+  const pend = pendenteLiquidar();
   const pct = recebido > 0 ? Math.round(guardado / recebido * 100) : 0;
-  const pendentes = S.stats.cofres.filter(c => !c.confirmado).length;
+  const pendentesCofre = S.stats.cofres.filter(c => !c.confirmado).length;
+  const aLiquidar = S.jobs.filter(precisaLiquidar).length;
+
+  const partes = [];
+  if (pend.USD > 0) partes.push(MOEDA.USD.fmt(pend.USD));
+  if (pend.RBX > 0) partes.push(MOEDA.RBX.fmt(pend.RBX));
 
   const cartoes = [
-    { rot: 'GUARDADO NO COFRE', val: guardado, sub: `${pct}% de tudo que entrou`, cls: 'verde' },
-    { rot: 'LIVRE / JÁ GASTO', val: livre, sub: `de R$ ${fmtNum(Math.round(recebido))} recebidos`, cls: 'azul' }
+    { rot: t('cartGuardado'), val: MOEDA.BRL.fmt(Math.round(guardado)), sub: `${pct}% ${t('cartDoQueEntrou')}`, cls: 'verde' },
+    { rot: t('cartLivre'), val: MOEDA.BRL.fmt(Math.round(livre)), sub: `${t('cartDe')} ${MOEDA.BRL.fmt(Math.round(recebido))} ${t('cartNaConta')}`, cls: 'azul' },
+    { rot: t('cartALiquidar'), val: partes.length ? partes.join(' · ') : MOEDA.BRL.fmt(0), sub: partes.length ? `≈ ${MOEDA.BRL.fmt(Math.round(pend.equiv))} · ${aLiquidar} ${t('cartTrabalhos')}` : t('cartTudoLiquidado'), cls: 'ambar' }
   ];
   $('carteiraPalco').innerHTML = cartoes.map((c, i) => {
-    const pos = (i - carteiraFrente + 2) % 2; // 0 = frente, 1 = atrás
-    return `<div class="cartao ${c.cls} ${pos === 0 ? 'frente' : 'atras'}">
+    const pos = (i - carteiraFrente + 3) % 3;
+    return `<div class="cartao ${c.cls} pos${pos}">
       <div class="cartao-topo">
         <div class="cartao-chip"></div>
         <img class="cartao-mascote" src="${spr('logo')}" alt="">
       </div>
       <div class="cartao-rot">${c.rot}</div>
-      <div class="cartao-val">R$ ${fmtNum(Math.round(c.val))}</div>
+      <div class="cartao-val">${c.val}</div>
       <div class="cartao-sub">${c.sub}</div>
     </div>`;
   }).join('');
+  $('carteiraPontos').innerHTML = cartoes.map((_, i) =>
+    `<span class="cart-ponto ${i === carteiraFrente ? 'on' : ''}"></span>`).join('');
 
   $('carteiraLinhas').innerHTML = `
-    <div class="cart-linha"><span>Recebido no total</span><b>R$ ${fmtNum(Math.round(recebido))}</b></div>
-    <div class="cart-linha"><span>Guardado</span><b class="c-green">R$ ${fmtNum(Math.round(guardado))}</b></div>
-    <div class="cart-linha"><span>Meta do cofre</span><b>${S.config.cofrePct}%</b></div>
-    ${pendentes ? `<div class="cart-linha alerta"><span>Cofres pendentes</span><b class="c-amber">${pendentes}</b></div>` : ''}`;
+    <div class="cart-linha"><span>${t('cartRecebidoConta')}</span><b>${MOEDA.BRL.fmt(Math.round(recebido))}</b></div>
+    <div class="cart-linha"><span>${t('cartGuardadoLinha')}</span><b class="c-green">${MOEDA.BRL.fmt(Math.round(guardado))}</b></div>
+    <div class="cart-linha"><span>${t('cartMetaCofre')}</span><b>${S.config.cofrePct}%</b></div>
+    ${aLiquidar ? `<div class="cart-linha alerta"><span>${t('cartEsperandoConversao')}</span><b class="c-amber">${aLiquidar}</b></div>` : ''}
+    ${pendentesCofre ? `<div class="cart-linha alerta"><span>${t('cartCofresPendentes')}</span><b class="c-amber">${pendentesCofre}</b></div>` : ''}`;
 }
 $('btnTrocarCarteira').onclick = () => { carteiraFrente = (carteiraFrente + 1) % 2; renderCarteira(); };
 $('carteiraPalco').onclick = () => { carteiraFrente = (carteiraFrente + 1) % 2; renderCarteira(); };
@@ -1208,7 +1285,7 @@ $('carteiraPalco').onclick = () => { carteiraFrente = (carteiraFrente + 1) % 2; 
 // ---------- Moedas do mês (donut) ----------
 let moedasMes = hoje().slice(0, 7);
 const MOEDA_COR = { BRL: '#2fd39c', USD: '#339dff', RBX: '#f5b74e' };
-const MOEDA_NOME = { BRL: 'Real', USD: 'Dólar', RBX: 'Robux' };
+const moedaNome = () => ({ BRL: t('real'), USD: t('dolar'), RBX: t('robux') });
 
 function renderMoedas() {
   const [a, m] = moedasMes.split('-').map(Number);
@@ -1250,15 +1327,15 @@ function renderMoedas() {
   const maior = ['BRL', 'USD', 'RBX'].sort((x, y) => equiv[y] - equiv[x])[0];
   const pctMaior = total > 0 ? Math.round(equiv[maior] / total * 100) : 0;
   $('donutCentro').innerHTML = total > 0
-    ? `<div class="donut-pct">${pctMaior}%</div><div class="donut-sub">em ${MOEDA_NOME[maior]}</div>`
-    : `<div class="donut-pct" style="font-size:20px">—</div><div class="donut-sub">sem entradas</div>`;
+    ? `<div class="donut-pct">${pctMaior}%</div><div class="donut-sub">${t('em')} ${moedaNome()[maior]}</div>`
+    : `<div class="donut-pct" style="font-size:20px">—</div><div class="donut-sub">${t('semEntradas')}</div>`;
 
   $('donutLegenda').innerHTML = ['BRL', 'USD', 'RBX'].map(k => {
     const pct = total > 0 ? Math.round(equiv[k] / total * 100) : 0;
     const cru = k === 'BRL' ? MOEDA.BRL.fmt(bruto.BRL) : k === 'USD' ? MOEDA.USD.fmt(bruto.USD) : MOEDA.RBX.fmt(bruto.RBX);
     return `<div class="leg-item">
       <span class="leg-dot" style="background:${MOEDA_COR[k]}"></span>
-      <span class="leg-nome">${MOEDA_NOME[k]}</span>
+      <span class="leg-nome">${moedaNome()[k]}</span>
       <span class="leg-val">${bruto[k] > 0 ? cru : '—'}</span>
       <b class="leg-pct">${pct}%</b>
     </div>`;
@@ -1285,14 +1362,14 @@ async function buscarCotacao() {
       cotacaoUSDonline = j.rates.BRL;
       cotacaoQuando = new Date().toLocaleDateString('pt-BR');
       $('cotacaoInfo').textContent = `US$ 1 = R$ ${cotacaoUSDonline.toFixed(2)}`;
-      $('convRodape').textContent = `cotação online de ${cotacaoQuando} · Robux pela config (1k = R$ ${S.config.cotacaoRBX1k})`;
+      $('convRodape').textContent = `${t('cotacaoOnline')} ${cotacaoQuando} · ${t('robuxPelaConfig')} (1k = R$ ${S.config.cotacaoRBX1k})`;
       calcularConversao();
       return;
     }
     throw new Error('resposta inválida');
   } catch {
     $('cotacaoInfo').textContent = `US$ 1 = R$ ${Number(S.config.cotacaoUSD).toFixed(2)}`;
-    $('convRodape').textContent = 'sem internet — usando as cotações das configurações';
+    $('convRodape').textContent = t('semInternet');
   }
 }
 function taxaUSD() { return cotacaoUSDonline || S.config.cotacaoUSD; }
@@ -1387,7 +1464,7 @@ function desenharViz() {
   const pad = 44;
   ctx.textAlign = 'left';
   ctx.fillStyle = '#e8edf4'; ctx.font = F(700, 26, "'Baloo 2'");
-  ctx.fillText('Lucro', pad, 58);
+  ctx.fillText(t('lucro'), pad, 58);
 
   const semana = ganhoEquivPeriodo(diaMenos(6), hoje());
   const semanaAnt = ganhoEquivPeriodo(diaMenos(13), diaMenos(7));
@@ -1407,9 +1484,9 @@ function desenharViz() {
     return (v >= 0 ? '+' : '') + v + '%';
   };
   const cols = [
-    ['Semana', semana, variacao(semana, semanaAnt), 'vs. semana passada'],
-    ['Mês', mesAtual, variacao(mesAtual, mesAnt), 'vs. mês passado'],
-    ['Ano', ano, '', String(anoKey)]
+    [t('semana'), semana, variacao(semana, semanaAnt), t('vsSemana')],
+    [t('mes'), mesAtual, variacao(mesAtual, mesAnt), t('vsMes')],
+    [t('ano'), ano, '', String(anoKey)]
   ];
   let cx = pad;
   const larg = (W - pad * 2) / 3;
@@ -1573,7 +1650,7 @@ function renderCalendario() {
 
   $('calPanel').innerHTML = `
     <div class="cal-head">
-      <div class="cal-titulo-app">Calendário de Lucro</div>
+      <div class="cal-titulo-app">${t('calendarioLucro')}</div>
       <div style="flex-grow:1"></div>
       <div class="mini-btn" data-cal="prev">‹</div>
       <div class="cal-titulo">${nomeMes.replace('.', '')}</div>
@@ -1585,10 +1662,10 @@ function renderCalendario() {
     <div class="cal-linha"></div>
     <div class="cal-sub">
       <span class="c-green"><b>${diasComLucro}</b> / R$ ${fmtNum(Math.round(totalMes))}</span>
-      <span class="cal-sub-dir">no ano: <b class="c-green">R$ ${fmtNum(Math.round(totalAno))}</b></span>
+      <span class="cal-sub-dir">${t('noAno')} <b class="c-green">R$ ${fmtNum(Math.round(totalAno))}</b></span>
     </div>
     <div class="cal-grid">${grid}</div>
-    <div class="cal-rodape"><span>Melhor sequência no mês: <b>${melhorSeq}d</b>${maxDia > 0 ? ` · melhor dia: <b class="c-amber">+R$ ${fmtCompacto(maxDia)}</b>` : ''}</span><span class="cal-marca"><img src="${spr('logo')}" alt=""><b>CRAVA</b></span></div>`;
+    <div class="cal-rodape"><span>${t('melhorSeq')} <b>${melhorSeq}d</b>${maxDia > 0 ? ` · ${t('melhorDia')} <b class="c-amber">+R$ ${fmtCompacto(maxDia)}</b>` : ''}</span><span class="cal-marca"><img src="${spr('logo')}" alt=""><b>CRAVA</b></span></div>`;
   try { pintarFundoCal(); } catch { }
 }
 $('calPanel').onclick = (e) => {
@@ -1861,7 +1938,7 @@ async function compartilharCalendario() {
   const midia = S.config.calMidia;
   const op = (S.config.calMidiaOp ?? 35) / 100;
   const txtOriginal = btn.textContent;
-  btn.textContent = 'Gerando…';
+  btn.textContent = t('gerando');
   try {
     const dc = dadosCal();
     const linhas = dc.celulas.length / 7;
@@ -2009,7 +2086,7 @@ document.addEventListener('keydown', (e) => {
 function esc(s) { return String(s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
 
 // expõe ações pros onclick inline
-Object.assign(window, { tornarAtivo, pausarRetomar, voltarFila, avancar, ciclarPagamento, excluir, cobrei, separeiCofre, escolherFavorita });
+Object.assign(window, { tornarAtivo, pausarRetomar, voltarFila, avancar, ciclarPagamento, excluir, cobrei, separeiCofre, escolherFavorita, abrirLiquidacao });
 
 // ---------- Boot ----------
 (async () => {

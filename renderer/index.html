@@ -15,33 +15,33 @@
     </div>
     <div class="nav-item active" data-view="hoje">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-      Hoje
+      <span data-i18n="navHoje">Hoje</span>
     </div>
     <div class="nav-item" data-view="trabalhos">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
-      Trabalhos
+      <span data-i18n="navTrabalhos">Trabalhos</span>
     </div>
     <div class="nav-item" data-view="insignias">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M8.5 13L7 22l5-3 5 3-1.5-9"/></svg>
-      Insígnias
+      <span data-i18n="navInsignias">Insígnias</span>
     </div>
     <div class="nav-item" data-view="share">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
-      Card do mês
+      <span data-i18n="navCard">Card do mês</span>
     </div>
     <div class="nav-item" data-view="config">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.7l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.7-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.7.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.7 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.7.3h.1a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 1 1.5h.1a1.6 1.6 0 0 0 1.7-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.7v.1a1.6 1.6 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.5 1z"/></svg>
-      Configurações
+      <span data-i18n="navConfig">Configurações</span>
     </div>
     <div class="sidebar-spacer"></div>
-    <div class="btn btn-ghost" id="btnWidget" style="font-size:12px">Mostrar widget</div>
+    <div class="btn btn-ghost" id="btnWidget" style="font-size:12px" data-i18n="btnWidget">Mostrar widget</div>
     <div class="slots-card">
       <div class="slots-head">
-        <div class="slots-title">Disponível</div>
+        <div class="slots-title" data-i18n="slotsTitulo">Disponível</div>
         <div class="slots-count" id="slotsCount">0 de 3 slots</div>
       </div>
       <div class="slots-bar" id="slotsBar"></div>
-      <div class="slots-hint">Slot livre só quando um trabalho for pago.</div>
+      <div class="slots-hint" data-i18n="slotsHint">Slot livre só quando um trabalho for pago.</div>
     </div>
   </div>
 
@@ -49,7 +49,7 @@
     <div class="topbar">
       <div class="search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input id="searchInput" type="text" placeholder="Buscar trabalho ou cliente…">
+        <input id="searchInput" type="text" placeholder="Buscar trabalho ou cliente…" data-i18n-ph="buscar" data-i18n-ph="buscar">
         <div class="kbd-chip">Ctrl K</div>
       </div>
       <div class="user-chip" id="userCard">
@@ -74,7 +74,7 @@
           <div class="chip">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--flame)" stroke-width="2" stroke-linecap="round"><path d="M12 22c4.4 0 7-2.8 7-6.5 0-2.5-1.4-4.6-3-6.5-.5 1.2-1.3 2-2.5 2.5C13.8 9 14 5.5 11 2c-.3 3-1.5 4.7-3 6.2C6.4 9.8 5 11.9 5 15.5 5 19.2 7.6 22 12 22z"/></svg>
             <div>
-              <div class="chip-label">STREAK DE META</div>
+              <div class="chip-label" data-i18n="streakLabel">STREAK DE META</div>
               <div class="chip-value c-flame" id="chipStreak">0 dias</div>
             </div>
           </div>
@@ -94,73 +94,73 @@
     <!-- ================= TRABALHOS ================= -->
     <div class="view" id="view-trabalhos">
       <div class="header">
-        <div class="h-title">Trabalhos</div>
-        <div class="btn btn-primary" id="btnNovo" style="padding:10px 18px">+ Novo pedido</div>
+        <div class="h-title" data-i18n="navTrabalhos">Trabalhos</div>
+        <div class="btn btn-primary" id="btnNovo" style="padding:10px 18px" data-i18n="btnNovoPedido">+ Novo pedido</div>
       </div>
       <div id="listaTodos"></div>
     </div>
 
     <!-- ================= INSÍGNIAS ================= -->
     <div class="view" id="view-insignias">
-      <div class="header"><div class="h-title">Insígnias <span id="insigniasCount" style="font-size:13px;color:var(--muted)"></span></div></div>
+      <div class="header"><div class="h-title"><span data-i18n="insigniasTitulo">Insígnias</span> <span id="insigniasCount" style="font-size:13px;color:var(--muted)"></span></div></div>
       <div id="insigniasGrid"></div>
       <div id="historicoMeses"></div>
     </div>
 
     <!-- ================= PERFIL ================= -->
     <div class="view" id="view-perfil">
-      <div class="header"><div class="h-title">Meu perfil</div></div>
+      <div class="header"><div class="h-title" data-i18n="meuPerfil">Meu perfil</div></div>
       <div class="config-card" style="flex-direction:row;align-items:center;gap:16px">
         <div class="perfil-avatar" id="perfilAvatar">V</div>
         <div style="flex-grow:1">
           <div style="font-size:16px;font-weight:800" id="perfilNomeShow">você</div>
           <div class="config-sub" id="perfilSubShow">@voce · GFX designer</div>
         </div>
-        <div class="mini-btn primary" id="btnFoto">Trocar foto</div>
+        <div class="mini-btn primary" id="btnFoto" data-i18n="trocarFoto">Trocar foto</div>
         <input type="file" id="fotoInput" accept="image/*" style="display:none">
       </div>
       <div class="config-card">
-        <div class="config-row"><div class="config-k">Nome de exibição</div><input id="pfNome" type="text" style="width:200px"></div>
-        <div class="config-row"><div class="config-k">Usuário</div><input id="pfUser" type="text" style="width:200px" placeholder="@voce"></div>
+        <div class="config-row"><div class="config-k" data-i18n="nomeExibicao">Nome de exibição</div><input id="pfNome" type="text" style="width:200px"></div>
+        <div class="config-row"><div class="config-k" data-i18n="usuario">Usuário</div><input id="pfUser" type="text" style="width:200px" placeholder="@voce"></div>
       </div>
       <div class="config-card">
-        <div style="margin-bottom:4px"><div class="config-k">Insígnia de destaque</div><div class="config-sub">Aparece ao lado do seu nome e no card do mês. Só dá pra escolher as que você já desbloqueou — clica de novo pra tirar.</div></div>
+        <div style="margin-bottom:4px"><div class="config-k" data-i18n="insigniaDestaque">Insígnia de destaque</div><div class="config-sub" data-i18n="insigniaDestaqueSub">Aparece ao lado do seu nome e no card do mês.</div></div>
         <div class="fav-picker" id="favPicker"></div>
       </div>
       <div class="config-card">
         <div class="config-row">
-          <div><div class="config-k">Conta e login</div><div class="config-sub">Sincronização entre PCs e login com senha chegam na próxima fase, junto com o servidor.</div></div>
-          <div class="badge-chip bc-muted">EM BREVE</div>
+          <div><div class="config-k" data-i18n="contaLogin">Conta e login</div><div class="config-sub" data-i18n="contaLoginSub">Sincronização entre PCs e login com senha chegam na próxima fase.</div></div>
+          <div class="badge-chip bc-muted" data-i18n="emBreve">EM BREVE</div>
         </div>
       </div>
-      <div class="btn btn-primary" id="btnSalvarPerfil">Salvar perfil</div>
+      <div class="btn btn-primary" id="btnSalvarPerfil" data-i18n="salvarPerfil">Salvar perfil</div>
     </div>
 
     <!-- ================= CARD DO MÊS ================= -->
     <div class="view" id="view-share">
-      <div class="header"><div class="h-title">Card do mês</div></div>
+      <div class="header"><div class="h-title" data-i18n="cardMes">Card do mês</div></div>
       <div class="share-wrap">
       <div class="share-col">
       <div class="canvas-wrap">
         <canvas id="shareCanvas" width="1120" height="680" style="width:560px;height:340px;border-radius:18px"></canvas>
         <div class="cal-abrir" id="btnAbrirCal" title="Calendário de lucro do mês">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="M3 10h18"/></svg>
-          Calendário
+          <span data-i18n="calendario">Calendário</span>
         </div>
       </div>
       <div class="share-bar">
-        <div class="share-label" style="letter-spacing:0">Mascote</div>
+        <div class="share-label" style="letter-spacing:0" data-i18n="mascote">Mascote</div>
         <div class="toggle" id="mascoteToggle"><div class="knob"></div></div>
         <div class="share-sep"></div>
-        <div class="mini-btn" id="btnMidia">Fundo</div>
+        <div class="mini-btn" id="btnMidia" data-i18n="fundo">Fundo</div>
         <div class="mini-btn" id="btnMidiaRemover" style="display:none">✕</div>
         <div id="opacidadeWrap" class="opacidade-wrap" style="display:none">
-          <span class="share-label" style="letter-spacing:0">Opacidade</span>
+          <span class="share-label" style="letter-spacing:0" data-i18n="opacidade">Opacidade</span>
           <input type="range" id="midiaOpacidade" min="10" max="100" value="40">
         </div>
         <input type="file" id="midiaInput" accept="image/*" style="display:none">
         <div style="flex-grow:1"></div>
-        <div class="btn btn-primary" id="btnCopiarCard" style="padding:9px 16px;font-size:12px">Copiar imagem</div>
+        <div class="btn btn-primary" id="btnCopiarCard" style="padding:9px 16px;font-size:12px" data-i18n="copiarImagem">Copiar imagem</div>
       </div>
       </div>
       <div class="share-col viz-col">
@@ -169,7 +169,7 @@
           <div class="mini-btn" id="vizMenos">‹ 6m</div>
           <div class="mini-btn" id="vizMais">12m ›</div>
           <div style="flex-grow:1"></div>
-          <div class="btn btn-primary" id="btnCopiarViz" style="padding:9px 16px;font-size:12px">Copiar imagem</div>
+          <div class="btn btn-primary" id="btnCopiarViz" style="padding:9px 16px;font-size:12px" data-i18n="copiarImagem">Copiar imagem</div>
         </div>
       </div>
       </div>
@@ -179,16 +179,17 @@
 
         <div class="trio-card" id="carteiraCard">
           <div class="trio-head">
-            <div class="trio-titulo">Carteira</div>
-            <div class="mini-btn" id="btnTrocarCarteira" title="Trocar cartão">⇄</div>
+            <div class="trio-titulo" data-i18n="carteira">Carteira</div>
+            <div class="mini-btn" id="btnTrocarCarteira" data-i18n-title="trocarCartao">⇄</div>
           </div>
           <div class="carteira-palco" id="carteiraPalco"></div>
-          <div class="carteira-linhas" id="carteiraLinhas"></div>
+          <div class="cart-pontos" id="carteiraPontos"></div>
+                    <div class="carteira-linhas" id="carteiraLinhas"></div>
         </div>
 
         <div class="trio-card">
           <div class="trio-head">
-            <div class="trio-titulo">Moedas</div>
+            <div class="trio-titulo" data-i18n="moedas">Moedas</div>
             <div style="flex-grow:1"></div>
             <div class="mini-btn" data-moe="prev">‹</div>
             <div class="trio-mes" id="moedasMes">—</div>
@@ -203,12 +204,12 @@
 
         <div class="trio-card">
           <div class="trio-head">
-            <div class="trio-titulo">Conversor</div>
+            <div class="trio-titulo" data-i18n="conversor">Conversor</div>
             <div style="flex-grow:1"></div>
             <div class="trio-cotacao" id="cotacaoInfo">—</div>
           </div>
           <div class="conv-bloco">
-            <div class="conv-rot">Você tem</div>
+            <div class="conv-rot" data-i18n="vcTem">Você tem</div>
             <div class="conv-linha">
               <select id="convDe"><option value="BRL">R$ Real</option><option value="USD">US$ Dólar</option><option value="RBX">Robux</option></select>
               <input id="convValor" type="number" min="0" value="1000">
@@ -216,7 +217,7 @@
           </div>
           <div class="conv-troca" id="btnConvTrocar" title="Inverter">⇅</div>
           <div class="conv-bloco">
-            <div class="conv-rot">Equivale a</div>
+            <div class="conv-rot" data-i18n="equivale">Equivale a</div>
             <div class="conv-linha">
               <select id="convPara"><option value="USD">US$ Dólar</option><option value="BRL">R$ Real</option><option value="RBX">Robux</option></select>
               <div class="conv-resultado" id="convResultado">—</div>
@@ -233,37 +234,44 @@
       <div class="modal modal-cal">
         <div class="cal-panel" id="calPanel"></div>
         <div class="share-bar">
-          <div class="mini-btn" id="btnCalFundo">Fundo</div>
+          <div class="mini-btn" id="btnCalFundo" data-i18n="fundo">Fundo</div>
           <div class="mini-btn" id="btnCalFundoRemover" style="display:none">✕</div>
           <input type="file" id="calMidiaInput" accept="image/*" style="display:none">
           <div id="calOpacidadeWrap" class="opacidade-wrap" style="display:none">
-            <span class="share-label" style="letter-spacing:0">Fundo</span>
+            <span class="share-label" style="letter-spacing:0" data-i18n="fundo">Fundo</span>
             <input type="range" id="calOpacidade" min="10" max="100" value="35">
           </div>
           <div id="calCelWrap" class="opacidade-wrap" style="display:none">
-            <span class="share-label" style="letter-spacing:0">Células</span>
+            <span class="share-label" style="letter-spacing:0" data-i18n="celulas">Células</span>
             <input type="range" id="calCelOp" min="0" max="100" value="100">
           </div>
           <div style="flex-grow:1"></div>
-          <div class="btn btn-ghost" id="btnFecharCal" style="padding:9px 16px;font-size:12px;max-width:110px">Fechar</div>
-          <div class="btn btn-primary" id="btnCompartilharCal" style="padding:9px 16px;font-size:12px">Salvar imagem</div>
+          <div class="btn btn-ghost" id="btnFecharCal" style="padding:9px 16px;font-size:12px;max-width:110px" data-i18n="btnFechar">Fechar</div>
+          <div class="btn btn-primary" id="btnCompartilharCal" style="padding:9px 16px;font-size:12px" data-i18n="salvarImagem">Salvar imagem</div>
         </div>
       </div>
     </div>
 
     <!-- ================= CONFIG ================= -->
     <div class="view" id="view-config">
-      <div class="header"><div class="h-title">Configurações</div></div>
+      <div class="header"><div class="h-title" data-i18n="config">Configurações</div></div>
       <div class="config-card">
         <div class="config-row">
-          <div><div class="config-k">Tema</div><div class="config-sub">Como o app aparece pra você</div></div>
+          <div><div class="config-k" data-i18n="tema">Tema</div><div class="config-sub" data-i18n="temaSub">Como o app aparece pra você</div></div>
           <div class="tema-picker" id="temaPicker">
-            <div class="tema-opt" data-tema="escuro">Escuro</div>
-            <div class="tema-opt" data-tema="claro">Claro</div>
+            <div class="tema-opt" data-tema="escuro" data-i18n="escuro">Escuro</div>
+            <div class="tema-opt" data-tema="claro" data-i18n="claro">Claro</div>
           </div>
         </div>
         <div class="config-row">
-          <div><div class="config-k">Cor do mascote</div><div class="config-sub">Muda o macaco, os ícones e o esquema de cores do app</div></div>
+          <div><div class="config-k" data-i18n="idioma">Idioma</div><div class="config-sub" data-i18n="idiomaSub">Language of the app</div></div>
+          <div class="tema-picker" id="idiomaPicker">
+            <div class="tema-opt" data-idioma="pt">PT</div>
+            <div class="tema-opt" data-idioma="en">EN</div>
+          </div>
+        </div>
+        <div class="config-row">
+          <div><div class="config-k" data-i18n="corMascote">Cor do mascote</div><div class="config-sub" data-i18n="corMascoteSub">Muda o macaco, os ícones e o esquema de cores do app</div></div>
           <div class="cor-picker" id="corPicker">
             <div class="cor-opt" data-cor="azul" style="background:#339dff"></div>
             <div class="cor-opt" data-cor="vermelho" style="background:#ff6b5e"></div>
@@ -274,23 +282,23 @@
           </div>
         </div>
         <div class="config-row">
-          <div><div class="config-k">Glow da tela inicial</div><div class="config-sub">Cards coloridos e vibrantes; desligado volta ao estilo discreto do design antigo</div></div>
+          <div><div class="config-k" data-i18n="glow">Glow da tela inicial</div><div class="config-sub" data-i18n="glowSub">Cards coloridos e vibrantes.</div></div>
           <div class="tema-picker" id="glowPicker">
-            <div class="tema-opt" data-glow="on">Ligado</div>
-            <div class="tema-opt" data-glow="off">Desligado</div>
+            <div class="tema-opt" data-glow="on" data-i18n="ligado">Ligado</div>
+            <div class="tema-opt" data-glow="off" data-i18n="desligado">Desligado</div>
           </div>
         </div>
       </div>
       <div class="config-card">
-        <div class="config-row"><div class="config-k">Meta diária (trabalhos)</div><input id="cfgMeta" type="number" min="1" max="20"></div>
-        <div class="config-row"><div class="config-k">Slots simultâneos</div><input id="cfgSlots" type="number" min="1" max="10"></div>
+        <div class="config-row"><div class="config-k" data-i18n="metaDiaria">Meta diária (trabalhos)</div><input id="cfgMeta" type="number" min="1" max="20"></div>
+        <div class="config-row"><div class="config-k" data-i18n="slotsSimultaneos">Slots simultâneos</div><input id="cfgSlots" type="number" min="1" max="10"></div>
       </div>
       <div class="config-card">
-        <div class="config-row"><div class="config-k">Cofre (% de cada pagamento)</div><input id="cfgCofre" type="number" min="0" max="90"></div>
-        <div class="config-row"><div class="config-k">Cotação US$ → R$</div><input id="cfgUSD" type="number" step="0.01"></div>
-        <div class="config-row"><div class="config-k">1.000 Robux → R$</div><input id="cfgRBX" type="number" step="0.01"></div>
+        <div class="config-row"><div class="config-k" data-i18n="cofrePct">Cofre (% de cada pagamento)</div><input id="cfgCofre" type="number" min="0" max="90"></div>
+        <div class="config-row"><div class="config-k" data-i18n="cotacaoUSD">Cotação US$ → R$</div><input id="cfgUSD" type="number" step="0.01"></div>
+        <div class="config-row"><div class="config-k" data-i18n="cotacaoRBX">1.000 Robux → R$</div><input id="cfgRBX" type="number" step="0.01"></div>
       </div>
-      <div class="btn btn-primary" id="btnSalvarConfig">Salvar configurações</div>
+      <div class="btn btn-primary" id="btnSalvarConfig" data-i18n="salvarConfig">Salvar configurações</div>
     </div>
   </div>
   </div>
@@ -299,12 +307,12 @@
 <!-- ================= MODAL: novo pedido ================= -->
 <div class="overlay" id="ovNovo">
   <div class="modal">
-    <div class="modal-title">Novo pedido</div>
-    <div class="field"><label>O que é?</label><input id="npTitulo" type="text" placeholder="Thumbnail — nome do jogo"></div>
+    <div class="modal-title" data-i18n="novoPedido">Novo pedido</div>
+    <div class="field"><label data-i18n="oQueE">O que é?</label><input id="npTitulo" type="text" placeholder="Thumbnail — nome do jogo"></div>
     <div class="field-row">
-      <div class="field"><label>Cliente</label><input id="npCliente" type="text" placeholder="@ do cliente"></div>
-      <div class="field" style="max-width:110px"><label>Valor</label><input id="npValor" type="number" min="0" placeholder="0"></div>
-      <div class="field" style="max-width:150px"><label>Moeda</label>
+      <div class="field"><label data-i18n="cliente">Cliente</label><input id="npCliente" type="text" placeholder="@ do cliente"></div>
+      <div class="field" style="max-width:110px"><label data-i18n="valor">Valor</label><input id="npValor" type="number" min="0" placeholder="0"></div>
+      <div class="field" style="max-width:150px"><label data-i18n="moeda">Moeda</label>
         <div class="moeda-picker" id="npMoeda">
           <div class="moeda-opt sel" data-m="BRL">R$</div>
           <div class="moeda-opt" data-m="USD">US$</div>
@@ -313,8 +321,8 @@
       </div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Prazo</label><input id="npPrazo" type="date"></div>
-      <div class="field"><label>Pagamento</label>
+      <div class="field"><label data-i18n="prazo">Prazo</label><input id="npPrazo" type="date"></div>
+      <div class="field"><label data-i18n="pagamento">Pagamento</label>
         <select id="npPgto">
           <option value="nao_pago">Não pago</option>
           <option value="aguardando">Aguardando</option>
@@ -323,8 +331,8 @@
       </div>
     </div>
     <div class="btn-row">
-      <div class="btn btn-primary" id="npSalvar">Salvar na fila</div>
-      <div class="btn btn-ghost" id="npCancelar" style="max-width:110px">Cancelar</div>
+      <div class="btn btn-primary" id="npSalvar" data-i18n="salvarNaFila">Salvar na fila</div>
+      <div class="btn btn-ghost" id="npCancelar" style="max-width:110px" data-i18n="btnCancelar">Cancelar</div>
     </div>
   </div>
 </div>
@@ -333,12 +341,29 @@
 <div class="overlay" id="ovCofre">
   <div class="modal" style="align-items:center;text-align:center">
     <img id="cofreImg" src="../assets/macaco/macaco-06.png" alt="" style="width:84px;height:auto;image-rendering:pixelated">
-    <div class="modal-title">Pagamento recebido!</div>
+    <div class="modal-title" data-i18n="pgtoRecebido">Pagamento recebido!</div>
     <div style="font-size:13px;font-weight:600;color:var(--muted)" id="cofreDetalhe"></div>
     <div style="font-size:22px;font-weight:800;color:var(--green)" id="cofreValor"></div>
     <div class="btn-row" style="align-self:stretch">
-      <div class="btn btn-green" id="cofreSim">Separei ✓</div>
-      <div class="btn btn-ghost" id="cofreDepois" style="max-width:110px">Depois</div>
+      <div class="btn btn-green" id="cofreSim" data-i18n="btnSeparei">Separei ✓</div>
+      <div class="btn btn-ghost" id="cofreDepois" style="max-width:110px" data-i18n="btnDepois">Depois</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: liquidação (vendeu robux / caiu o paypal) ================= -->
+<div class="overlay" id="ovLiq">
+  <div class="modal" style="align-items:center;text-align:center">
+    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/></svg>
+    <div class="modal-title" id="liqTitulo">Caiu na conta!</div>
+    <div style="font-size:13px;font-weight:600;color:var(--muted)" id="liqDetalhe"></div>
+    <div class="field" style="align-self:stretch">
+      <label id="liqLabel" data-i18n="liqPergunta">Quanto caiu em reais?</label>
+      <input id="liqValor" type="number" min="0" step="0.01">
+    </div>
+    <div class="btn-row" style="align-self:stretch">
+      <div class="btn btn-primary" id="liqConfirmar" data-i18n="btnConfirmar">Confirmar</div>
+      <div class="btn btn-ghost" id="liqCancelar" style="max-width:110px" data-i18n="btnCancelar">Cancelar</div>
     </div>
   </div>
 </div>
@@ -347,13 +372,14 @@
 <div class="overlay" id="ovMeta">
   <div class="modal" style="align-items:center;text-align:center;border-color:var(--blue-border)">
     <img id="metaImg" src="../assets/macaco/macaco-03.png" alt="" style="width:96px;height:auto;image-rendering:pixelated">
-    <div class="modal-title" style="font-size:20px">Meta batida!</div>
+    <div class="modal-title" style="font-size:20px" data-i18n="metaBatida">Meta batida!</div>
     <div style="font-size:13px;font-weight:600;color:var(--muted)" id="metaDetalhe"></div>
     <div class="badge-chip bc-amber" id="metaStreak"></div>
-    <div class="btn btn-primary" id="metaFechar" style="align-self:stretch">Jogo liberado, sem culpa</div>
+    <div class="btn btn-primary" id="metaFechar" style="align-self:stretch" data-i18n="jogoLiberado">Jogo liberado, sem culpa</div>
   </div>
 </div>
 
+<script src="i18n.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

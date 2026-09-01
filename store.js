@@ -12,6 +12,7 @@ const DEFAULTS = {
     atalho: 'CommandOrControl+Shift+N',
     tema: 'escuro',
     cor: 'azul',
+    idioma: 'pt',
     glowCards: true,
     cotacaoUSD: 5.4,
     cotacaoRBX1k: 28,

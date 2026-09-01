@@ -1081,3 +1081,41 @@ input:focus, select:focus { border-color: var(--blue); }
 .conv-rodape { font-size: 10.5px; font-weight: 600; color: var(--faint); }
 
 @media (max-width: 1180px) { .trio-wrap { grid-template-columns: 1fr; } }
+
+/* ================================================================
+   CARTEIRA EM CARROSSEL (3 cartoes) + ANIMACOES MAIS SUAVES
+   ================================================================ */
+.carteira-palco { height: 176px; perspective: 1000px; }
+.cartao {
+  transition: transform 0.62s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.62s cubic-bezier(0.22, 1, 0.36, 1),
+              filter 0.62s ease, box-shadow 0.62s ease;
+  will-change: transform, opacity;
+}
+.cartao.ambar { background: linear-gradient(135deg, #ffc861, #e08a10); color: #2a1a02; }
+.cartao.pos0 { transform: translate3d(0, 0, 0) scale(1) rotateX(0deg); opacity: 1; z-index: 3; }
+.cartao.pos1 { transform: translate3d(0, 16px, -60px) scale(0.945) rotateX(3deg); opacity: 0.72; z-index: 2; filter: saturate(0.85) brightness(0.92); }
+.cartao.pos2 { transform: translate3d(0, 30px, -120px) scale(0.89) rotateX(5deg); opacity: 0.42; z-index: 1; filter: saturate(0.6) brightness(0.82); }
+.cart-pontos { display: flex; gap: 6px; justify-content: center; }
+.cart-ponto {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--border2);
+  transition: background 0.4s ease, transform 0.4s ease;
+}
+.cart-ponto.on { background: var(--blue); transform: scale(1.25); }
+.mini-btn.liquidar { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+
+/* animacoes globais mais suaves e organicas */
+:root { --ease: cubic-bezier(0.22, 1, 0.36, 1); }
+.view.open { animation: fadeUp 0.42s var(--ease); }
+.job-row, .stat-card, .active-card, .insignia, .trio-card {
+  animation: fadeUp 0.5s var(--ease) backwards;
+  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease), border-color 0.35s ease;
+}
+.btn, .mini-btn, .nav-item, .badge-chip, .cor-opt, .fav-opt, .toggle, .tema-opt, .user-chip, .cal-abrir {
+  transition: all 0.28s var(--ease);
+}
+.overlay.open .modal { animation: popIn 0.4s var(--ease); }
+.overlay { transition: opacity 0.28s ease; }
+.seg, .pipe, .slot, .mm-fill, .cal-cell { transition: background 0.5s ease, transform 0.4s var(--ease); }
+.stat-card:hover, .job-row:hover { transform: translateY(-3px); }
+.btn:active, .mini-btn:active { transform: scale(0.95); transition-duration: 0.1s; }
