@@ -189,6 +189,29 @@ ipcMain.on('clipboard:image', (_e, dataURL) => {
   clipboard.writeImage(nativeImage.createFromDataURL(dataURL));
   new Notification({ title: 'Card copiado!', body: 'Cola no Discord ou no X com Ctrl+V.', icon: ICON }).show();
 });
+// mídia do share card vive em arquivo próprio (não incha o JSON de dados)
+ipcMain.handle('midia:save', (_e, dataURL) => {
+  const fs = require('fs');
+  const m = String(dataURL).match(/^data:(image\/[\w+]+);base64,(.+)$/s);
+  if (!m) return null;
+  const ext = m[1] === 'image/gif' ? 'gif' : 'png';
+  for (const e of ['gif', 'png']) {
+    try { fs.unlinkSync(path.join(app.getPath('userData'), 'share-midia.' + e)); } catch { }
+  }
+  const p = path.join(app.getPath('userData'), 'share-midia.' + ext);
+  fs.writeFileSync(p, Buffer.from(m[2], 'base64'));
+  return p;
+});
+ipcMain.handle('midia:read', (_e, p) => {
+  try { return require('fs').readFileSync(p); } catch { return null; }
+});
+ipcMain.on('midia:clear', () => {
+  const fs = require('fs');
+  for (const e of ['gif', 'png']) {
+    try { fs.unlinkSync(path.join(app.getPath('userData'), 'share-midia.' + e)); } catch { }
+  }
+});
+
 ipcMain.handle('gif:save', async (_e, bytes) => {
   const { dialog } = require('electron');
   const fs = require('fs');

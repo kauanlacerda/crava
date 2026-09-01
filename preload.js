@@ -11,5 +11,8 @@ contextBridge.exposeInMainWorld('api', {
   saveCapture: (job) => ipcRenderer.send('capture:save', job),
   copyImage: (dataURL) => ipcRenderer.send('clipboard:image', dataURL),
   saveGif: (bytes) => ipcRenderer.invoke('gif:save', bytes),
+  saveMidia: (dataURL) => ipcRenderer.invoke('midia:save', dataURL),
+  readMidia: (p) => ipcRenderer.invoke('midia:read', p),
+  clearMidia: () => ipcRenderer.send('midia:clear'),
   quit: () => ipcRenderer.send('app:quit')
 });

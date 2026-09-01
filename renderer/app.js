@@ -875,9 +875,12 @@ function atualizarSprites() {
   $('logoImg').src = spr('logo');
   $('metaImg').src = spr('metaModal');
   $('cofreImg').src = spr('cofre');
-  if (S.config.shareMidia && MEDIA_IMG.src !== S.config.shareMidia.dataURL) {
-    MEDIA_IMG.src = S.config.shareMidia.dataURL;
-    prepararGifPreview();
+  if (S.config.shareMidia) {
+    const alvo = midiaSrc(S.config.shareMidia);
+    if (alvo && MEDIA_IMG.src !== alvo) {
+      MEDIA_IMG.src = alvo;
+      prepararGifPreview();
+    }
   }
   const fav = S.config.insigniaFavorita;
   if (fav && !FAV_IMG.src.includes(`insignias/${fav}.png`)) FAV_IMG.src = `../assets/insignias/${fav}.png`;
@@ -1061,6 +1064,20 @@ function iniciarGifPreview() {
   };
   gifTimer = setTimeout(tick, gifDelays[0]);
 }
+// mídia pode estar em arquivo (novo, aguenta 15 MB) ou dataURL (legado)
+function midiaSrc(midia) {
+  if (midia.path) return 'file:///' + midia.path.replace(/\\/g, '/');
+  return midia.dataURL || '';
+}
+async function midiaBuffer(midia) {
+  if (midia.path) {
+    const bytes = await window.api.readMidia(midia.path);
+    if (!bytes) throw new Error('arquivo da mídia sumiu');
+    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+  }
+  return await (await fetch(midia.dataURL)).arrayBuffer();
+}
+
 async function prepararGifPreview() {
   const midia = S.config.shareMidia;
   pararGifPreview();
@@ -1068,7 +1085,7 @@ async function prepararGifPreview() {
   if (!midia || midia.tipo !== 'gif' || gifPreparando) return;
   gifPreparando = true;
   try {
-    const buf = await (await fetch(midia.dataURL)).arrayBuffer();
+    const buf = await midiaBuffer(midia);
     const dec = new ImageDecoder({ data: buf, type: 'image/gif' });
     await dec.tracks.ready;
     await dec.completed.catch(() => { });
@@ -1091,11 +1108,13 @@ $('btnMidia').onclick = () => $('midiaInput').click();
 $('midiaInput').onchange = () => {
   const f = $('midiaInput').files[0];
   if (!f) return;
-  if (f.size > 8 * 1024 * 1024) { alert('Arquivo muito grande (máx. 8 MB).'); return; }
+  if (f.size > 15 * 1024 * 1024) { alert('Arquivo muito grande (máx. 15 MB).'); return; }
   const r = new FileReader();
   r.onload = async () => {
-    S.config.shareMidia = { tipo: f.type === 'image/gif' ? 'gif' : 'foto', dataURL: r.result };
-    MEDIA_IMG.src = r.result;
+    const p = await window.api.saveMidia(r.result);
+    if (!p) { alert('Não consegui salvar a mídia.'); return; }
+    S.config.shareMidia = { tipo: f.type === 'image/gif' ? 'gif' : 'foto', path: p };
+    MEDIA_IMG.src = midiaSrc(S.config.shareMidia);
     await salvar();
     prepararGifPreview();
     drawShareCard();
@@ -1105,6 +1124,7 @@ $('midiaInput').onchange = () => {
 };
 $('btnMidiaRemover').onclick = async () => {
   delete S.config.shareMidia;
+  window.api.clearMidia();
   pararGifPreview();
   gifFrames = null;
   await salvar();
@@ -1124,7 +1144,7 @@ async function gerarGifAnimado() {
   btn.textContent = 'Gerando GIF…';
   try {
     const { GIFEncoder, quantize, applyPalette } = await import('./lib/gifenc.esm.js');
-    const buf = await (await fetch(midia.dataURL)).arrayBuffer();
+    const buf = await midiaBuffer(midia);
     const dec = new ImageDecoder({ data: buf, type: 'image/gif' });
     await dec.tracks.ready;
     await dec.completed.catch(() => { });
