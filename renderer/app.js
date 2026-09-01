@@ -169,16 +169,28 @@ function abrirCofre(j) {
   $('cofreValor').textContent = `Separa ${fmtValor({ q: guardar, m: j.valor.m })} (${pct}%)`;
   $('ovCofre').classList.add('open');
 }
+function novoCofre(confirmado) {
+  return {
+    data: hoje(),
+    valor: cofreJob ? fmtValor({ q: cofreJob.valor.q * S.config.cofrePct / 100, m: cofreJob.valor.m }) : '',
+    titulo: cofreJob ? cofreJob.titulo : '',
+    confirmado
+  };
+}
 $('cofreSim').onclick = async () => {
-  S.stats.cofres.push({ data: hoje(), valor: cofreJob ? fmtValor({ q: cofreJob.valor.q * S.config.cofrePct / 100, m: cofreJob.valor.m }) : '', confirmado: true });
+  S.stats.cofres.push(novoCofre(true));
   $('ovCofre').classList.remove('open');
   await salvar();
 };
 $('cofreDepois').onclick = async () => {
-  S.stats.cofres.push({ data: hoje(), valor: '', confirmado: false });
+  S.stats.cofres.push(novoCofre(false));
   $('ovCofre').classList.remove('open');
   await salvar();
 };
+async function separeiCofre(idx) {
+  const c = S.stats.cofres[idx];
+  if (c) { c.confirmado = true; c.confirmadoEm = hoje(); await salvar(); }
+}
 $('metaFechar').onclick = () => $('ovMeta').classList.remove('open');
 
 // ---------- Render ----------
@@ -207,6 +219,7 @@ function render() {
   renderUser();
   renderAtivo();
   renderFila();
+  renderCofrePendente();
   renderCobrador();
   renderTodos();
   renderInsignias();
@@ -380,6 +393,21 @@ function renderFila() {
   $('filaArea').innerHTML = html;
 }
 
+// lembretes de cofre não separados (quem clicou "Depois" no popup)
+function renderCofrePendente() {
+  const pendentes = S.stats.cofres
+    .map((c, idx) => ({ ...c, idx }))
+    .filter(c => !c.confirmado);
+  if (!pendentes.length) { $('cofreArea').innerHTML = ''; return; }
+  $('cofreArea').innerHTML = pendentes.slice(0, 3).map(c => `
+    <div class="cobrador" style="border-color:rgba(47,211,156,0.3);background:rgba(47,211,156,0.06)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="3"/><path d="M12 8V5"/><circle cx="12" cy="3.5" r="1.5"/><circle cx="16" cy="13" r="1"/></svg>
+      <div class="cobrador-text" style="color:var(--green)">Cofre pendente${c.valor ? `: separa ${esc(c.valor)}` : ''}${c.titulo ? ` — ${esc(c.titulo)}` : ''} · desde ${c.data.split('-').reverse().join('/')}</div>
+      <div class="cobrador-btn" style="background:var(--green)" onclick="separeiCofre(${c.idx})">Separei ✓</div>
+    </div>`).join('') +
+    (pendentes.length > 3 ? `<div class="section-label">+ ${pendentes.length - 3} cofres pendentes</div>` : '');
+}
+
 function renderCobrador() {
   const alvo = S.jobs.find(j =>
     (j.status === 'entregue' || j.status === 'aprovado') &&
@@ -400,9 +428,26 @@ let busca = '';
 function renderTodos() {
   let todos = [...S.jobs].sort((a, b) => (a.prazo || '9999') < (b.prazo || '9999') ? -1 : 1);
   if (busca) todos = todos.filter(j => `${j.titulo} ${j.cliente || ''}`.toLowerCase().includes(busca));
-  $('listaTodos').innerHTML = todos.length
-    ? `<div class="job-grid">${todos.map(j => jobRowHTML(j, null, j.status === 'aprovado' && j.pagamento === 'pago')).join('')}</div>`
-    : `<div class="empty-state"><div class="big">${busca ? 'Nada encontrado' : 'Nenhum trabalho ainda'}</div><div>${busca ? `nenhum trabalho bate com "${esc(busca)}"` : 'Aceita um pedido e ele aparece aqui.'}</div></div>`;
+  if (!todos.length) {
+    $('listaTodos').innerHTML = `<div class="empty-state"><div class="big">${busca ? 'Nada encontrado' : 'Nenhum trabalho ainda'}</div><div>${busca ? `nenhum trabalho bate com "${esc(busca)}"` : 'Aceita um pedido e ele aparece aqui.'}</div></div>`;
+    return;
+  }
+  // seções: ativo → fila → esperando aprovação/pagamento → finalizados
+  const grupos = [
+    ['EM ANDAMENTO', todos.filter(j => j.status === 'fazendo'), false],
+    ['NA FILA', todos.filter(j => j.status === 'aceito'), false],
+    ['ESPERANDO APROVAÇÃO OU PAGAMENTO', todos.filter(j =>
+      (j.status === 'entregue' || j.status === 'aprovado') && j.pagamento !== 'pago'), false],
+    ['FINALIZADOS E PAGOS', todos.filter(j => j.status === 'aprovado' && j.pagamento === 'pago')
+      .sort((a, b) => (b.pagoEm || '') < (a.pagoEm || '') ? -1 : 1), true],
+    ['ENTREGUES E PAGOS (FALTA APROVAR)', todos.filter(j => j.status === 'entregue' && j.pagamento === 'pago'), false]
+  ];
+  $('listaTodos').innerHTML = grupos.map(([nome, lista, dim]) => {
+    if (!lista.length) return '';
+    return `
+      <div class="section-label" style="margin-top:12px">${nome} · ${lista.length}</div>
+      <div class="job-grid" style="margin-top:9px">${lista.map(j => jobRowHTML(j, null, dim)).join('')}</div>`;
+  }).join('');
 }
 
 // ---------- Insígnias ----------
@@ -1100,7 +1145,7 @@ document.addEventListener('keydown', (e) => {
 function esc(s) { return String(s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
 
 // expõe ações pros onclick inline
-Object.assign(window, { tornarAtivo, pausar, avancar, ciclarPagamento, excluir, cobrei });
+Object.assign(window, { tornarAtivo, pausar, avancar, ciclarPagamento, excluir, cobrei, separeiCofre });
 
 // ---------- Boot ----------
 (async () => {
