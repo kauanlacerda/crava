@@ -1210,9 +1210,10 @@ function renderCalendario() {
     const ehHoje = `${calMes}-${String(d).padStart(2, '0')}` === hj;
     const ehMelhor = d === melhorIdx && g > 0;
     const int = maxDia > 0 ? g / maxDia : 0;
+    const celOp = (S.config.calCelOp ?? 100) / 100;
     const bg = ehMelhor
-      ? 'background:rgba(245,183,78,0.22)'
-      : (g > 0 ? `background:rgba(47,211,156,${(0.07 + 0.30 * int).toFixed(2)})` : '');
+      ? `background:rgba(245,183,78,${(0.22 * celOp).toFixed(2)})`
+      : (g > 0 ? `background:rgba(47,211,156,${((0.07 + 0.30 * int) * celOp).toFixed(2)})` : '');
     grid += `<div class="cal-cell ${ehHoje ? 'hoje' : ''} ${ehMelhor ? 'melhor' : ''}" style="${bg}" title="${d}/${mes}: R$ ${fmtNum(Math.round(g))}">
       <div class="cal-dia">${d}</div>
       <div class="cal-val ${ehMelhor ? 'c-amber' : (g > 0 ? 'c-green' : 'sem-lucro')}">${g > 0 ? '+R$ ' + fmtCompacto(g) : ''}</div>
@@ -1338,9 +1339,12 @@ function pintarFundoCal() {
     painel.style.backgroundImage =
       `linear-gradient(rgba(8,12,24,${(1 - op).toFixed(2)}),rgba(8,12,24,${(1 - op).toFixed(2)})),url("${midiaSrc(midia)}")`;
   }
+  painel.style.setProperty('--celop', String((S.config.calCelOp ?? 100) / 100));
   $('btnCalFundoRemover').style.display = '';
   $('calOpacidadeWrap').style.display = '';
+  $('calCelWrap').style.display = '';
   if (document.activeElement !== $('calOpacidade')) $('calOpacidade').value = S.config.calMidiaOp ?? 35;
+  if (document.activeElement !== $('calCelOp')) $('calCelOp').value = S.config.calCelOp ?? 100;
 }
 
 $('btnCalFundo').onclick = () => $('calMidiaInput').click();
@@ -1368,11 +1372,14 @@ $('btnCalFundoRemover').onclick = async () => {
   pararCalGif(); calGifFrames = null;
   $('btnCalFundoRemover').style.display = 'none';
   $('calOpacidadeWrap').style.display = 'none';
+  $('calCelWrap').style.display = 'none';
   await salvar();
   pintarFundoCal();
 };
 $('calOpacidade').oninput = () => { S.config.calMidiaOp = +$('calOpacidade').value; pintarFundoCal(); };
 $('calOpacidade').onchange = async () => { await salvar(); };
+$('calCelOp').oninput = () => { S.config.calCelOp = +$('calCelOp').value; renderCalendario(); };
+$('calCelOp').onchange = async () => { await salvar(); };
 
 // compartilhar: imagem do calendário (PNG no clipboard; GIF animado salvo em arquivo)
 // dados do mês corrente do calendário (mesma conta do render)
@@ -1458,11 +1465,12 @@ function desenharCalCanvas(ctx, W, H, dc, fonteMidia, op) {
     const int = dc.maxDia > 0 ? g / dc.maxDia : 0;
     const ehMelhor = d === dc.melhorIdx && g > 0;
     rrect(ctx, x, y, cw, ch, 12);
-    ctx.fillStyle = fonteMidia ? 'rgba(255,255,255,0.07)' : '#171c24';
+    const celOp = (S.config.calCelOp ?? 100) / 100;
+    ctx.fillStyle = fonteMidia ? `rgba(255,255,255,${(0.07 * celOp).toFixed(3)})` : '#171c24';
     ctx.fill();
     if (g > 0) {
       rrect(ctx, x, y, cw, ch, 12);
-      ctx.fillStyle = ehMelhor ? 'rgba(245,183,78,0.24)' : `rgba(47,211,156,${(0.07 + 0.30 * int).toFixed(2)})`;
+      ctx.fillStyle = ehMelhor ? `rgba(245,183,78,${(0.24 * celOp).toFixed(2)})` : `rgba(47,211,156,${((0.07 + 0.30 * int) * celOp).toFixed(2)})`;
       ctx.fill();
     }
     if (ehMelhor) { rrect(ctx, x, y, cw, ch, 12); ctx.strokeStyle = 'rgba(245,183,78,0.6)'; ctx.lineWidth = 2; ctx.stroke(); }

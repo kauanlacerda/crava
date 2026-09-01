@@ -923,3 +923,9 @@ input:focus, select:focus { border-color: var(--blue); }
 .cal-marca { display: flex; align-items: center; gap: 8px; }
 .cal-marca img { width: 28px; height: auto; image-rendering: pixelated; }
 .cal-marca b { font-family: 'Press Start 2P', monospace; font-size: 12px; font-weight: 400; color: var(--text); letter-spacing: 0; }
+
+/* opacidade das celulas controlavel (--celop) quando ha fundo */
+.cal-panel.com-fundo .cal-cell:not(.vazia) {
+  background: rgba(255, 255, 255, calc(0.07 * var(--celop, 1)));
+  border-color: rgba(255, 255, 255, calc(0.12 * var(--celop, 1)));
+}
