@@ -33,10 +33,10 @@ function diasAte(prazo) {
 function prazoTexto(prazo) {
   const d = diasAte(prazo);
   if (d === null) return '';
-  if (d < 0) return `${-d}d atrasado`;
-  if (d === 0) return 'é HOJE';
-  if (d === 1) return 'amanhã';
-  return `em ${d} dias`;
+  if (d < 0) return `${-d}${t('prazoAtrasado')}`;
+  if (d === 0) return t('prazoHoje');
+  if (d === 1) return t('prazoAmanha');
+  return `${t('prazoEm')} ${d} ${t('prazoDias')}`;
 }
 function prazoClasse(prazo) {
   const d = diasAte(prazo);
@@ -88,6 +88,7 @@ function totalPagoBRLequiv() {
 // redesenho depois (salvar, sincronizar, o tique de cada minuto) refaz todo o
 // HTML — e reanimar tudo é exatamente o piscar que se via.
 let primeiraPintura = true;
+let trocandoView = false;   // render disparado por troca de aba: a animação deve rodar
 
 function silenciarAnimacoes(ms = 500) {
   const main = document.querySelector('.main');
@@ -129,6 +130,7 @@ async function tornarAtivo(id) {
   j.pausado = false;
   j.fazendoDesde = Date.now();
   await salvar();
+  destacarCard(id);
 }
 // pausa/retoma o cronômetro sem largar o trabalho
 async function pausarRetomar(id) {
@@ -141,8 +143,30 @@ async function pausarRetomar(id) {
 // devolve o trabalho pra fila (o antigo "pausar")
 async function praFila(id) {
   const j = S.jobs.find(x => x.id === id);
-  if (j) { j.status = 'aceito'; await salvar(); }
+  if (j) { j.status = 'aceito'; await salvar(); destacarCard(id); }
 }
+// A fila ordenada, com o trabalho fixado à frente. renderAtivo e renderFila
+// precisam concordar: antes um usava find() por ordem de criação e o outro
+// sort() por prazo, então o botão "Começar:" apontava para um trabalho e a
+// lista logo abaixo começava por outro.
+function filaOrdenada() {
+  return S.jobs.filter(j => j.status === 'aceito').sort((a, b) => {
+    if (!!b.proximo - !!a.proximo) return !!b.proximo - !!a.proximo;
+    const pa = a.prazo || '9999-99', pb = b.prazo || '9999-99';
+    return pa < pb ? -1 : pa > pb ? 1 : 0;
+  });
+}
+function proximoDaFila() { return filaOrdenada()[0] || null; }
+
+// "Faz esse ser o próximo" — a escolha dele vence a ordenação automática.
+// Só um pode estar fixado; marcar um solta o anterior.
+async function fazerProximo(id) {
+  for (const j of S.jobs) if (j.proximo) delete j.proximo;
+  const j = S.jobs.find(x => x.id === id);
+  if (j) j.proximo = true;
+  await salvar();
+}
+
 async function voltarFila(id) {
   const j = S.jobs.find(x => x.id === id);
   if (j) { acumularTempo(j); j.status = 'aceito'; j.pausado = false; await salvar(); }
@@ -169,6 +193,7 @@ async function avancar(id) {
     j.status = 'aceito';
   }
   await salvar();
+  destacarCard(id);
 }
 async function ciclarPagamento(id) {
   const j = S.jobs.find(x => x.id === id);
@@ -279,9 +304,16 @@ async function separeiCofre(idx) {
 $('metaFechar').onclick = () => $('ovMeta').classList.remove('open');
 
 // ---------- Render ----------
+const viewAberta = (nome) => {
+  const v = document.getElementById('view-' + nome);
+  return !!v && v.classList.contains('open');
+};
+
 function render() {
   const rolagem = lerRolagem();
-  if (!primeiraPintura) silenciarAnimacoes(200);
+  // redesenho comum não repete a animação; trocar de aba, sim — é a única
+  // hora em que a entrada deve ser vista
+  if (!primeiraPintura && !trocandoView) silenciarAnimacoes(200);
   IDIOMA = S.config.idioma === 'en' ? 'en' : 'pt';
   aplicarIdiomaHTML();
   // o modal em modo edição não pode voltar a dizer "Novo pedido" num render
@@ -302,27 +334,67 @@ function render() {
   const st = streakVigente();
   $('chipStreak').textContent = `${st} ${st === 1 ? t('dia') : t('dias')}`;
 
-  // slots
-  const occ = ocupados(), tot = S.config.slots;
-  $('slotsCount').textContent = `${occ} ${t('slotsDe')} ${tot} ${t('slots')}`;
-  $('slotsBar').innerHTML = Array.from({ length: tot }, (_, i) =>
-    `<div class="slot ${i < occ ? 'on' : ''}"></div>`).join('');
-
+  renderMetaInsignia();
   renderStats();
   renderUser();
   renderAtivo();
   renderFila();
   renderCofrePendente();
-  try { renderCofreView(); } catch { }
   renderCobrador();
-  renderTodos();
-  renderInsignias();
-  renderConfig();
-  renderCalendario();
-  try { desenharViz(); } catch { }
-  try { renderCarteira(); renderMoedas(); calcularConversao(); renderDinheiro(); } catch { }
+
+  // cada aba só se redesenha quando está aberta; ao trocar de aba,
+  // abrirView() chama render() de novo e a aba nova se monta ali
+  if (viewAberta('cofre')) { try { renderCofreView(); } catch { } }
+  if (viewAberta('trabalhos')) renderTodos();
+  if (viewAberta('insignias')) renderInsignias();
+  if (viewAberta('config')) renderConfig();
+  if (viewAberta('share')) {
+    renderCalendario();
+    try { desenharViz(); } catch { }
+    try { renderCarteira(); renderMoedas(); calcularConversao(); renderDinheiro(); } catch { }
+  }
+
   devolverRolagem(rolagem);
   primeiraPintura = false;
+}
+
+// A barra lateral passa a mostrar a meta escolhida em vez dos slots: uma coisa
+// só, que enche conforme você trabalha.
+function renderMetaInsignia() {
+  const caixa = $('metaCard');
+  if (!caixa) return;
+  const m = metaAtual();
+
+  if (!m) {
+    caixa.className = 'meta-card vazia';
+    caixa.innerHTML = `<div class="meta-vazia">${t('metaSemEscolha')}</div>`;
+    return;
+  }
+  const pct = Math.min(100, Math.round(m.atual / m.alvo * 100));
+  const falta = Math.max(0, m.alvo - m.atual);
+  caixa.className = 'meta-card';
+  caixa.innerHTML = `
+    <div class="meta-topo">
+      <img class="meta-art" src="../assets/insignias/${m.b.id}.png" alt=""
+        onerror="this.style.visibility='hidden'">
+      <div class="meta-txt">
+        <div class="meta-nome">${esc(nomeInsignia(m.b))}</div>
+        <div class="meta-desc">${esc(descInsignia(m.b))}</div>
+      </div>
+    </div>
+    <div class="meta-barra"><div style="width:${pct}%;background:${m.b.cor}"></div></div>
+    <div class="meta-rodape">
+      <span>${fmtMeta(m.atual)} / ${fmtMeta(m.alvo)}</span>
+      <span class="meta-pct">${pct}%</span>
+    </div>
+    <div class="meta-falta">${falta > 0 ? t('metaFalta') + ' ' + fmtMeta(falta) : t('metaQuase')}</div>`;
+}
+
+// números grandes viram "1,2k" pra caber na barra estreita
+function fmtMeta(v) {
+  if (v >= 1000000) return (v / 1000000).toLocaleString(loc(), { maximumFractionDigits: 1 }) + 'M';
+  if (v >= 1000) return (v / 1000).toLocaleString(loc(), { maximumFractionDigits: 1 }) + 'k';
+  return String(Math.round(v));
 }
 
 // ---------- Stat cards (fileira do topo, como no design) ----------
@@ -425,6 +497,25 @@ function renderFavPicker(ganhas, fav) {
         </div>`).join('')
     : `<div class="config-sub">${t('semInsignias')}</div>`;
 }
+// Meta: a insígnia que você está perseguindo. Só faz sentido numa que ainda
+// não foi conquistada — clicar de novo desmarca.
+async function escolherMeta(id) {
+  S.config.metaInsignia = S.config.metaInsignia === id ? '' : id;
+  await salvar();
+}
+
+function metaAtual() {
+  const id = S.config.metaInsignia;
+  if (!id) return null;
+  const b = INSIGNIAS.find(x => x.id === id);
+  if (!b) return null;
+  const ganhas = S.stats.insigniasGanhas || {};
+  if (ganhas[b.id]) return null;      // já conquistada: deixa de ser meta
+  let atual = 0, alvo = 1;
+  try { [atual, alvo] = b.prog(); } catch { }
+  return { b, atual: Math.max(0, atual), alvo: alvo || 1 };
+}
+
 async function escolherFavorita(id) {
   S.config.insigniaFavorita = S.config.insigniaFavorita === id ? '' : id;
   await salvar();
@@ -449,7 +540,7 @@ function pipelineHTML(j) {
 function renderAtivo() {
   const j = ativo();
   if (!j) {
-    const prox = S.jobs.find(x => x.status === 'aceito');
+    const prox = proximoDaFila();
     $('activeArea').innerHTML = `
       <div class="active-card" style="justify-content:center">
         <div class="empty-state" style="padding:18px 0">
@@ -485,22 +576,36 @@ function renderAtivo() {
     </div>`;
 }
 
-function jobRowHTML(j, num, dim) {
+// opts: { dim, fila, proximo }
+// Na fila as linhas ficam com DUAS ações (cravar e "fazer próximo"). Editar e
+// excluir saem: já existem na aba Trabalhos, e aqui competiam com a única
+// decisão que importa — qual eu faço agora.
+function jobRowHTML(j, opts = {}) {
+  const { dim = false, fila = false, proximo = false } = opts;
   const [ptxt, pcls] = pgtoChip()[j.pagamento];
   const acts = [];
   if (j.status === 'aceito') acts.push(`<div class="mini-btn primary" onclick="tornarAtivo('${j.id}')">${t('btnCravar')}</div>`);
   if (j.status === 'entregue') acts.push(`<div class="mini-btn" onclick="avancar('${j.id}')">${t('btnAprovado')}</div>`);
   if (precisaLiquidar(j)) acts.push(`<div class="mini-btn liquidar" onclick="abrirLiquidacao('${j.id}')">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</div>`);
-  acts.push(`<div class="mini-btn" onclick="editarJob('${j.id}')" title="${t('editar')}">✎</div>`);
-  acts.push(`<div class="mini-btn" onclick="excluir('${j.id}')">✕</div>`);
+  if (fila && !proximo) acts.push(`<div class="mini-btn" onclick="fazerProximo('${j.id}')" title="${t('fazerProximo')}">⇡</div>`);
+  if (!fila) {
+    acts.push(`<div class="mini-btn" onclick="editarJob('${j.id}')" title="${t('editar')}">✎</div>`);
+    acts.push(`<div class="mini-btn" onclick="excluir('${j.id}')">✕</div>`);
+  }
+  // o motivo de estar nessa posição fica escrito, em vez de ser regra invisível
+  const motivo = `<span class="${prazoClasse(j.prazo)}">${prazoTexto(j.prazo) || t('semPrazo')}</span>`;
+  const marca = proximo
+    ? `<div class="job-selo">${t('proximo')}</div>`
+    : fila
+      ? `<div class="job-num vago"></div>`
+      : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>`;
   return `
-    <div class="job-row ${dim ? 'dim' : ''}" data-id="${j.id}">
+    <div class="job-row ${dim ? 'dim' : ''} ${proximo ? 'proximo' : ''}" data-id="${j.id}">
       <div class="job-main">
-        ${num ? `<div class="job-num">${num}</div>` :
-          `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>`}
+        ${marca}
         <div>
           <div class="job-title">${esc(j.titulo)}</div>
-          <div class="job-client">${esc(j.cliente || '')} · ${pipeLabel()[j.status].toLowerCase()} · <span class="${prazoClasse(j.prazo)}">${prazoTexto(j.prazo) || t('semPrazo')}</span></div>
+          <div class="job-client">${esc(j.cliente || '')}${j.cliente ? ' · ' : ''}${fila ? motivo : pipeLabel()[j.status].toLowerCase() + ' · ' + motivo}</div>
         </div>
       </div>
       <div class="job-foot">
@@ -512,28 +617,33 @@ function jobRowHTML(j, num, dim) {
     </div>`;
 }
 
+const TETO_FILA = 3;
+
 function renderFila() {
-  // fila ordenada por urgência: prazo mais próximo primeiro, sem prazo por último
-  const fila = S.jobs.filter(j => j.status === 'aceito')
-    .sort((a, b) => {
-      const pa = a.prazo || '9999-99', pb = b.prazo || '9999-99';
-      return pa < pb ? -1 : pa > pb ? 1 : 0;
-    });
+  // A aba Hoje responde "qual é o próximo?", não "quais são todos". Mostrar a
+  // fila inteira transformava a resposta num inventário: 9 aceitos viravam 9
+  // linhas empurrando o resto da tela pra fora.
+  const fila = filaOrdenada();
   const feitosHoje = S.jobs.filter(j => j.entregueEm && j.entregueEm.slice(0, 10) === hoje());
   const esperandoPgto = feitosHoje.filter(j => j.pagamento !== 'pago');
   const pagos = feitosHoje.filter(j => j.pagamento === 'pago');
   let html = '';
   if (fila.length) {
+    const mostrar = fila.slice(0, TETO_FILA);
+    const restam = fila.length - mostrar.length;
     html += `<div class="section-label">${t('naFila')} · ${fila.length}</div>`;
-    html += `<div class="job-grid" style="margin-top:9px">${fila.map((j, i) => jobRowHTML(j, i + 2, false)).join('')}</div>`;
+    html += `<div class="job-grid" style="margin-top:9px">` +
+      mostrar.map((j, i) => jobRowHTML(j, { fila: true, proximo: i === 0 })).join('') +
+      (restam ? `<div class="job-mais" onclick="abrirView('trabalhos')">+ ${restam} ${t('maisNaFila')} →</div>` : '') +
+      `</div>`;
   }
   if (esperandoPgto.length) {
     html += `<div class="section-label" style="margin-top:12px">${t('concluidosEsperando')} · ${esperandoPgto.length}</div>`;
-    html += `<div class="job-grid" style="margin-top:9px">${esperandoPgto.map(j => jobRowHTML(j, null, false)).join('')}</div>`;
+    html += `<div class="job-grid" style="margin-top:9px">${esperandoPgto.map(j => jobRowHTML(j)).join('')}</div>`;
   }
   if (pagos.length) {
     html += `<div class="section-label" style="margin-top:12px">${t('concluidosPagos')} · ${pagos.length}</div>`;
-    html += `<div class="job-grid" style="margin-top:9px">${pagos.map(j => jobRowHTML(j, null, true)).join('')}</div>`;
+    html += `<div class="job-grid" style="margin-top:9px">${pagos.map(j => jobRowHTML(j, { dim: true })).join('')}</div>`;
   }
   if (!html) html = `<div class="empty-state"><img src="${spr('espiar')}" alt="" style="width:64px;height:auto;image-rendering:pixelated;opacity:0.85"><div class="big">${t('diaLimpo')}</div><div>${t('capturaDica')}</div></div>`;
   $('filaArea').innerHTML = html;
@@ -616,7 +726,7 @@ const COLUNAS_TRAB = [
   { id: 'fazendo', i18n: 'colFazendo', cor: 'var(--blue)', filtro: j => j.status === 'fazendo' },
   { id: 'entregue', i18n: 'colEntregue', cor: 'var(--green)', filtro: j => j.status === 'entregue' || j.status === 'aprovado' }
 ];
-const colunasAtuais = () => COLUNAS_TRAB;
+const colunasAtuais = () => (lente === 'pagamento' ? COLUNAS_PGTO : COLUNAS_TRAB);
 
 function urgencia(j) {
   const d = diasAte(j.prazo);
@@ -637,14 +747,20 @@ function cardKanbanHTML(j) {
   const [ptxt, pcls] = ESTAGIO_CHIP()[est];
   const total = Number(j.valor.q), rec = recebidoDe(j);
 
+  // O que faz o trabalho ANDAR fica sempre na tela: escondê-lo atrás do hover
+  // obrigava a explorar com o mouse pra descobrir a ação principal de cada card.
+  // O que mexe no registro (editar, excluir) continua no hover, longe do dedo.
   const acts = [];
   if (j.status === 'esperando') acts.push(`<div class="mini-btn primary" onclick="event.stopPropagation();praFila('${j.id}')">${t('btnPraFila')}</div>`);
   if (j.status === 'aceito') acts.push(`<div class="mini-btn primary" onclick="event.stopPropagation();tornarAtivo('${j.id}')">${t('btnCravar')}</div>`);
   if (j.status === 'fazendo') acts.push(`<div class="mini-btn primary" onclick="event.stopPropagation();avancar('${j.id}')">${t('btnMarcarEntregue')}</div>`);
   if (j.status === 'entregue') acts.push(`<div class="mini-btn" onclick="event.stopPropagation();avancar('${j.id}')">${t('btnAprovado')}</div>`);
   if (precisaLiquidar(j)) acts.push(`<div class="mini-btn liquidar" onclick="event.stopPropagation();abrirLiquidacao('${j.id}')">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</div>`);
-  acts.push(`<div class="mini-btn" onclick="event.stopPropagation();editarJob('${j.id}')" title="${t('editar')}">✎</div>`);
-  acts.push(`<div class="mini-btn" onclick="event.stopPropagation();excluir('${j.id}')">✕</div>`);
+
+  const extras = [
+    `<div class="mini-btn" onclick="event.stopPropagation();editarJob('${j.id}')" title="${t('editar')}">✎</div>`,
+    `<div class="mini-btn perigo-sutil" onclick="event.stopPropagation();excluir('${j.id}')" title="${t('excluir')}">✕</div>`
+  ];
   const prazo = prazoTexto(j.prazo);
   const pend = est === 'a_converter' ? (j.valor.m === 'RBX' ? t('aVender') : t('aCair')) : '';
   const selo = j.status === 'aprovado' ? `<span class="kb-selo-aprovado">${t('aprovadoSelo')}</span>` : '';
@@ -658,24 +774,40 @@ function cardKanbanHTML(j) {
       ${est === 'parcial' ? `<div class="kb-din-bar"><div style="width:${Math.round(rec / total * 100)}%"></div></div>` : ''}
     </div>`;
   return `
-    <div class="kb-card ${classeUrgencia(j)}" draggable="true" data-id="${j.id}">
+    <div class="kb-card ${classeUrgencia(j)} ${lente === 'pagamento' ? 'sem-arrasto' : ''}" draggable="${lente !== 'pagamento'}" data-id="${j.id}">
       <div class="kb-titulo">${esc(j.titulo)}${selo}</div>
       <div class="kb-meta">
         <span class="kb-cliente">${esc(j.cliente || t('semCliente'))}</span>
         ${prazo ? `<span class="kb-prazo ${prazoClasse(j.prazo)}">${prazo}</span>` : ''}
       </div>
       ${linhaDinheiro}
-      <div class="kb-acoes">${acts.join('')}</div>
+      ${acts.length ? `<div class="kb-acoes">${acts.join('')}</div>` : ''}
+      <div class="kb-acoes-extra">${extras.join('')}</div>
     </div>`;
 }
 
+function pintarLente() {
+  document.querySelectorAll('#lentePicker .tema-opt').forEach(el =>
+    el.classList.toggle('sel', el.dataset.lente === lente));
+}
+const seletorLente = $('lentePicker');
+if (seletorLente) seletorLente.onclick = (e) => {
+  const l = e.target.dataset.lente;
+  if (!l || l === lente) return;
+  lente = l;
+  silenciarAnimacoes();
+  pintarLente();
+  renderTodos();
+};
+
 function renderTodos() {
+  pintarLente();
   let todos = [...S.jobs];
   if (busca) todos = todos.filter(j => `${j.titulo} ${j.cliente || ''}`.toLowerCase().includes(busca));
 
-  const html = COLUNAS_TRAB.map(col => {
+  const html = colunasAtuais().map(col => {
     let lista = todos.filter(col.filtro);
-    if (col.id === 'entregue') {
+    if (col.id === 'entregue' || col.id === 'na_conta') {
       // não pagos primeiro (dinheiro parado), depois os mais recentes
       lista.sort((a, b) => {
         const pa = estagioPgto(a) === 'na_conta' ? 1 : 0, pb = estagioPgto(b) === 'na_conta' ? 1 : 0;
@@ -694,13 +826,15 @@ function renderTodos() {
         return (a.prazo || '9999').localeCompare(b.prazo || '9999');
       });
     }
-    // soma por moeda
+    // O cabeçalho mostra o que FALTA RECEBER, não o valor cheio: a pergunta
+    // que se faz olhando uma coluna é "quanto ainda tenho a receber daqui".
     const soma = { BRL: 0, USD: 0, RBX: 0 };
-    for (const j of lista) soma[j.valor.m] += Number(j.valor.q);
+    for (const j of lista) soma[j.valor.m] += faltaDe(j);
     const partes = [];
     if (soma.BRL) partes.push(MOEDA.BRL.fmt(soma.BRL));
     if (soma.USD) partes.push(MOEDA.USD.fmt(soma.USD));
     if (soma.RBX) partes.push(MOEDA.RBX.fmt(soma.RBX));
+    const rotuloSoma = partes.length ? `${t('colFalta')} ${partes.join(' · ')}` : '';
     const totalPagos = todos.filter(col.filtro).length;
 
     return `
@@ -708,13 +842,13 @@ function renderTodos() {
         <div class="kb-col-head" style="--col:${col.cor}">
           <span class="kb-col-nome">${t(col.i18n)}</span>
           <span class="kb-col-num">${lista.length}</span>
-          <span class="kb-col-soma">${partes.join(' · ')}</span>
+          <span class="kb-col-soma">${rotuloSoma}</span>
         </div>
         <div class="kb-lista">
           ${lista.length ? lista.map(cardKanbanHTML).join('') : `<div class="kb-vazio">${t('colVazia')}</div>`}
-          ${(col.id === 'entregue') && totalPagos > lista.length && !verTodosPagos
+          ${(col.id === 'entregue' || col.id === 'na_conta') && totalPagos > lista.length && !verTodosPagos
             ? `<div class="kb-vertodos" onclick="alternarVerTodos()">${t('verTodos')} (${totalPagos})</div>` : ''}
-          ${(col.id === 'entregue') && verTodosPagos
+          ${(col.id === 'entregue' || col.id === 'na_conta') && verTodosPagos
             ? `<div class="kb-vertodos" onclick="alternarVerTodos()">${t('verRecentes')}</div>` : ''}
         </div>
       </div>`;
@@ -724,6 +858,17 @@ function renderTodos() {
   ligarDragDrop();
 }
 function alternarVerTodos() { verTodosPagos = !verTodosPagos; renderTodos(); }
+
+// Depois de uma transição o card muda de coluna. Sem isto, o passo seguinte
+// (entregue -> aprovado -> recebi) exigia caçar o card de novo a cada vez.
+function destacarCard(id) {
+  requestAnimationFrame(() => {
+    const el = document.querySelector(`.kb-card[data-id="${id}"]`);
+    if (!el) return;
+    el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    try { piscarCard(id); } catch { }
+  });
+}
 
 // ---------- arrastar e soltar ----------
 let arrastando = null;
@@ -741,6 +886,7 @@ function ligarDragDrop() {
       $('listaTodos').querySelectorAll('.kb-col').forEach(c => c.classList.remove('alvo'));
     });
   });
+  if (lente === 'pagamento') return; // ver comentário em moverPara
   $('listaTodos').querySelectorAll('.kb-col').forEach(col => {
     col.addEventListener('dragover', (e) => { e.preventDefault(); col.classList.add('alvo'); });
     col.addEventListener('dragleave', () => col.classList.remove('alvo'));
@@ -756,6 +902,7 @@ function ligarDragDrop() {
 async function moverPara(id, coluna) {
   const j = S.jobs.find(x => x.id === id);
   if (!j) return;
+  if (COLUNAS_PGTO.some(c => c.id === coluna)) return; // pagamento não se move arrastando
   if (coluna === 'esperando_pgto') { acumularTempo(j); j.status = 'esperando'; j.pausado = false; }
   else if (coluna === 'fila') { acumularTempo(j); j.status = 'aceito'; j.pausado = false; }
   else if (coluna === 'fazendo') { return tornarAtivo(id); }
@@ -765,6 +912,7 @@ async function moverPara(id, coluna) {
     if (!j.entregueEm) j.entregueEm = new Date().toISOString();
   }
   await salvar();
+  destacarCard(id);
 }
 
 // ---------- Insígnias ----------
@@ -788,12 +936,13 @@ function mesesComAtividade() {
   }
   return [...set].sort().reverse();
 }
-function algumMesPontual() {
-  return mesesComAtividade().some(mes => {
+function mesesPontuais() {
+  return mesesComAtividade().filter(mes => {
     const doMes = entregasDoMes(mes);
     return doMes.length >= 5 && doMes.every(j => !j.prazo || j.entregueEm.slice(0, 10) <= j.prazo);
-  });
+  }).length;
 }
+function algumMesPontual() { return mesesPontuais() >= 1; }
 
 const IC = {
   flame: '<path d="M12 22c4.4 0 7-2.8 7-6.5 0-2.5-1.4-4.6-3-6.5-.5 1.2-1.3 2-2.5 2.5C13.8 9 14 5.5 11 2c-.3 3-1.5 4.7-3 6.2C6.4 9.8 5 11.9 5 15.5 5 19.2 7.6 22 12 22z"/>',
@@ -817,118 +966,178 @@ const CATEGORIAS_INSIGNIAS = [
   { id: 'geral', nome: 'GERAL — TODAS AS MOEDAS', i18n: 'catGeral' }
 ];
 
+// maiores marcas já atingidas — servem de progresso pras insígnias de recorde
+function maiorDia() {
+  const v = Object.values(S.stats.historico || {});
+  return v.length ? Math.max(...v) : 0;
+}
+function maiorMesEntregas() {
+  const m = mesesComAtividade();
+  return m.length ? Math.max(...m.map(x => entregasDoMes(x).length)) : 0;
+}
+function maiorMesGanho() {
+  const m = mesesComAtividade();
+  return m.length ? Math.max(...m.map(x => ganhoEquivDoMes(x))) : 0;
+}
+
 const INSIGNIAS = [
   // ---- ROTINA ----
   { id: 'primeiro-crava', cat: 'rotina', nome: 'Primeiro Crava', desc: 'Sua primeira entrega', cor: 'var(--blue)', icon: IC.bolt,
-    check: () => S.jobs.some(j => j.entregueEm) },
+    check: () => S.jobs.some(j => j.entregueEm),
+    prog: () => [S.jobs.filter(j => j.entregueEm).length, 1] },
   { id: 'maquina', cat: 'rotina', nome: 'Máquina', desc: '5 entregas num único dia', cor: 'var(--blue)', icon: IC.bolt,
-    check: () => Object.values(S.stats.historico).some(n => n >= 5) },
+    check: () => Object.values(S.stats.historico).some(n => n >= 5),
+    prog: () => [maiorDia(), 5] },
   { id: 'fabrica', cat: 'rotina', nome: 'Fábrica', desc: '10 entregas num único dia', cor: 'var(--blue)', icon: IC.bolt,
-    check: () => Object.values(S.stats.historico).some(n => n >= 10) },
+    check: () => Object.values(S.stats.historico).some(n => n >= 10),
+    prog: () => [maiorDia(), 10] },
   { id: 'esquenta', cat: 'rotina', nome: 'Esquenta', desc: '3 dias de meta seguidos', cor: 'var(--flame)', icon: IC.flame,
-    check: () => S.stats.maxStreak >= 3 },
+    check: () => S.stats.maxStreak >= 3,
+    prog: () => [S.stats.maxStreak, 3] },
   { id: 'semana', cat: 'rotina', nome: 'Semana Cravada', desc: '7 dias de meta seguidos', cor: 'var(--flame)', icon: IC.flame,
-    check: () => S.stats.maxStreak >= 7 },
+    check: () => S.stats.maxStreak >= 7,
+    prog: () => [S.stats.maxStreak, 7] },
   { id: 'quinzena', cat: 'rotina', nome: 'Quinzena Bruta', desc: '14 dias de meta seguidos', cor: 'var(--flame)', icon: IC.flame,
-    check: () => S.stats.maxStreak >= 14 },
+    check: () => S.stats.maxStreak >= 14,
+    prog: () => [S.stats.maxStreak, 14] },
   { id: 'ferro', cat: 'rotina', nome: 'Mês de Ferro', desc: '30 dias de meta seguidos', cor: 'var(--flame)', icon: IC.flame,
-    check: () => S.stats.maxStreak >= 30 },
+    check: () => S.stats.maxStreak >= 30,
+    prog: () => [S.stats.maxStreak, 30] },
   { id: 'streak-60', cat: 'rotina', nome: 'Bimestre de Aço', desc: '60 dias de meta seguidos', cor: 'var(--flame)', icon: IC.flame,
-    check: () => S.stats.maxStreak >= 60 },
+    check: () => S.stats.maxStreak >= 60,
+    prog: () => [S.stats.maxStreak, 60] },
   { id: 'streak-100', cat: 'rotina', nome: 'Centurião', desc: '100 dias de meta seguidos', cor: 'var(--amber)', icon: IC.coroa,
-    check: () => S.stats.maxStreak >= 100 },
+    check: () => S.stats.maxStreak >= 100,
+    prog: () => [S.stats.maxStreak, 100] },
   // ---- MÊS ----
   { id: 'mes-10', cat: 'mes', nome: 'Mês Consistente', desc: '10 entregas num mês', cor: 'var(--blue)', icon: IC.calendario,
-    check: () => mesesComAtividade().some(m => entregasDoMes(m).length >= 10) },
+    check: () => mesesComAtividade().some(m => entregasDoMes(m).length >= 10),
+    prog: () => [maiorMesEntregas(), 10] },
   { id: 'monstro', cat: 'mes', nome: 'Mês Monstro', desc: '20 entregas num mês', cor: 'var(--blue)', icon: IC.calendario,
-    check: () => mesesComAtividade().some(m => entregasDoMes(m).length >= 20) },
+    check: () => mesesComAtividade().some(m => entregasDoMes(m).length >= 20),
+    prog: () => [maiorMesEntregas(), 20] },
   { id: 'mes-40', cat: 'mes', nome: 'Mês Lendário', desc: '40 entregas num mês', cor: 'var(--amber)', icon: IC.calendario,
-    check: () => mesesComAtividade().some(m => entregasDoMes(m).length >= 40) },
+    check: () => mesesComAtividade().some(m => entregasDoMes(m).length >= 40),
+    prog: () => [maiorMesEntregas(), 40] },
   { id: 'mes-ouro', cat: 'mes', nome: 'Mês de Ouro', desc: 'R$ 20.000 recebidos num mês (equiv.)', cor: 'var(--amber)', icon: IC.coin,
-    check: () => mesesComAtividade().some(m => ganhoEquivDoMes(m) >= 20000) },
+    check: () => mesesComAtividade().some(m => ganhoEquivDoMes(m) >= 20000),
+    prog: () => [maiorMesGanho(), 20000] },
   { id: 'mes-diamante', cat: 'mes', nome: 'Mês de Diamante', desc: 'R$ 50.000 recebidos num mês (equiv.)', cor: 'var(--amber)', icon: IC.coroa,
-    check: () => mesesComAtividade().some(m => ganhoEquivDoMes(m) >= 50000) },
+    check: () => mesesComAtividade().some(m => ganhoEquivDoMes(m) >= 50000),
+    prog: () => [maiorMesGanho(), 50000] },
   { id: 'pontual', cat: 'mes', nome: 'Pontualidade', desc: 'Mês com 5+ entregas e zero atraso', cor: 'var(--green)', icon: IC.relogio,
-    check: algumMesPontual },
+    check: algumMesPontual, prog: () => [mesesPontuais(), 1] },
   { id: 'pontual-3', cat: 'mes', nome: 'Relógio Suíço', desc: '3 meses com 5+ entregas e zero atraso', cor: 'var(--green)', icon: IC.relogio,
-    check: () => mesesComAtividade().filter(mes => {
-      const doMes = entregasDoMes(mes);
-      return doMes.length >= 5 && doMes.every(j => !j.prazo || j.entregueEm.slice(0, 10) <= j.prazo);
-    }).length >= 3 },
+    check: () => mesesPontuais() >= 3, prog: () => [mesesPontuais(), 3] },
   // ---- GANHOS EM R$ ----
   { id: 'brl-250', cat: 'brl', nome: 'Primeira Grana', desc: 'R$ 250 recebidos em R$', cor: 'var(--green)', icon: IC.coin,
-    check: () => totalMoedaPaga('BRL') >= 250 },
+    check: () => totalMoedaPaga('BRL') >= 250,
+    prog: () => [totalMoedaPaga('BRL'), 250] },
   { id: 'brl-1k', cat: 'brl', nome: 'Primeiro Pila', desc: 'R$ 1.000 recebidos em R$', cor: 'var(--green)', icon: IC.coin,
-    check: () => totalMoedaPaga('BRL') >= 1000 },
+    check: () => totalMoedaPaga('BRL') >= 1000,
+    prog: () => [totalMoedaPaga('BRL'), 1000] },
   { id: 'brl-5k', cat: 'brl', nome: 'Cofrinho Cheio', desc: 'R$ 5.000 recebidos em R$', cor: 'var(--green)', icon: IC.coin,
-    check: () => totalMoedaPaga('BRL') >= 5000 },
+    check: () => totalMoedaPaga('BRL') >= 5000,
+    prog: () => [totalMoedaPaga('BRL'), 5000] },
   { id: 'brl-10k', cat: 'brl', nome: 'Dez Barão', desc: 'R$ 10.000 recebidos em R$', cor: 'var(--green)', icon: IC.coin,
-    check: () => totalMoedaPaga('BRL') >= 10000 },
+    check: () => totalMoedaPaga('BRL') >= 10000,
+    prog: () => [totalMoedaPaga('BRL'), 10000] },
   { id: 'brl-50k', cat: 'brl', nome: 'Cinquentão', desc: 'R$ 50.000 recebidos em R$', cor: 'var(--green)', icon: IC.coin,
-    check: () => totalMoedaPaga('BRL') >= 50000 },
+    check: () => totalMoedaPaga('BRL') >= 50000,
+    prog: () => [totalMoedaPaga('BRL'), 50000] },
   { id: 'brl-100k', cat: 'brl', nome: 'Clube dos 100k', desc: 'R$ 100.000 recebidos em R$', cor: 'var(--amber)', icon: IC.coin,
-    check: () => totalMoedaPaga('BRL') >= 100000 },
+    check: () => totalMoedaPaga('BRL') >= 100000,
+    prog: () => [totalMoedaPaga('BRL'), 100000] },
   { id: 'brl-500k', cat: 'brl', nome: 'Barão do Pix', desc: 'R$ 500.000 recebidos em R$', cor: 'var(--amber)', icon: IC.coin,
-    check: () => totalMoedaPaga('BRL') >= 500000 },
+    check: () => totalMoedaPaga('BRL') >= 500000,
+    prog: () => [totalMoedaPaga('BRL'), 500000] },
   { id: 'brl-1m', cat: 'brl', nome: 'Milhão em Pila', desc: 'R$ 1.000.000 recebidos em R$', cor: 'var(--amber)', icon: IC.coroa,
-    check: () => totalMoedaPaga('BRL') >= 1000000 },
+    check: () => totalMoedaPaga('BRL') >= 1000000,
+    prog: () => [totalMoedaPaga('BRL'), 1000000] },
   // ---- GANHOS EM US$ ----
   { id: 'usd-100', cat: 'usd', nome: 'Primeiro Dólar', desc: 'US$ 100 recebidos', cor: 'var(--blue)', icon: IC.dolar,
-    check: () => totalMoedaPaga('USD') >= 100 },
+    check: () => totalMoedaPaga('USD') >= 100,
+    prog: () => [totalMoedaPaga('USD'), 100] },
   { id: 'usd-500', cat: 'usd', nome: 'Meio Grand', desc: 'US$ 500 recebidos', cor: 'var(--blue)', icon: IC.dolar,
-    check: () => totalMoedaPaga('USD') >= 500 },
+    check: () => totalMoedaPaga('USD') >= 500,
+    prog: () => [totalMoedaPaga('USD'), 500] },
   { id: 'gringo', cat: 'usd', nome: 'Gringo', desc: 'US$ 1.000 recebidos', cor: 'var(--blue)', icon: IC.dolar,
-    check: () => totalMoedaPaga('USD') >= 1000 },
+    check: () => totalMoedaPaga('USD') >= 1000,
+    prog: () => [totalMoedaPaga('USD'), 1000] },
   { id: 'usd-2500', cat: 'usd', nome: 'Um Quarto', desc: 'US$ 2.500 recebidos', cor: 'var(--blue)', icon: IC.dolar,
-    check: () => totalMoedaPaga('USD') >= 2500 },
+    check: () => totalMoedaPaga('USD') >= 2500,
+    prog: () => [totalMoedaPaga('USD'), 2500] },
   { id: 'usd-5k', cat: 'usd', nome: 'Exportador', desc: 'US$ 5.000 recebidos', cor: 'var(--blue)', icon: IC.dolar,
-    check: () => totalMoedaPaga('USD') >= 5000 },
+    check: () => totalMoedaPaga('USD') >= 5000,
+    prog: () => [totalMoedaPaga('USD'), 5000] },
   { id: 'usd-10k', cat: 'usd', nome: 'Dolarizado', desc: 'US$ 10.000 recebidos', cor: 'var(--amber)', icon: IC.dolar,
-    check: () => totalMoedaPaga('USD') >= 10000 },
+    check: () => totalMoedaPaga('USD') >= 10000,
+    prog: () => [totalMoedaPaga('USD'), 10000] },
   { id: 'usd-25k', cat: 'usd', nome: 'Gringo Rico', desc: 'US$ 25.000 recebidos', cor: 'var(--amber)', icon: IC.dolar,
-    check: () => totalMoedaPaga('USD') >= 25000 },
+    check: () => totalMoedaPaga('USD') >= 25000,
+    prog: () => [totalMoedaPaga('USD'), 25000] },
   { id: 'usd-50k', cat: 'usd', nome: 'Tio Sam', desc: 'US$ 50.000 recebidos', cor: 'var(--amber)', icon: IC.coroa,
-    check: () => totalMoedaPaga('USD') >= 50000 },
+    check: () => totalMoedaPaga('USD') >= 50000,
+    prog: () => [totalMoedaPaga('USD'), 50000] },
   // ---- GANHOS EM ROBUX ----
   { id: 'rbx-1k', cat: 'rbx', nome: 'Robux de Bolso', desc: '1.000 Robux recebidos', cor: '#2fd39c', icon: IC.robux,
-    check: () => totalMoedaPaga('RBX') >= 1000 },
+    check: () => totalMoedaPaga('RBX') >= 1000,
+    prog: () => [totalMoedaPaga('RBX'), 1000] },
   { id: 'rbx-10k', cat: 'rbx', nome: 'Primeiros Robux', desc: '10.000 Robux recebidos', cor: '#2fd39c', icon: IC.robux,
-    check: () => totalMoedaPaga('RBX') >= 10000 },
+    check: () => totalMoedaPaga('RBX') >= 10000,
+    prog: () => [totalMoedaPaga('RBX'), 10000] },
   { id: 'rbx-50k', cat: 'rbx', nome: 'Bolso de Robux', desc: '50.000 Robux recebidos', cor: '#2fd39c', icon: IC.robux,
-    check: () => totalMoedaPaga('RBX') >= 50000 },
+    check: () => totalMoedaPaga('RBX') >= 50000,
+    prog: () => [totalMoedaPaga('RBX'), 50000] },
   { id: 'robuxeiro', cat: 'rbx', nome: 'Robuxeiro', desc: '100.000 Robux recebidos', cor: '#2fd39c', icon: IC.robux,
-    check: () => totalMoedaPaga('RBX') >= 100000 },
+    check: () => totalMoedaPaga('RBX') >= 100000,
+    prog: () => [totalMoedaPaga('RBX'), 100000] },
   { id: 'rbx-250k', cat: 'rbx', nome: 'Cofre de Robux', desc: '250.000 Robux recebidos', cor: '#2fd39c', icon: IC.robux,
-    check: () => totalMoedaPaga('RBX') >= 250000 },
+    check: () => totalMoedaPaga('RBX') >= 250000,
+    prog: () => [totalMoedaPaga('RBX'), 250000] },
   { id: 'rbx-500k', cat: 'rbx', nome: 'Magnata do Robux', desc: '500.000 Robux recebidos', cor: '#2fd39c', icon: IC.robux,
-    check: () => totalMoedaPaga('RBX') >= 500000 },
+    check: () => totalMoedaPaga('RBX') >= 500000,
+    prog: () => [totalMoedaPaga('RBX'), 500000] },
   { id: 'rei-robux', cat: 'rbx', nome: 'Rei dos Robux', desc: '1.000.000 Robux recebidos', cor: 'var(--amber)', icon: IC.coroa,
-    check: () => totalMoedaPaga('RBX') >= 1000000 },
+    check: () => totalMoedaPaga('RBX') >= 1000000,
+    prog: () => [totalMoedaPaga('RBX'), 1000000] },
   { id: 'rbx-2m', cat: 'rbx', nome: 'Imperador do Robux', desc: '2.500.000 Robux recebidos', cor: 'var(--amber)', icon: IC.coroa,
-    check: () => totalMoedaPaga('RBX') >= 2500000 },
+    check: () => totalMoedaPaga('RBX') >= 2500000,
+    prog: () => [totalMoedaPaga('RBX'), 2500000] },
   { id: 'rbx-5m', cat: 'rbx', nome: 'Deus do Robux', desc: '5.000.000 Robux recebidos', cor: 'var(--amber)', icon: IC.coroa,
-    check: () => totalMoedaPaga('RBX') >= 5000000 },
+    check: () => totalMoedaPaga('RBX') >= 5000000,
+    prog: () => [totalMoedaPaga('RBX'), 5000000] },
   // ---- GERAL (soma equivalente de todas as moedas) ----
   { id: 'triplo', cat: 'geral', nome: 'Câmbio Triplo', desc: 'Recebeu em R$, US$ e Robux', cor: 'var(--flame)', icon: IC.bolt,
-    check: () => totalMoedaPaga('BRL') > 0 && totalMoedaPaga('USD') > 0 && totalMoedaPaga('RBX') > 0 },
+    check: () => totalMoedaPaga('BRL') > 0 && totalMoedaPaga('USD') > 0 && totalMoedaPaga('RBX') > 0,
+    prog: () => [['BRL', 'USD', 'RBX'].filter(m => totalMoedaPaga(m) > 0).length, 3] },
   { id: 'geral-5k', cat: 'geral', nome: 'Primeiro Salário', desc: 'R$ 5.000 no total (equiv.)', cor: 'var(--green)', icon: IC.coin,
-    check: () => totalPagoBRLequiv() >= 5000 },
+    check: () => totalPagoBRLequiv() >= 5000,
+    prog: () => [totalPagoBRLequiv(), 5000] },
   { id: 'dez-k', cat: 'geral', nome: 'Faturador', desc: 'R$ 10.000 no total (equiv.)', cor: 'var(--green)', icon: IC.coin,
-    check: () => totalPagoBRLequiv() >= 10000 },
+    check: () => totalPagoBRLequiv() >= 10000,
+    prog: () => [totalPagoBRLequiv(), 10000] },
   { id: 'geral-50k', cat: 'geral', nome: 'Empresa de Um', desc: 'R$ 50.000 no total (equiv.)', cor: 'var(--green)', icon: IC.coin,
-    check: () => totalPagoBRLequiv() >= 50000 },
+    check: () => totalPagoBRLequiv() >= 50000,
+    prog: () => [totalPagoBRLequiv(), 50000] },
   { id: 'cem-k', cat: 'geral', nome: 'Seis Dígitos', desc: 'R$ 100.000 no total (equiv.)', cor: 'var(--amber)', icon: IC.coin,
-    check: () => totalPagoBRLequiv() >= 100000 },
+    check: () => totalPagoBRLequiv() >= 100000,
+    prog: () => [totalPagoBRLequiv(), 100000] },
   { id: 'geral-250k', cat: 'geral', nome: 'Quarto de Milhão', desc: 'R$ 250.000 no total (equiv.)', cor: 'var(--amber)', icon: IC.coin,
-    check: () => totalPagoBRLequiv() >= 250000 },
+    check: () => totalPagoBRLequiv() >= 250000,
+    prog: () => [totalPagoBRLequiv(), 250000] },
   { id: 'geral-500k', cat: 'geral', nome: 'Meio Milhão', desc: 'R$ 500.000 no total (equiv.)', cor: 'var(--amber)', icon: IC.coroa,
-    check: () => totalPagoBRLequiv() >= 500000 },
+    check: () => totalPagoBRLequiv() >= 500000,
+    prog: () => [totalPagoBRLequiv(), 500000] },
   { id: 'geral-1m', cat: 'geral', nome: 'Milionário do Pixel', desc: 'R$ 1.000.000 no total (equiv.)', cor: 'var(--amber)', icon: IC.coroa,
-    check: () => totalPagoBRLequiv() >= 1000000 },
+    check: () => totalPagoBRLequiv() >= 1000000,
+    prog: () => [totalPagoBRLequiv(), 1000000] },
   { id: 'geral-2m', cat: 'geral', nome: 'Dois Milhões', desc: 'R$ 2.000.000 no total (equiv.)', cor: 'var(--amber)', icon: IC.coroa,
-    check: () => totalPagoBRLequiv() >= 2000000 },
+    check: () => totalPagoBRLequiv() >= 2000000,
+    prog: () => [totalPagoBRLequiv(), 2000000] },
   { id: 'geral-5m', cat: 'geral', nome: 'Lenda do GFX', desc: 'R$ 5.000.000 no total (equiv.)', cor: 'var(--amber)', icon: IC.coroa,
-    check: () => totalPagoBRLequiv() >= 5000000 }
+    check: () => totalPagoBRLequiv() >= 5000000,
+    prog: () => [totalPagoBRLequiv(), 5000000] }
 ];
 const CADEADO = '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>';
 
@@ -955,8 +1164,9 @@ function fmtMes(mes) {
 function insigniaHTML(b, ganhas) {
   const data = ganhas[b.id];
   const ok = !!data;
+  const ehMeta = !ok && S.config.metaInsignia === b.id;
   return `
-    <div class="insignia ${ok ? '' : 'locked'}" ${ok ? `style="border-color:${b.cor}66"` : ''}>
+    <div class="insignia ${ok ? '' : 'locked'} ${ehMeta ? 'alvo' : ''}" ${ok ? `style="border-color:${b.cor}66"` : ''}>
       <div class="insignia-icon">
         <img class="insignia-art" src="../assets/insignias/${b.id}.png" alt=""
           onerror="this.style.display='none';this.nextElementSibling.style.display=''">
@@ -964,7 +1174,8 @@ function insigniaHTML(b, ganhas) {
       </div>
       <div class="insignia-name">${nomeInsignia(b)}</div>
       <div class="insignia-desc">${descInsignia(b)}</div>
-      ${ok ? `<div class="insignia-data">${t('conquistadaEm')} ${data.split('-').reverse().join('/')}</div>` : ''}
+      ${ok ? `<div class="insignia-data">${t('conquistadaEm')} ${data.split('-').reverse().join('/')}</div>`
+        : `<div class="insignia-meta ${ehMeta ? 'sel' : ''}" onclick="escolherMeta('${b.id}')" title="${t('definirMeta')}">◎ ${ehMeta ? t('metaAtiva') : t('definirMeta')}</div>`}
     </div>`;
 }
 
@@ -1028,6 +1239,8 @@ function renderConfig() {
   setIf('cfgRBX', S.config.cotacaoRBX1k);
   document.querySelectorAll('#temaPicker .tema-opt').forEach(el =>
     el.classList.toggle('sel', el.dataset.tema === (S.config.tema || 'escuro')));
+  document.querySelectorAll('#palpitePicker .tema-opt').forEach(el =>
+    el.classList.toggle('sel', el.dataset.palpite === (S.config.palpiteCaptura !== false ? 'on' : 'off')));
   document.querySelectorAll('#glowPicker .tema-opt').forEach(el =>
     el.classList.toggle('sel', el.dataset.glow === (S.config.glowCards !== false ? 'on' : 'off')));
   document.querySelectorAll('#idiomaPicker .tema-opt').forEach(el =>
@@ -1041,6 +1254,11 @@ $('idiomaPicker').onclick = async (e) => {
   silenciarAnimacoes();
   const i = e.target.dataset.idioma;
   if (i) { S.config.idioma = i; await salvar(); }
+};
+$('palpitePicker').onclick = async (e) => {
+  silenciarAnimacoes();
+  const p = e.target.dataset.palpite;
+  if (p) { S.config.palpiteCaptura = p === 'on'; await salvar(); }
 };
 $('glowPicker').onclick = async (e) => {
   silenciarAnimacoes();
@@ -1122,6 +1340,13 @@ function abrirView(nome) {
   document.querySelectorAll('.nav-item').forEach(x => x.classList.toggle('active', x.dataset.view === nome));
   document.querySelectorAll('.view').forEach(v => v.classList.remove('open'));
   $('view-' + nome).classList.add('open');
+  // a aba que acabou de abrir ainda não foi montada nesta rodada
+  if (!trocandoView) {
+    trocandoView = true;
+    try { render(); } finally { trocandoView = false; }
+    const main = document.querySelector('.main');
+    if (main) main.scrollTop = 0;
+  }
   if (nome === 'share') {
     drawShareCard();
     requestAnimationFrame(() => { try { desenharViz(); } catch { } });
@@ -1501,7 +1726,7 @@ $('midiaInput').onchange = () => {
   if (f.size > 100 * 1024 * 1024) { alert('Arquivo muito grande (máx. 100 MB).'); return; }
   const ehGif = f.type === 'image/gif';
   const instalar = async (p) => {
-    if (!p) { alert('Não consegui salvar a mídia.'); return; }
+    if (!p) { alert(t('erroMidia')); return; }
     S.config.shareMidia = { tipo: ehGif ? 'gif' : 'foto', path: p };
     midiaAplicada = midiaSrc(S.config.shareMidia);
     MEDIA_IMG.src = midiaAplicada;
@@ -2372,9 +2597,12 @@ function iniciarCalGif() {
 }
 async function prepararCalGif() {
   const midia = S.config.calMidia;
+  // decide antes de mexer nos quadros: uma chamada durante o preparo apagava
+  // o que já estava rodando e deixava o calendário sem fundo
+  if (calGifPreparando) return;
   pararCalGif();
   calGifFrames = null; calGifIdx = 0;
-  if (!midia || midia.tipo !== 'gif' || calGifPreparando) return;
+  if (!midia || midia.tipo !== 'gif') return;
   calGifPreparando = true;
   try {
     const buf = await midiaBuffer(midia);
@@ -2410,8 +2638,16 @@ function pintarFundoCal() {
   }
   painel.classList.add('com-fundo');
   if (!painel.getBoundingClientRect().width) return; // modal fechado
-  if (midia.tipo === 'gif' && calGifFrames && calGifFrames.length) {
-    painel.style.backgroundImage = '';
+
+  if (midia.tipo === 'gif') {
+    // GIF decodificando ainda não tem quadro pra mostrar. Antes, esse intervalo
+    // era preenchido pelo background-image do CSS — o navegador animava o GIF
+    // nativamente e, segundos depois, o canvas assumia começando do quadro 0 e
+    // com outra conta de opacidade. Essa troca de renderizador no meio é que
+    // dava o pulo. Agora o painel espera calado: mantém o que já estava e só
+    // muda quando há quadro de verdade pra desenhar.
+    if (!calGifFrames || !calGifFrames.length) return;
+
     if (!cv) {
       cv = document.createElement('canvas');
       cv.className = 'cal-bg';
@@ -2425,9 +2661,12 @@ function pintarFundoCal() {
     const esc = Math.max(cv.width / img.width, cv.height / img.height);
     const dw = img.width * esc, dh = img.height * esc;
     ctx.clearRect(0, 0, cv.width, cv.height);
-    ctx.globalAlpha = op;
+    // mesma conta do caminho CSS: imagem cheia + véu escuro de (1 - op).
+    // Com globalAlpha o resultado era diferente, e a diferença aparecia na troca.
     ctx.drawImage(img, (cv.width - dw) / 2, (cv.height - dh) / 2, dw, dh);
-    ctx.globalAlpha = 1;
+    ctx.fillStyle = `rgba(8,12,24,${(1 - op).toFixed(2)})`;
+    ctx.fillRect(0, 0, cv.width, cv.height);
+    painel.style.backgroundImage = ''; // só depois de já ter o que mostrar
   } else {
     if (cv) cv.remove();
     painel.style.backgroundImage =
@@ -2448,9 +2687,10 @@ $('calMidiaInput').onchange = () => {
   if (f.size > 100 * 1024 * 1024) { alert('Arquivo muito grande (máx. 100 MB).'); return; }
   const ehGif = f.type === 'image/gif';
   const instalar = async (p) => {
-    if (!p) { alert('Não consegui salvar a mídia.'); return; }
+    if (!p) { alert(t('erroMidia')); return; }
     S.config.calMidia = { tipo: ehGif ? 'gif' : 'foto', path: p };
-    CAL_MEDIA_IMG.src = midiaSrc(S.config.calMidia);
+    calMidiaAplicada = midiaSrc(S.config.calMidia);
+    CAL_MEDIA_IMG.src = calMidiaAplicada;
     await salvar();
     prepararCalGif();
     pintarFundoCal();
@@ -2462,6 +2702,7 @@ $('calMidiaInput').onchange = () => {
 };
 $('btnCalFundoRemover').onclick = async () => {
   delete S.config.calMidia;
+  calMidiaAplicada = '';
   window.api.clearMidia('cal');
   pararCalGif(); calGifFrames = null;
   $('btnCalFundoRemover').style.display = 'none';
@@ -2632,7 +2873,7 @@ async function compartilharCalendario() {
       window.api.copyImage(cv.toDataURL('image/png'));
     }
   } catch (err) {
-    alert('Não consegui gerar a imagem: ' + err.message);
+    alert(t('erroImagem') + ' ' + err.message);
   }
   btn.textContent = txtOriginal;
 }
@@ -2652,7 +2893,7 @@ async function gerarGifAnimado() {
   const midia = S.config.shareMidia;
   if (!midia || midia.tipo !== 'gif') return;
   const btn = $('btnCopiarCard');
-  btn.textContent = 'Gerando GIF…';
+  btn.textContent = t('gerandoGif');
   try {
     const { GIFEncoder, quantize, applyPalette } = await import('./lib/gifenc.esm.js');
     const buf = await midiaBuffer(midia);
@@ -2698,7 +2939,7 @@ async function gerarGifAnimado() {
     drawShareCard();
     await window.api.saveGif(enc.bytes());
   } catch (err) {
-    alert('Não consegui gerar o GIF: ' + err.message);
+    alert(t('erroGif') + ' ' + err.message);
   }
   drawShareCard();
 }
@@ -2864,7 +3105,7 @@ document.addEventListener('keydown', async (e) => {
 function esc(s) { return String(s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
 
 // expõe ações pros onclick inline
-Object.assign(window, { tornarAtivo, pausarRetomar, voltarFila, avancar, ciclarPagamento, excluir, cobrei, separeiCofre, escolherFavorita, abrirLiquidacao, alternarVerTodos, abrirRecebimento, praFila });
+Object.assign(window, { tornarAtivo, pausarRetomar, voltarFila, avancar, ciclarPagamento, excluir, cobrei, separeiCofre, escolherFavorita, abrirLiquidacao, alternarVerTodos, abrirRecebimento, praFila, fazerProximo, escolherMeta });
 
 // ---------- Boot ----------
 function migrarLiquidacao() {
@@ -2912,8 +3153,16 @@ function migrarLiquidacao() {
   if (migrarLiquidacao()) await window.api.saveState(S);
   if (verificarInsignias()) await window.api.saveState(S);
   render();
-  window.api.onState((s) => {
+  window.api.onState(async (s) => {
     S = s; window.S = s; render();
+    // pedido capturado com "Salvar e cravar": a regra de 1 ativo é aplicada aqui
+    if (S.stats.cravarPendente) {
+      const id = S.stats.cravarPendente;
+      delete S.stats.cravarPendente;
+      if (S.jobs.some(j => j.id === id)) { await tornarAtivo(id); return; }
+      await salvar();
+      return;
+    }
     // mudanças vindas do processo principal (captura rápida, aviso de prazo)
     // não passam pelo saveState do renderer, então o envio é agendado aqui
     try { if (window.agendarEnvio) window.agendarEnvio(); } catch { }

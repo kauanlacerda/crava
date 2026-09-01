@@ -20,6 +20,8 @@ const DEFAULTS = {
     cotacaoRBX1k: 28,
     vizFundo: 'auto',       // fundo do gráfico de lucro: auto | preto | branco
     cofreGrad: 'azul',      // degradê do card do cofre
+    palpiteCaptura: true,   // ler a janela em foco e o texto copiado na captura rápida
+    metaInsignia: '',       // insígnia que a barra lateral está perseguindo   // ler a janela em foco e o texto copiado na captura rápida
     tutorialVisto: false,
     nome: 'você'
   },

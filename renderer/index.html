@@ -93,14 +93,7 @@
     </div>
     <div class="sidebar-spacer"></div>
     <div class="btn btn-ghost" id="btnWidget" style="font-size:12px" data-i18n="btnWidget">Mostrar widget</div>
-    <div class="slots-card">
-      <div class="slots-head">
-        <div class="slots-title" data-i18n="slotsTitulo">Disponível</div>
-        <div class="slots-count" id="slotsCount">0 de 3 slots</div>
-      </div>
-      <div class="slots-bar" id="slotsBar"></div>
-      <div class="slots-hint" data-i18n="slotsHint">Slot livre só quando um trabalho for pago.</div>
-    </div>
+    <div class="meta-card vazia" id="metaCard"></div>
   </div>
 
   <div class="content">
@@ -153,7 +146,13 @@
     <div class="view" id="view-trabalhos">
       <div class="header">
         <div class="h-title" data-i18n="navTrabalhos">Trabalhos</div>
-        <div class="btn btn-primary" id="btnNovo" style="padding:10px 18px" data-i18n="btnNovoPedido">+ Novo pedido</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="tema-picker" id="lentePicker">
+            <div class="tema-opt sel" data-lente="trabalho" data-i18n="lenteTrabalho">Etapa</div>
+            <div class="tema-opt" data-lente="pagamento" data-i18n="lentePagamento">Pagamento</div>
+          </div>
+          <div class="btn btn-primary" id="btnNovo" style="padding:10px 18px" data-i18n="btnNovoPedido">+ Novo pedido</div>
+        </div>
       </div>
       <div id="listaTodos"></div>
     </div>
@@ -403,6 +402,13 @@
             <div class="cor-opt grad-mini" data-grad="laranja"></div>
             <div class="cor-opt grad-mini" data-grad="vermelho"></div>
             <div class="cor-opt grad-mini" data-grad="noite"></div>
+          </div>
+        </div>
+        <div class="config-row">
+          <div><div class="config-k" data-i18n="palpite">Adivinhar na captura rápida</div><div class="config-sub" data-i18n="palpiteSub">Ao abrir com Ctrl+Shift+N, lê o nome da janela do Discord e o texto copiado, e sugere cliente, valor e prazo. Nada é preenchido sozinho — você clica na sugestão pra usar.</div></div>
+          <div class="tema-picker" id="palpitePicker">
+            <div class="tema-opt" data-palpite="on" data-i18n="ligado">Ligado</div>
+            <div class="tema-opt" data-palpite="off" data-i18n="desligado">Desligado</div>
           </div>
         </div>
         <div class="config-row">

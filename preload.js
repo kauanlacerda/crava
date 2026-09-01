@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('api', {
   hideWidget: () => ipcRenderer.send('widget:hide'),
   closeCapture: () => ipcRenderer.send('capture:close'),
   saveCapture: (job) => ipcRenderer.send('capture:save', job),
+  onContextoCaptura: (cb) => ipcRenderer.on('capture:contexto', (_e, d) => cb(d)),
   copyImage: (dataURL) => ipcRenderer.send('clipboard:image', dataURL),
   saveGif: (bytes) => ipcRenderer.invoke('gif:save', bytes),
   saveMidia: (dataURL, slot) => ipcRenderer.invoke('midia:save', dataURL, slot),

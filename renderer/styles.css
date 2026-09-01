@@ -1106,7 +1106,11 @@ input:focus, select:focus { border-color: var(--blue); }
 
 /* animacoes globais mais suaves e organicas */
 :root { --ease: cubic-bezier(0.22, 1, 0.36, 1); }
-.view.open { animation: fadeUp 0.42s var(--ease); }
+.view.open { animation: entradaAba 0.34s var(--ease); }
+@keyframes entradaAba {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .job-row, .stat-card, .active-card, .insignia, .trio-card {
   animation: fadeUp 0.5s var(--ease) backwards;
   transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease), border-color 0.35s ease;
@@ -1124,7 +1128,7 @@ input:focus, select:focus { border-color: var(--blue); }
    KANBAN DA ABA TRABALHOS
    ================================================================ */
 .kanban {
-  display: grid; grid-template-columns: repeat(5, minmax(230px, 1fr));
+  display: grid; grid-template-columns: repeat(4, minmax(230px, 1fr));
   gap: 12px; align-items: start; overflow-x: auto; padding-bottom: 6px;
 }
 .kb-col {
@@ -1178,15 +1182,21 @@ input:focus, select:focus { border-color: var(--blue); }
 .kb-rodape { display: flex; align-items: center; gap: 8px; }
 .kb-valor { font-size: 14px; font-weight: 800; }
 .kb-rodape .badge-chip { margin-left: auto; font-size: 10px; padding: 4px 8px; min-width: 0; }
-.kb-acoes {
-  display: flex; gap: 5px; flex-wrap: wrap;
-  max-height: 0; opacity: 0; overflow: hidden;
-  transition: max-height 0.32s var(--ease), opacity 0.28s ease, margin-top 0.28s var(--ease);
-}
-.kb-card:hover .kb-acoes { max-height: 60px; opacity: 1; margin-top: 2px; }
+/* Ações que fazem o trabalho andar: sempre visíveis. */
+.kb-acoes { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
 .kb-acoes .mini-btn { font-size: 10.5px; padding: 5px 9px; }
 
-@media (max-width: 1280px) { .kanban { grid-template-columns: repeat(5, 220px); } }
+/* Editar e excluir: só no hover, e discretos — não competem com a ação real. */
+.kb-acoes-extra {
+  display: flex; gap: 5px; justify-content: flex-end;
+  max-height: 0; opacity: 0; overflow: hidden;
+  transition: max-height 0.28s var(--ease), opacity 0.24s ease, margin-top 0.28s var(--ease);
+}
+.kb-card:hover .kb-acoes-extra { max-height: 34px; opacity: 1; margin-top: 1px; }
+.kb-acoes-extra .mini-btn { font-size: 10.5px; padding: 4px 8px; }
+.kb-acoes-extra .perigo-sutil:hover { border-color: var(--red); color: var(--red); }
+
+@media (max-width: 1280px) { .kanban { grid-template-columns: repeat(4, 220px); } }
 
 /* render periodico nao repete as animacoes de entrada */
 .sem-anim *, .sem-anim { animation: none !important; }
@@ -1547,3 +1557,63 @@ input:focus, select:focus { border-color: var(--blue); }
 }
 .tut-ponto.on { background: var(--blue); width: 20px; border-radius: 4px; }
 .tut-modal .btn-row { width: 100%; }
+
+/* na lente de pagamento o card nao se move arrastando */
+.kb-card.sem-arrasto { cursor: default; }
+.kb-card.sem-arrasto:active { cursor: default; }
+
+/* ---------- fila da aba Hoje: o proximo e uma escolha, nao uma posicao ---------- */
+/* O selo diz a verdade (isto foi escolhido); o numero prometia um ranking
+   que o usuario nao controlava. */
+/* selo e espaco vazio tem a MESMA largura: sem isso os titulos das
+   linhas nao alinham e a lista fica com cara de desalinhada por acidente. */
+.job-selo, .job-num.vago { width: 67px; box-sizing: border-box; flex-shrink: 0; }
+.job-selo {
+  padding: 5px 4px; border-radius: 8px; text-align: center;
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.5px;
+  background: var(--blue-bg); border: 1px solid var(--blue-border); color: var(--blue);
+}
+.job-row.proximo { border-color: var(--blue-border); box-shadow: 0 0 0 2px var(--blue-glow), var(--shadow-soft); }
+
+/* as demais linhas da fila ficam sem marca: nao ha 2o nem 3o lugar */
+.job-num.vago { background: transparent; border-color: transparent; }
+
+.job-mais {
+  font-size: 11.5px; font-weight: 800; color: var(--blue);
+  text-align: center; padding: 10px 0 4px; cursor: pointer;
+}
+.job-mais:hover { text-decoration: underline; }
+
+/* ---------- meta de insígnia na barra lateral ---------- */
+/* Substitui o card de slots: uma coisa só, que enche conforme você trabalha. */
+.meta-card {
+  background: var(--panel2); border: 1px solid var(--border2);
+  border-radius: 16px; padding: 14px;
+  display: flex; flex-direction: column; gap: 9px;
+}
+.meta-card.vazia { padding: 16px 14px; }
+.meta-vazia { font-size: 11px; font-weight: 600; color: var(--faint); line-height: 1.45; text-align: center; }
+
+.meta-topo { display: flex; align-items: center; gap: 10px; }
+.meta-art { width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; image-rendering: pixelated; }
+.meta-txt { min-width: 0; }
+.meta-nome { font-size: 12.5px; font-weight: 800; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meta-desc { font-size: 10px; font-weight: 600; color: var(--muted); line-height: 1.35; }
+
+.meta-barra { height: 7px; border-radius: 5px; background: var(--border2); overflow: hidden; }
+.meta-barra div { height: 100%; border-radius: 5px; transition: width 0.6s var(--ease); }
+
+.meta-rodape { display: flex; justify-content: space-between; font-size: 10.5px; font-weight: 800; color: var(--muted); }
+.meta-pct { color: var(--text2); }
+.meta-falta { font-size: 10px; font-weight: 600; color: var(--faint); }
+
+/* escolher a meta, no card da insígnia bloqueada */
+.insignia-meta {
+  margin-top: 6px; font-size: 9.5px; font-weight: 800;
+  color: var(--faint); border: 1px solid var(--border2); border-radius: 8px;
+  padding: 4px 6px; cursor: pointer; opacity: 0; transition: opacity 0.18s, color 0.18s, border-color 0.18s;
+}
+.insignia:hover .insignia-meta { opacity: 1; }
+.insignia-meta:hover { color: var(--blue); border-color: var(--blue-border); }
+.insignia-meta.sel { opacity: 1; color: var(--blue); border-color: var(--blue); background: var(--blue-bg); }
+.insignia.alvo { opacity: 1; border-color: var(--blue-border); }

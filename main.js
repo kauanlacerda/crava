@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Tray, Menu, ipcMain, globalShortcut, Notification, nativeImage, clipboard } = require('electron');
 const path = require('path');
+const { spawn } = require('child_process');
 const Store = require('./store');
 const { autoUpdater } = require('electron-updater');
 
@@ -44,7 +45,7 @@ function createWidget() {
 
 function createCapture() {
   captureWin = new BrowserWindow({
-    width: 460, height: 330,
+    width: 460, height: 366,
     frame: false, transparent: true, resizable: false,
     alwaysOnTop: true, skipTaskbar: true, show: false,
     webPreferences: { preload: path.join(__dirname, 'preload.js') }
@@ -158,9 +159,25 @@ if (!lock) {
     const atalho = store.get().config.atalho || 'CommandOrControl+Shift+N';
     try {
       globalShortcut.register(atalho, () => {
+        // ORDEM IMPORTA: o título tem que ser lido antes do show, senão a
+        // janela em foco passa a ser o próprio Crava e o palpite vira "Crava".
+        const ligado = store.get().config.palpiteCaptura !== false;
+        const promessa = ligado ? lerJanelaEmFoco() : Promise.resolve(null);
+        const texto = ligado ? (() => { try { return clipboard.readText(); } catch { return ''; } })() : '';
+
         captureWin.center();
         captureWin.show();
         captureWin.focus();
+
+        // e o palpite chega depois, sem segurar a abertura
+        promessa.then((info) => {
+          if (!captureWin || captureWin.isDestroyed()) return;
+          captureWin.webContents.send('capture:contexto', {
+            titulo: (info && info.titulo) || '',
+            processo: (info && info.processo) || '',
+            clipboard: texto
+          });
+        });
       });
     } catch { /* atalho em uso por outro app — segue sem */ }
 
@@ -173,6 +190,70 @@ if (!lock) {
 
   app.on('window-all-closed', () => { /* vive na bandeja */ });
   app.on('before-quit', () => { isQuitting = true; globalShortcut.unregisterAll(); });
+}
+
+// ---------- Palpite da captura rápida ----------
+// Lê o título da janela do Discord pelo user32.dll, via PowerShell. Sem
+// dependência nova e sem tocar no Discord: é a mesma informação que já
+// aparece na barra de tarefas.
+//
+// Custa ~500ms, e é aí que mora a armadilha: quando o PowerShell finalmente
+// roda, a janela em foco já é o Crava — o atalho acabou de abrir a captura.
+// Por isso não basta perguntar "quem está em foco": se for uma janela nossa,
+// descemos a ordem Z até a primeira janela visível de outro processo, que é
+// quem estava na frente quando o atalho foi apertado.
+function scriptFoco(pidExcluir) {
+  return [
+    '$excluir = ' + pidExcluir,
+    'Add-Type @"',
+    'using System;',
+    'using System.Runtime.InteropServices;',
+    'using System.Text;',
+    'public class F {',
+    '  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();',
+    '  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetWindowTextW(IntPtr h, StringBuilder s, int n);',
+    '  [DllImport("user32.dll")] public static extern int GetWindowThreadProcessId(IntPtr h, out uint pid);',
+    '  [DllImport("user32.dll")] public static extern IntPtr GetWindow(IntPtr h, uint cmd);',
+    '  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr h);',
+    '}',
+    '"@',
+    '$h = [F]::GetForegroundWindow()',
+    '$achou = $null',
+    'for ($i = 0; $i -lt 20 -and $h -ne [IntPtr]::Zero; $i++) {',
+    '  $dono = 0; [void][F]::GetWindowThreadProcessId($h, [ref]$dono)',
+    '  $sb = New-Object System.Text.StringBuilder 512',
+    '  [void][F]::GetWindowTextW($h, $sb, 512)',
+    '  $t = $sb.ToString()',
+    '  if ($dono -ne $excluir -and [F]::IsWindowVisible($h) -and $t -ne "") {',
+    '    $n = ""; try { $n = (Get-Process -Id $dono -ErrorAction Stop).ProcessName } catch {}',
+    '    $achou = @{ titulo = $t; processo = $n }',
+    '    break',
+    '  }',
+    '  $h = [F]::GetWindow($h, 2)',
+    '}',
+    '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8',
+    'if ($achou) { Write-Output ($achou | ConvertTo-Json -Compress) } else { Write-Output "{}" }'
+  ].join('\n');
+}
+
+function lerJanelaEmFoco() {
+  return new Promise((resolve) => {
+    let respondeu = false;
+    const pronto = (v) => { if (!respondeu) { respondeu = true; resolve(v); } };
+    const prazo = setTimeout(() => pronto(null), 3000); // nunca fica pendurado
+    try {
+      const ps = spawn('powershell.exe',
+        ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', scriptFoco(process.pid)],
+        { windowsHide: true });
+      let saida = '';
+      ps.stdout.on('data', (d) => { saida += d.toString(); });
+      ps.on('error', () => { clearTimeout(prazo); pronto(null); });
+      ps.on('close', () => {
+        clearTimeout(prazo);
+        try { pronto(JSON.parse(saida.trim())); } catch { pronto(null); }
+      });
+    } catch { clearTimeout(prazo); pronto(null); }
+  });
 }
 
 // ---------- Atualizações ----------
@@ -263,11 +344,20 @@ ipcMain.on('widget:hide', () => widgetWin && widgetWin.hide());
 ipcMain.on('capture:close', () => captureWin && captureWin.hide());
 ipcMain.on('capture:save', (_e, job) => {
   const s = store.get();
+  const cravar = job.cravar;
+  delete job.cravar;
   s.jobs.push(job);
+  // A regra de "um ativo por vez" mora em tornarAtivo(), na janela principal.
+  // Aqui só fica o recado; duplicar a regra aqui seria pedir pras duas versões
+  // divergirem com o tempo.
+  if (cravar) s.stats.cravarPendente = job.id;
   store.set(s);
   broadcast();
   captureWin.hide();
-  new Notification({ title: 'Pedido salvo na fila', body: job.titulo, icon: ICON }).show();
+  new Notification({
+    title: cravar ? 'Cravado!' : 'Pedido salvo na fila',
+    body: job.titulo, icon: ICON
+  }).show();
 });
 ipcMain.on('app:quit', () => { isQuitting = true; app.quit(); });
 ipcMain.on('clipboard:image', (_e, dataURL) => {
