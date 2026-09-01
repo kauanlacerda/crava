@@ -572,3 +572,9 @@ input:focus, select:focus { border-color: var(--blue); }
 .stat-card.solid-orange .stat-label { color: rgba(255, 255, 255, 0.87); }
 .stat-card.solid-orange .stat-value { color: #fff !important; }
 .stat-card.solid-orange .stat-sub { color: rgba(255, 255, 255, 0.92) !important; }
+
+/* respiro de verdade na sidebar (dos 4 lados) + busca quadrada arredondada */
+.app { padding: 0; }
+.sidebar { margin: 20px 6px 20px 20px; }
+.topbar { padding: 20px 30px 4px 24px; }
+.search { border-radius: 14px; padding: 13px 18px; }
