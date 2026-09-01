@@ -95,7 +95,13 @@
     <div class="view" id="view-trabalhos">
       <div class="header">
         <div class="h-title" data-i18n="navTrabalhos">Trabalhos</div>
-        <div class="btn btn-primary" id="btnNovo" style="padding:10px 18px" data-i18n="btnNovoPedido">+ Novo pedido</div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="tema-picker" id="lentePicker">
+            <div class="tema-opt sel" data-lente="trabalho" data-i18n="lenteTrabalho">Trabalho</div>
+            <div class="tema-opt" data-lente="pagamento" data-i18n="lentePagamento">Pagamento</div>
+          </div>
+          <div class="btn btn-primary" id="btnNovo" style="padding:10px 18px" data-i18n="btnNovoPedido">+ Novo pedido</div>
+        </div>
       </div>
       <div id="listaTodos"></div>
     </div>
@@ -347,6 +353,28 @@
     <div class="btn-row" style="align-self:stretch">
       <div class="btn btn-green" id="cofreSim" data-i18n="btnSeparei">Separei ✓</div>
       <div class="btn btn-ghost" id="cofreDepois" style="max-width:110px" data-i18n="btnDepois">Depois</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: registrar recebimento ================= -->
+<div class="overlay" id="ovReceb">
+  <div class="modal" style="align-items:center;text-align:center">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="3"/><circle cx="12" cy="12.5" r="3"/></svg>
+    <div class="modal-title" data-i18n="recebTitulo">Registrar recebimento</div>
+    <div style="font-size:13px;font-weight:600;color:var(--muted)" id="recebDetalhe"></div>
+    <div class="receb-atalhos">
+      <div class="mini-btn" id="recebZero" data-i18n="recebNada">Não recebi</div>
+      <div class="mini-btn" id="recebMetade" data-i18n="recebMetade">Metade (sinal)</div>
+      <div class="mini-btn primary" id="recebTudo" data-i18n="recebTudo">Recebi tudo</div>
+    </div>
+    <div class="field" style="align-self:stretch">
+      <label id="recebLabel" data-i18n="recebQuanto">Quanto já entrou no total?</label>
+      <input id="recebValor" type="number" min="0" step="0.01">
+    </div>
+    <div class="btn-row" style="align-self:stretch">
+      <div class="btn btn-primary" id="recebConfirmar" data-i18n="btnConfirmar">Confirmar</div>
+      <div class="btn btn-ghost" id="recebCancelar" style="max-width:110px" data-i18n="btnCancelar">Cancelar</div>
     </div>
   </div>
 </div>

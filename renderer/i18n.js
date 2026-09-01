@@ -2,7 +2,13 @@
 const I18N = {
   pt: {
     // nav / sidebar
-    colFila: 'Na fila', colFazendo: 'Fazendo', colEntregue: 'Entregue', colAprovado: 'Aprovado · a receber', colPago: 'Pago', colVazia: 'vazio', verTodos: 'ver todos', verRecentes: 'ver só recentes',
+    lenteTrabalho: 'Trabalho', lentePagamento: 'Pagamento',
+    pgNaoPago: 'Não pago', pgParcial: 'Sinal', pgAConverter: 'A converter', pgNaConta: 'Na conta',
+    pgParcialCol: 'Sinal / parcial', pgAConverterCol: 'Recebido · a converter', pgNaContaCol: 'Na conta',
+    deTotal: 'de', falta: 'falta', via: 'via',
+    recebTitulo: 'Registrar recebimento', recebNada: 'Não recebi', recebMetade: 'Metade (sinal)',
+    recebTudo: 'Recebi tudo', recebQuanto: 'Quanto já entrou no total?',
+    colFila: 'Na fila', colFazendo: 'Fazendo', colEntregue: 'Entregue', colAprovado: 'Aprovado', colPago: 'Pago', colVazia: 'vazio', verTodos: 'ver todos', verRecentes: 'ver só recentes',
     navHoje: 'Hoje', navTrabalhos: 'Trabalhos', navInsignias: 'Insígnias',
     navCard: 'Finanças', navConfig: 'Configurações',
     slotsTitulo: 'Disponível', slots: 'slots', slotsDe: 'de',
@@ -123,7 +129,13 @@ const I18N = {
   },
 
   en: {
-    colFila: 'Queue', colFazendo: 'Doing', colEntregue: 'Delivered', colAprovado: 'Approved · unpaid', colPago: 'Paid', colVazia: 'empty', verTodos: 'see all', verRecentes: 'recent only',
+    lenteTrabalho: 'Work', lentePagamento: 'Payment',
+    pgNaoPago: 'Unpaid', pgParcial: 'Deposit', pgAConverter: 'To convert', pgNaConta: 'In account',
+    pgParcialCol: 'Deposit / partial', pgAConverterCol: 'Received · to convert', pgNaContaCol: 'In account',
+    deTotal: 'of', falta: 'missing', via: 'via',
+    recebTitulo: 'Log payment', recebNada: 'Not paid', recebMetade: 'Half (deposit)',
+    recebTudo: 'Paid in full', recebQuanto: 'How much came in so far?',
+    colFila: 'Queue', colFazendo: 'Doing', colEntregue: 'Delivered', colAprovado: 'Approved', colPago: 'Paid', colVazia: 'empty', verTodos: 'see all', verRecentes: 'recent only',
     navHoje: 'Today', navTrabalhos: 'Jobs', navInsignias: 'Badges',
     navCard: 'Finance', navConfig: 'Settings',
     slotsTitulo: 'Available', slots: 'slots', slotsDe: 'of',
