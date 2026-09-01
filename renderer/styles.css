@@ -837,3 +837,8 @@ input:focus, select:focus { border-color: var(--blue); }
 .share-wrap { align-items: flex-start; }
 .cal-cell { aspect-ratio: auto; height: 52px; }
 .cal-week { height: 52px; }
+
+/* celulas compactas e quase quadradas; o espaco extra vira respiro entre elas */
+.cal-grid { grid-template-columns: repeat(7, 62px) 58px; justify-content: space-between; }
+.cal-cell { height: 56px; }
+.cal-week { height: 56px; }
