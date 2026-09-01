@@ -1181,8 +1181,9 @@ function serieMensal(n) {
 }
 
 // curva suave por pontos médios
-function curva(ctx, pts) {
-  ctx.moveTo(pts[0][0], pts[0][1]);
+function curva(ctx, pts, mover = true) {
+  if (mover) ctx.moveTo(pts[0][0], pts[0][1]);
+  else ctx.lineTo(pts[0][0], pts[0][1]);
   for (let i = 1; i < pts.length - 1; i++) {
     const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2;
     ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
@@ -1192,6 +1193,8 @@ function curva(ctx, pts) {
 
 function desenharViz() {
   const cv = $('vizCanvas'); if (!cv) return;
+  const larguraCss = cv.parentElement.clientWidth;
+  if (larguraCss > 0 && cv.width !== larguraCss * 2) cv.width = larguraCss * 2;
   const ctx = cv.getContext('2d');
   const W = cv.width, H = cv.height;
   const F = (w, sz, fam) => `${w} ${sz}px ${fam || 'Manrope'}, sans-serif`;
@@ -1271,8 +1274,7 @@ function desenharViz() {
     const baixo = xs.map((x, i) => [x, meio + maxMeia * norm[i] * c.esc]).reverse();
     ctx.beginPath();
     curva(ctx, cima);
-    ctx.lineTo(baixo[0][0], baixo[0][1]);
-    curva(ctx, baixo);
+    curva(ctx, baixo, false);
     ctx.closePath();
     const g = ctx.createLinearGradient(pad, 0, W - pad, 0);
     g.addColorStop(0, c.cor + '00');
@@ -1319,6 +1321,7 @@ function desenharViz() {
 $('vizMenos').onclick = () => { vizMeses = Math.max(4, vizMeses - 2); desenharViz(); };
 $('vizMais').onclick = () => { vizMeses = Math.min(14, vizMeses + 2); desenharViz(); };
 $('btnCopiarViz').onclick = () => window.api.copyImage($('vizCanvas').toDataURL('image/png'));
+window.addEventListener('resize', () => { try { desenharViz(); } catch { } });
 
 // ---------- Calendário de lucro (estilo PnL da GMGN) ----------
 let calMes = hoje().slice(0, 7);
