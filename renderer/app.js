@@ -264,7 +264,7 @@ function render() {
   renderConfig();
   renderCalendario();
   try { desenharViz(); } catch { }
-  try { renderCarteira(); renderMoedas(); calcularConversao(); } catch { }
+  try { renderCarteira(); renderMoedas(); calcularConversao(); renderDinheiro(); } catch { }
 }
 
 // ---------- Stat cards (fileira do topo, como no design) ----------
@@ -552,7 +552,7 @@ const COLUNAS_TRAB = [
   { id: 'entregue', i18n: 'colEntregue', cor: 'var(--amber)', filtro: j => j.status === 'entregue' },
   { id: 'aprovado', i18n: 'colAprovado', cor: 'var(--green)', filtro: j => j.status === 'aprovado' }
 ];
-const colunasAtuais = () => (lente === 'pagamento' ? COLUNAS_PGTO : COLUNAS_TRAB);
+const colunasAtuais = () => COLUNAS_TRAB;
 
 function urgencia(j) {
   const d = diasAte(j.prazo);
@@ -572,11 +572,7 @@ function cardKanbanHTML(j) {
   const est = estagioPgto(j);
   const [ptxt, pcls] = ESTAGIO_CHIP()[est];
   const total = Number(j.valor.q), rec = recebidoDe(j);
-  const barra = est === 'parcial'
-    ? `<div class="kb-parcial">
-         <div class="kb-parcial-bar"><div style="width:${Math.round(rec / total * 100)}%"></div></div>
-         <div class="kb-parcial-txt">${fmtValor({ q: rec, m: j.valor.m })} ${t('deTotal')} ${fmtValor(j.valor)} · ${t('falta')} ${fmtValor({ q: faltaDe(j), m: j.valor.m })}</div>
-       </div>` : '';
+
   const acts = [];
   if (j.status === 'aceito') acts.push(`<div class="mini-btn primary" onclick="event.stopPropagation();tornarAtivo('${j.id}')">${t('btnCravar')}</div>`);
   if (j.status === 'fazendo') acts.push(`<div class="mini-btn primary" onclick="event.stopPropagation();avancar('${j.id}')">${t('btnMarcarEntregue')}</div>`);
@@ -584,7 +580,16 @@ function cardKanbanHTML(j) {
   if (precisaLiquidar(j)) acts.push(`<div class="mini-btn liquidar" onclick="event.stopPropagation();abrirLiquidacao('${j.id}')">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</div>`);
   acts.push(`<div class="mini-btn" onclick="event.stopPropagation();excluir('${j.id}')">✕</div>`);
   const prazo = prazoTexto(j.prazo);
-  const etapa = lente === 'pagamento' ? `<span class="kb-etapa">${pipeLabel()[j.status].toLowerCase()}</span>` : '';
+  const pend = est === 'a_converter' ? (j.valor.m === 'RBX' ? t('aVender') : t('aCair')) : '';
+  const linhaDinheiro = `
+    <div class="kb-dinheiro ${est}" onclick="event.stopPropagation();abrirRecebimento('${j.id}')" title="${t('recebTitulo')}">
+      <span class="kb-din-valor">${est === 'parcial'
+        ? `${fmtValor({ q: rec, m: j.valor.m })} / ${fmtValor(j.valor)}`
+        : fmtValor(j.valor)}</span>
+      <span class="kb-din-forma">${formaPgto(j)}</span>
+      <span class="kb-din-estado">${pend || ptxt}</span>
+      ${est === 'parcial' ? `<div class="kb-din-bar"><div style="width:${Math.round(rec / total * 100)}%"></div></div>` : ''}
+    </div>`;
   return `
     <div class="kb-card ${classeUrgencia(j)}" draggable="true" data-id="${j.id}">
       <div class="kb-titulo">${esc(j.titulo)}</div>
@@ -592,13 +597,7 @@ function cardKanbanHTML(j) {
         <span class="kb-cliente">${esc(j.cliente || t('semCliente'))}</span>
         ${prazo ? `<span class="kb-prazo ${prazoClasse(j.prazo)}">${prazo}</span>` : ''}
       </div>
-      ${barra}
-      <div class="kb-rodape">
-        <div class="kb-valor">${fmtValor(j.valor)}</div>
-        <span class="kb-forma">${formaPgto(j)}</span>
-        ${etapa}
-        <div class="badge-chip ${pcls} click" onclick="event.stopPropagation();abrirRecebimento('${j.id}')">${ptxt}</div>
-      </div>
+      ${linhaDinheiro}
       <div class="kb-acoes">${acts.join('')}</div>
     </div>`;
 }
@@ -607,7 +606,7 @@ function renderTodos() {
   let todos = [...S.jobs];
   if (busca) todos = todos.filter(j => `${j.titulo} ${j.cliente || ''}`.toLowerCase().includes(busca));
 
-  const html = colunasAtuais().map(col => {
+  const html = COLUNAS_TRAB.map(col => {
     let lista = todos.filter(col.filtro);
     if (col.id === 'aprovado' || col.id === 'na_conta') {
       // não pagos primeiro (dinheiro parado), depois os mais recentes
@@ -658,13 +657,6 @@ function renderTodos() {
   ligarDragDrop();
 }
 function alternarVerTodos() { verTodosPagos = !verTodosPagos; renderTodos(); }
-$('lentePicker').onclick = (e) => {
-  const l = e.target.dataset.lente;
-  if (!l || l === lente) return;
-  lente = l;
-  document.querySelectorAll('#lentePicker .tema-opt').forEach(x => x.classList.toggle('sel', x.dataset.lente === l));
-  renderTodos();
-};
 
 // ---------- arrastar e soltar ----------
 let arrastando = null;
@@ -697,26 +689,6 @@ function ligarDragDrop() {
 async function moverPara(id, coluna) {
   const j = S.jobs.find(x => x.id === id);
   if (!j) return;
-  if (lente === 'pagamento') {
-    const total = Number(j.valor.q);
-    if (coluna === 'nao_pago') {
-      j.recebido = 0; j.pagamento = 'nao_pago';
-      delete j.pagoEm; delete j.liquidado; delete j.liquidadoEm; delete j.liquidadoBRL;
-    } else if (coluna === 'parcial') { await salvar(); return abrirRecebimento(id); }
-    else if (coluna === 'a_converter') {
-      if (j.valor.m === 'BRL') { await salvar(); return abrirRecebimento(id); } // Pix não converte
-      j.recebido = total; j.pagamento = 'pago';
-      if (!j.pagoEm) j.pagoEm = new Date().toISOString();
-      j.liquidado = false;
-    } else if (coluna === 'na_conta') {
-      j.recebido = total; j.pagamento = 'pago';
-      if (!j.pagoEm) j.pagoEm = new Date().toISOString();
-      if (j.valor.m === 'BRL') { j.liquidado = true; j.liquidadoEm = j.pagoEm; j.liquidadoBRL = total; await salvar(); return abrirCofre(j); }
-      if (!j.liquidado) { await salvar(); return abrirLiquidacao(id); }
-    }
-    await salvar();
-    return;
-  }
   if (coluna === 'fila') { acumularTempo(j); j.status = 'aceito'; j.pausado = false; }
   else if (coluna === 'fazendo') { return tornarAtivo(id); }
   else if (coluna === 'entregue') {
@@ -1376,6 +1348,71 @@ $('midiaOpacidade').onchange = async () => { await salvar(); drawShareCard(); };
 
 
 
+
+// ---------- Painel Dinheiro: o que precisa de ação ----------
+function renderDinheiro() {
+  const cobrar = S.jobs.filter(j => j.status !== 'aceito' && ['nao_pago', 'parcial'].includes(estagioPgto(j)));
+  const converter = S.jobs.filter(j => estagioPgto(j) === 'a_converter');
+  const guardar = S.stats.cofres.map((c, idx) => ({ ...c, idx })).filter(c => !c.confirmado);
+
+  const somaMoedas = (lista, pegar) => {
+    const acc = { BRL: 0, USD: 0, RBX: 0 };
+    for (const j of lista) acc[j.valor.m] += pegar(j);
+    return ['BRL', 'USD', 'RBX'].filter(m => acc[m] > 0)
+      .map(m => MOEDA[m].fmt(acc[m])).join(' · ') || MOEDA.BRL.fmt(0);
+  };
+
+  const grupos = [
+    {
+      id: 'cobrar', titulo: t('grCobrar'), cor: 'var(--amber)', total: somaMoedas(cobrar, faltaDe),
+      vazio: t('grCobrarVazio'),
+      itens: cobrar.map(j => ({
+        id: j.id, titulo: j.titulo, cliente: j.cliente,
+        info: `${t('falta')} ${fmtValor({ q: faltaDe(j), m: j.valor.m })} ${t('de')} ${fmtValor(j.valor)} · ${formaPgto(j)}`,
+        botao: t('grBtnRecebi'), acao: `abrirRecebimento('${j.id}')`
+      }))
+    },
+    {
+      id: 'converter', titulo: t('grConverter'), cor: 'var(--blue)', total: somaMoedas(converter, j => Number(j.valor.q)),
+      vazio: t('grConverterVazio'),
+      itens: converter.map(j => ({
+        id: j.id, titulo: j.titulo, cliente: j.cliente,
+        info: `${fmtValor(j.valor)} ${t('via')} ${formaPgto(j)} · ${j.valor.m === 'RBX' ? t('aVender') : t('aCair')}`,
+        botao: j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu'), acao: `abrirLiquidacao('${j.id}')`
+      }))
+    },
+    {
+      id: 'guardar', titulo: t('grGuardar'), cor: 'var(--green)',
+      total: guardar.length ? `${guardar.length}` : '0',
+      vazio: t('grGuardarVazio'),
+      itens: guardar.map(c => ({
+        id: 'c' + c.idx, titulo: c.titulo || t('cofrePendente'), cliente: '',
+        info: `${t('cofreSepara2')} ${esc(c.valor || '')} · ${t('desde')} ${c.data.split('-').reverse().join('/')}`,
+        botao: t('btnSeparei'), acao: `separeiCofre(${c.idx})`
+      }))
+    }
+  ];
+
+  $('dinheiroPainel').innerHTML = grupos.map(g => `
+    <div class="din-col">
+      <div class="din-head" style="--col:${g.cor}">
+        <span class="din-titulo">${g.titulo}</span>
+        <span class="din-num">${g.itens.length}</span>
+        <span class="din-total">${g.total}</span>
+      </div>
+      <div class="din-lista">
+        ${g.itens.length ? g.itens.map(it => `
+          <div class="din-item">
+            <div class="din-item-main">
+              <div class="din-item-titulo">${esc(it.titulo)}</div>
+              <div class="din-item-info">${it.cliente ? esc(it.cliente) + ' · ' : ''}${it.info}</div>
+            </div>
+            <div class="mini-btn primary" onclick="${it.acao}">${it.botao}</div>
+          </div>`).join('')
+        : `<div class="din-vazio">${g.vazio}</div>`}
+      </div>
+    </div>`).join('');
+}
 
 // ---------- Registrar recebimento (não pago / sinal / total) ----------
 let recebJob = null;

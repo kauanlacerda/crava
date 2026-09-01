@@ -95,13 +95,7 @@
     <div class="view" id="view-trabalhos">
       <div class="header">
         <div class="h-title" data-i18n="navTrabalhos">Trabalhos</div>
-        <div style="display:flex;align-items:center;gap:12px">
-          <div class="tema-picker" id="lentePicker">
-            <div class="tema-opt sel" data-lente="trabalho" data-i18n="lenteTrabalho">Trabalho</div>
-            <div class="tema-opt" data-lente="pagamento" data-i18n="lentePagamento">Pagamento</div>
-          </div>
-          <div class="btn btn-primary" id="btnNovo" style="padding:10px 18px" data-i18n="btnNovoPedido">+ Novo pedido</div>
-        </div>
+        <div class="btn btn-primary" id="btnNovo" style="padding:10px 18px" data-i18n="btnNovoPedido">+ Novo pedido</div>
       </div>
       <div id="listaTodos"></div>
     </div>
@@ -179,6 +173,9 @@
         </div>
       </div>
       </div>
+
+      <!-- ===== dinheiro: o que precisa de ação ===== -->
+      <div class="dinheiro-painel" id="dinheiroPainel"></div>
 
       <!-- ===== trio: carteira · moedas · conversor ===== -->
       <div class="trio-wrap">

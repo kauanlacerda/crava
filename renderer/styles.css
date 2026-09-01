@@ -1222,3 +1222,54 @@ input:focus, select:focus { border-color: var(--blue); }
 .bc-blue { color: var(--blue); background: var(--blue-bg); }
 .receb-atalhos { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 #lentePicker { flex-shrink: 0; }
+
+/* ---- linha de dinheiro no card do kanban ---- */
+.kb-dinheiro {
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  background: var(--panel2); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 7px 9px; cursor: pointer;
+  font-size: 11px; font-weight: 700;
+  transition: border-color 0.25s var(--ease), background 0.25s var(--ease);
+}
+.kb-dinheiro:hover { border-color: var(--blue); }
+.kb-din-valor { font-size: 12.5px; font-weight: 800; }
+.kb-din-forma { color: var(--faint); font-size: 10px; font-weight: 800; letter-spacing: 0.3px; }
+.kb-din-estado { margin-left: auto; font-size: 10px; font-weight: 800; }
+.kb-dinheiro.nao_pago { border-color: var(--border2); }
+.kb-dinheiro.nao_pago .kb-din-estado { color: var(--faint); }
+.kb-dinheiro.parcial { border-color: rgba(245, 183, 78, 0.45); }
+.kb-dinheiro.parcial .kb-din-estado { color: var(--amber); }
+.kb-dinheiro.a_converter { border-color: rgba(51, 157, 255, 0.45); }
+.kb-dinheiro.a_converter .kb-din-estado { color: var(--blue); }
+.kb-dinheiro.na_conta { border-color: rgba(47, 211, 156, 0.4); background: var(--green-bg); }
+.kb-dinheiro.na_conta .kb-din-estado { color: var(--green); }
+.kb-din-bar { width: 100%; height: 4px; border-radius: 3px; background: var(--border2); overflow: hidden; }
+.kb-din-bar div { height: 100%; background: var(--amber); border-radius: 3px; transition: width 0.5s var(--ease); }
+
+/* ---- painel Dinheiro (3 listas de acao) ---- */
+.dinheiro-painel {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px; width: 100%;
+}
+.din-col {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 20px; padding: 16px 16px 12px;
+  display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow-soft);
+}
+.din-head { display: flex; align-items: center; gap: 8px; padding-bottom: 9px; border-bottom: 2px solid var(--col); }
+.din-titulo { font-size: 12px; font-weight: 800; color: var(--col); letter-spacing: 0.4px; }
+.din-num { font-size: 11px; font-weight: 800; color: var(--muted); background: var(--panel2); border-radius: 20px; padding: 2px 8px; }
+.din-total { margin-left: auto; font-size: 12px; font-weight: 800; }
+.din-lista { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
+.din-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--panel2); border: 1px solid var(--border2);
+  border-radius: 12px; padding: 10px 12px;
+  animation: fadeUp 0.4s var(--ease) backwards;
+}
+.din-item-main { flex-grow: 1; min-width: 0; }
+.din-item-titulo { font-size: 12.5px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.din-item-info { font-size: 10.5px; font-weight: 600; color: var(--muted); }
+.din-item .mini-btn { flex-shrink: 0; }
+.din-vazio { font-size: 11.5px; font-weight: 600; color: var(--faint); text-align: center; padding: 18px 0; }
+@media (max-width: 1180px) { .dinheiro-painel { grid-template-columns: 1fr; } }
