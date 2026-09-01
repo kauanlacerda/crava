@@ -1187,3 +1187,23 @@ input:focus, select:focus { border-color: var(--blue); }
 .kb-acoes .mini-btn { font-size: 10.5px; padding: 5px 9px; }
 
 @media (max-width: 1280px) { .kanban { grid-template-columns: repeat(5, 220px); } }
+
+/* render periodico nao repete as animacoes de entrada */
+.sem-anim *, .sem-anim { animation: none !important; }
+
+/* celebracao com tela preta em fade */
+.celebra.com-fundo::before {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(0, 0, 0, 0.88); backdrop-filter: blur(3px);
+  animation: celebra-fundo 2.7s ease forwards;
+}
+@keyframes celebra-fundo {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.celebra-mascote, .celebra-texto, .confete { position: relative; z-index: 1; }
+
+/* card arrastado: sem transicao brigando com o balanco */
+.kb-card.arrastando { transition: none; }

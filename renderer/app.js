@@ -171,7 +171,7 @@ function celebrar() {
   const cores = ['#339dff', '#2fd39c', '#f5b74e', '#ff8fa3', '#a06bff', '#ff6b5e'];
   const frases = ['Mandou bem!', 'Cravou!', 'Mais uma!', 'Boa!', 'É isso!'];
   const el = document.createElement('div');
-  el.className = 'celebra';
+  el.className = 'celebra com-fundo';
   let html = `<img class="celebra-mascote" src="${spr('metaModal')}" alt="">`;
   html += `<div class="celebra-texto">${frases[Math.floor(Math.random() * frases.length)]}</div>`;
   for (let i = 0; i < 30; i++) {
@@ -510,12 +510,12 @@ let busca = '';
 let verTodosPagos = false;
 
 // colunas do quadro
+// as colunas seguem SÓ a etapa do trabalho; o pagamento é um selo no card
 const COLUNAS = [
   { id: 'fila', i18n: 'colFila', cor: 'var(--muted)', filtro: j => j.status === 'aceito' },
   { id: 'fazendo', i18n: 'colFazendo', cor: 'var(--blue)', filtro: j => j.status === 'fazendo' },
-  { id: 'entregue', i18n: 'colEntregue', cor: 'var(--amber)', filtro: j => j.status === 'entregue' && j.pagamento !== 'pago' },
-  { id: 'aprovado', i18n: 'colAprovado', cor: 'var(--flame)', filtro: j => j.status === 'aprovado' && j.pagamento !== 'pago' },
-  { id: 'pago', i18n: 'colPago', cor: 'var(--green)', filtro: j => j.pagamento === 'pago' }
+  { id: 'entregue', i18n: 'colEntregue', cor: 'var(--amber)', filtro: j => j.status === 'entregue' },
+  { id: 'aprovado', i18n: 'colAprovado', cor: 'var(--green)', filtro: j => j.status === 'aprovado' }
 ];
 
 function urgencia(j) {
@@ -562,11 +562,17 @@ function renderTodos() {
 
   const html = COLUNAS.map(col => {
     let lista = todos.filter(col.filtro);
-    if (col.id === 'pago') {
-      lista.sort((a, b) => (dataRealizado(b) || '').localeCompare(dataRealizado(a) || ''));
-      if (!verTodosPagos) {
+    if (col.id === 'aprovado') {
+      // não pagos primeiro (dinheiro parado), depois os mais recentes
+      lista.sort((a, b) => {
+        const pa = a.pagamento === 'pago' ? 1 : 0, pb = b.pagamento === 'pago' ? 1 : 0;
+        if (pa !== pb) return pa - pb;
+        return (dataRealizado(b) || b.entregueEm || '').localeCompare(dataRealizado(a) || a.entregueEm || '');
+      });
+      if (!verTodosPagos && !busca) {
         const limite = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
-        lista = lista.filter(j => (dataRealizado(j) || '').slice(0, 10) >= limite);
+        lista = lista.filter(j => j.pagamento !== 'pago' ||
+          (dataRealizado(j) || j.entregueEm || '').slice(0, 10) >= limite);
       }
     } else {
       lista.sort((a, b) => {
@@ -593,9 +599,9 @@ function renderTodos() {
         </div>
         <div class="kb-lista">
           ${lista.length ? lista.map(cardKanbanHTML).join('') : `<div class="kb-vazio">${t('colVazia')}</div>`}
-          ${col.id === 'pago' && totalPagos > lista.length && !verTodosPagos
+          ${col.id === 'aprovado' && totalPagos > lista.length && !verTodosPagos
             ? `<div class="kb-vertodos" onclick="alternarVerTodos()">${t('verTodos')} (${totalPagos})</div>` : ''}
-          ${col.id === 'pago' && verTodosPagos
+          ${col.id === 'aprovado' && verTodosPagos
             ? `<div class="kb-vertodos" onclick="alternarVerTodos()">${t('verRecentes')}</div>` : ''}
         </div>
       </div>`;
@@ -608,17 +614,38 @@ function alternarVerTodos() { verTodosPagos = !verTodosPagos; renderTodos(); }
 
 // ---------- arrastar e soltar ----------
 let arrastando = null;
+// balanço: o card inclina pro lado que o mouse move e volta com molinha
+let tiltAlvo = 0, tiltAtual = 0, tiltEl = null, tiltRaf = null, tiltUltimoX = 0;
+function loopTilt() {
+  tiltAtual += (tiltAlvo - tiltAtual) * 0.18;
+  tiltAlvo *= 0.88; // sem movimento, volta ao centro
+  if (tiltEl) tiltEl.style.transform = `scale(0.97) rotate(${tiltAtual.toFixed(2)}deg)`;
+  if (Math.abs(tiltAtual) > 0.05 || Math.abs(tiltAlvo) > 0.05) tiltRaf = requestAnimationFrame(loopTilt);
+  else { if (tiltEl) tiltEl.style.transform = ''; tiltRaf = null; }
+}
 function ligarDragDrop() {
   $('listaTodos').querySelectorAll('.kb-card').forEach(el => {
     el.addEventListener('dragstart', (e) => {
       arrastando = el.dataset.id;
       el.classList.add('arrastando');
+      tiltEl = el; tiltUltimoX = e.clientX; tiltAlvo = 0; tiltAtual = 0;
+      if (!tiltRaf) tiltRaf = requestAnimationFrame(loopTilt);
       e.dataTransfer.effectAllowed = 'move';
       try { e.dataTransfer.setData('text/plain', el.dataset.id); } catch { }
+    });
+    el.addEventListener('drag', (e) => {
+      if (!e.clientX) return; // o último evento vem zerado
+      const dx = e.clientX - tiltUltimoX;
+      tiltUltimoX = e.clientX;
+      tiltAlvo = Math.max(-15, Math.min(15, tiltAlvo + dx * 0.9));
+      if (!tiltRaf) tiltRaf = requestAnimationFrame(loopTilt);
     });
     el.addEventListener('dragend', () => {
       el.classList.remove('arrastando');
       arrastando = null;
+      tiltAlvo = 0;
+      if (!tiltRaf) tiltRaf = requestAnimationFrame(loopTilt);
+      setTimeout(() => { if (tiltEl === el) { el.style.transform = ''; tiltEl = null; } }, 500);
       $('listaTodos').querySelectorAll('.kb-col').forEach(c => c.classList.remove('alvo'));
     });
   });
@@ -647,16 +674,6 @@ async function moverPara(id, coluna) {
   else if (coluna === 'aprovado') {
     if (!j.entregueEm) j.entregueEm = new Date().toISOString();
     j.status = 'aprovado';
-  }
-  else if (coluna === 'pago') {
-    if (!j.entregueEm) j.entregueEm = new Date().toISOString();
-    if (j.status !== 'aprovado') j.status = 'aprovado';
-    if (j.pagamento !== 'pago') {
-      j.pagamento = 'pago';
-      j.pagoEm = new Date().toISOString();
-      if (j.valor.m === 'BRL') { j.liquidado = true; j.liquidadoEm = j.pagoEm; j.liquidadoBRL = Number(j.valor.q); abrirCofre(j); }
-      else { j.liquidado = false; abrirLiquidacao(id); }
-    }
   }
   await salvar();
 }
@@ -958,7 +975,10 @@ function abrirView(nome) {
   document.querySelectorAll('.nav-item').forEach(x => x.classList.toggle('active', x.dataset.view === nome));
   document.querySelectorAll('.view').forEach(v => v.classList.remove('open'));
   $('view-' + nome).classList.add('open');
-  if (nome === 'share') drawShareCard();
+  if (nome === 'share') {
+    drawShareCard();
+    requestAnimationFrame(() => { try { desenharViz(); } catch { } });
+  }
 }
 document.querySelectorAll('.nav-item').forEach(el => { el.onclick = () => abrirView(el.dataset.view); });
 $('userCard').onclick = () => abrirView('perfil');
@@ -1580,7 +1600,8 @@ function curva(ctx, pts, mover = true) {
 function desenharViz() {
   const cv = $('vizCanvas'); if (!cv) return;
   const larguraCss = cv.parentElement.clientWidth;
-  if (larguraCss > 0 && cv.width !== larguraCss * 2) cv.width = larguraCss * 2;
+  if (!larguraCss) return; // aba escondida: desenha quando abrir
+  if (cv.width !== larguraCss * 2) cv.width = larguraCss * 2;
   const ctx = cv.getContext('2d');
   const W = cv.width, H = cv.height;
   const F = (w, sz, fam) => `${w} ${sz}px ${fam || 'Manrope'}, sans-serif`;
@@ -2226,5 +2247,10 @@ function migrarLiquidacao() {
   render();
   window.api.onState((s) => { S = s; render(); });
   buscarCotacao();
-  setInterval(render, 60 * 1000); // atualiza prazos/saudação
+  setInterval(() => {
+    const main = document.querySelector('.main');
+    main.classList.add('sem-anim');
+    render();
+    setTimeout(() => main.classList.remove('sem-anim'), 60);
+  }, 60 * 1000); // atualiza prazos/saudação sem repetir as animações
 })();

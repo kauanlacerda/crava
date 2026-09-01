@@ -65,6 +65,7 @@ function render() {
       <div class="btn-main" id="btnConcluir">✓ Concluir etapa</div>
       <div class="btn-sq" id="btnPausa" title="${pausado ? 'Retomar' : 'Pausar'}">${pausado ? '▶' : '| |'}</div>
       <div class="btn-sq" onclick="window.api.showMain()" title="Abrir janela cheia">⤢</div>
+      <div class="btn-sq" onclick="window.api.hideWidget()" title="Fechar widget">✕</div>
     </div>`;
   document.getElementById('btnConcluir').onclick = async () => {
     if (ativo.fazendoDesde) {

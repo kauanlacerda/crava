@@ -4,7 +4,7 @@ const I18N = {
     // nav / sidebar
     colFila: 'Na fila', colFazendo: 'Fazendo', colEntregue: 'Entregue', colAprovado: 'Aprovado · a receber', colPago: 'Pago', colVazia: 'vazio', verTodos: 'ver todos', verRecentes: 'ver só recentes',
     navHoje: 'Hoje', navTrabalhos: 'Trabalhos', navInsignias: 'Insígnias',
-    navCard: 'Card do mês', navConfig: 'Configurações',
+    navCard: 'Finanças', navConfig: 'Configurações',
     slotsTitulo: 'Disponível', slots: 'slots', slotsDe: 'de',
     slotsHint: 'Slot livre só quando um trabalho for pago.',
     btnWidget: 'Mostrar widget', buscar: 'Buscar trabalho ou cliente…',
@@ -74,7 +74,7 @@ const I18N = {
     emBreve: 'EM BREVE', salvarPerfil: 'Salvar perfil', designer: 'GFX designer',
 
     // card do mês / calendário / lucro
-    cardMes: 'Card do mês', mascote: 'Mascote', fundo: 'Fundo', opacidade: 'Opacidade',
+    cardMes: 'Finanças', mascote: 'Mascote', fundo: 'Fundo', opacidade: 'Opacidade',
     celulas: 'Células', copiarImagem: 'Copiar imagem', salvarGif: 'Salvar GIF',
     gerando: 'Gerando…', calendario: 'Calendário', calendarioLucro: 'Calendário de Lucro',
     salvarImagem: 'Salvar imagem', melhorSeq: 'Melhor sequência no mês:',
@@ -125,7 +125,7 @@ const I18N = {
   en: {
     colFila: 'Queue', colFazendo: 'Doing', colEntregue: 'Delivered', colAprovado: 'Approved · unpaid', colPago: 'Paid', colVazia: 'empty', verTodos: 'see all', verRecentes: 'recent only',
     navHoje: 'Today', navTrabalhos: 'Jobs', navInsignias: 'Badges',
-    navCard: 'Monthly card', navConfig: 'Settings',
+    navCard: 'Finance', navConfig: 'Settings',
     slotsTitulo: 'Available', slots: 'slots', slotsDe: 'of',
     slotsHint: 'A slot frees up only when a job gets paid.',
     btnWidget: 'Show widget', buscar: 'Search job or client…',
@@ -187,7 +187,7 @@ const I18N = {
     contaLoginSub: 'Cross-device sync and password login arrive in the next phase, with the server.',
     emBreve: 'SOON', salvarPerfil: 'Save profile', designer: 'GFX designer',
 
-    cardMes: 'Monthly card', mascote: 'Mascot', fundo: 'Background', opacidade: 'Opacity',
+    cardMes: 'Finance', mascote: 'Mascot', fundo: 'Background', opacidade: 'Opacity',
     celulas: 'Cells', copiarImagem: 'Copy image', salvarGif: 'Save GIF',
     gerando: 'Generating…', calendario: 'Calendar', calendarioLucro: 'Profit Calendar',
     salvarImagem: 'Save image', melhorSeq: 'Best streak this month:',
