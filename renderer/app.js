@@ -1226,9 +1226,7 @@ function renderCalendario() {
       <div class="mini-btn" data-cal="prev">‹</div>
       <div class="cal-titulo">${nomeMes.replace('.', '')}</div>
       <div class="mini-btn" data-cal="next">›</div>
-      <div class="tema-picker" style="margin-left:10px">
-        <div class="tema-opt ${calModo === 'valores' ? 'sel' : ''}" data-cal="valores">Valores</div>
-        <div class="tema-opt ${calModo === 'calor' ? 'sel' : ''}" data-cal="calor">Calor</div>
+      
       </div>
     </div>
     <div class="cal-total-grande">R$ ${fmtNum(Math.round(totalMes))}</div>
@@ -1237,7 +1235,7 @@ function renderCalendario() {
       <span class="c-green"><b>${diasComLucro}</b> / R$ ${fmtNum(Math.round(totalMes))}</span>
       <span class="cal-sub-dir">no ano: <b class="c-green">R$ ${fmtNum(Math.round(totalAno))}</b></span>
     </div>
-    <div class="cal-grid ${calModo === 'calor' ? 'modo-calor' : ''}">${grid}</div>
+    <div class="cal-grid">${grid}</div>
     <div class="cal-rodape">Melhor sequência no mês: <b>${melhorSeq}d</b>${maxDia > 0 ? ` · melhor dia: <b class="c-amber">+R$ ${fmtCompacto(maxDia)}</b>` : ''}</div>`;
   try { pintarFundoCal(); } catch { }
 }
@@ -1377,63 +1375,143 @@ $('calOpacidade').oninput = () => { S.config.calMidiaOp = +$('calOpacidade').val
 $('calOpacidade').onchange = async () => { await salvar(); };
 
 // compartilhar: imagem do calendário (PNG no clipboard; GIF animado salvo em arquivo)
+// dados do mês corrente do calendário (mesma conta do render)
+function dadosCal() {
+  const [ano, mes] = calMes.split('-').map(Number);
+  const diasNoMes = new Date(ano, mes, 0).getDate();
+  const offset = new Date(ano, mes - 1, 1).getDay();
+  const nomeMes = new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }).replace('.', '');
+  const ganhos = [];
+  let totalMes = 0, maxDia = 0, melhorIdx = -1, diasComLucro = 0;
+  for (let d = 1; d <= diasNoMes; d++) {
+    const g = ganhoEquivDoDia(`${calMes}-${String(d).padStart(2, '0')}`);
+    ganhos.push(g);
+    totalMes += g;
+    if (g > 0) diasComLucro++;
+    if (g > maxDia) { maxDia = g; melhorIdx = d; }
+  }
+  let seq = 0, melhorSeq = 0;
+  for (const g of ganhos) { seq = g > 0 ? seq + 1 : 0; if (seq > melhorSeq) melhorSeq = seq; }
+  const totalAno = S.jobs
+    .filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 4) === String(ano))
+    .reduce((a, j) => {
+      if (j.valor.m === 'BRL') return a + Number(j.valor.q);
+      if (j.valor.m === 'USD') return a + Number(j.valor.q) * S.config.cotacaoUSD;
+      return a + (Number(j.valor.q) / 1000) * S.config.cotacaoRBX1k;
+    }, 0);
+  const celulas = [];
+  for (let i = 0; i < offset; i++) celulas.push(null);
+  for (let d = 1; d <= diasNoMes; d++) celulas.push(d);
+  while (celulas.length % 7 !== 0) celulas.push(null);
+  return { ano, mes, nomeMes, ganhos, totalMes, totalAno, maxDia, melhorIdx, diasComLucro, melhorSeq, celulas };
+}
+
+// desenha o calendário inteiro num canvas (fontes reais, sem captura de DOM)
+function desenharCalCanvas(ctx, W, H, dc, fonteMidia, op) {
+  const F = (w, s, fam) => `${w} ${s}px ${fam || 'Manrope'}, sans-serif`;
+  rrect(ctx, 0, 0, W, H, 26);
+  ctx.fillStyle = '#12161d'; ctx.fill();
+  if (fonteMidia) {
+    ctx.save();
+    rrect(ctx, 0, 0, W, H, 26); ctx.clip();
+    const fw = fonteMidia.naturalWidth || fonteMidia.width, fh = fonteMidia.naturalHeight || fonteMidia.height;
+    const esc = Math.max(W / fw, H / fh);
+    ctx.globalAlpha = op;
+    ctx.drawImage(fonteMidia, (W - fw * esc) / 2, (H - fh * esc) / 2, fw * esc, fh * esc);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = 'rgba(8,12,24,0.40)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+  const pad = 44;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#e8edf4'; ctx.font = F(700, 24, "'Baloo 2'");
+  ctx.fillText('Calendário de Lucro', pad, 62);
+  ctx.fillStyle = '#8b98a9'; ctx.font = F(700, 20); ctx.textAlign = 'right';
+  ctx.fillText(dc.nomeMes, W - pad, 60); ctx.textAlign = 'left';
+
+  ctx.fillStyle = '#2fd39c'; ctx.font = F(700, 44, "'Baloo 2'");
+  ctx.fillText('R$ ' + fmtNum(Math.round(dc.totalMes)), pad, 126);
+  ctx.fillStyle = 'rgba(47,211,156,0.9)';
+  ctx.fillRect(pad, 144, W - pad * 2, 4);
+
+  ctx.font = F(700, 17);
+  ctx.fillStyle = '#2fd39c';
+  ctx.fillText(`${dc.diasComLucro} / R$ ${fmtNum(Math.round(dc.totalMes))}`, pad, 180);
+  ctx.fillStyle = '#8b98a9'; ctx.textAlign = 'right';
+  ctx.fillText(`no ano: R$ ${fmtNum(Math.round(dc.totalAno))}`, W - pad, 180); ctx.textAlign = 'left';
+
+  const gap = 10, cw = (W - pad * 2 - gap * 6) / 7, ch = 92;
+  const dows = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+  ctx.font = F(800, 13); ctx.fillStyle = '#5a6676'; ctx.textAlign = 'center';
+  for (let c = 0; c < 7; c++) ctx.fillText(dows[c], pad + c * (cw + gap) + cw / 2, 214);
+  ctx.textAlign = 'left';
+
+  const topo = 228;
+  const hj = hoje();
+  for (let i = 0; i < dc.celulas.length; i++) {
+    const d = dc.celulas[i];
+    if (d === null) continue;
+    const lin = Math.floor(i / 7), col = i % 7;
+    const x = pad + col * (cw + gap), y = topo + lin * (ch + gap);
+    const g = dc.ganhos[d - 1];
+    const int = dc.maxDia > 0 ? g / dc.maxDia : 0;
+    const ehMelhor = d === dc.melhorIdx && g > 0;
+    rrect(ctx, x, y, cw, ch, 12);
+    ctx.fillStyle = fonteMidia ? 'rgba(255,255,255,0.07)' : '#171c24';
+    ctx.fill();
+    if (g > 0) {
+      rrect(ctx, x, y, cw, ch, 12);
+      ctx.fillStyle = ehMelhor ? 'rgba(245,183,78,0.24)' : `rgba(47,211,156,${(0.07 + 0.30 * int).toFixed(2)})`;
+      ctx.fill();
+    }
+    if (ehMelhor) { rrect(ctx, x, y, cw, ch, 12); ctx.strokeStyle = 'rgba(245,183,78,0.6)'; ctx.lineWidth = 2; ctx.stroke(); }
+    if (`${calMes}-${String(d).padStart(2, '0')}` === hj) {
+      rrect(ctx, x, y, cw, ch, 12); ctx.strokeStyle = 'rgba(51,157,255,0.8)'; ctx.lineWidth = 2; ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(232,237,244,0.75)'; ctx.font = F(700, 13);
+    ctx.fillText(String(d), x + 10, y + 22);
+    if (g > 0) {
+      ctx.fillStyle = ehMelhor ? '#f5b74e' : '#2fd39c';
+      ctx.font = F(800, 17); ctx.textAlign = 'center';
+      ctx.fillText('+R$ ' + fmtCompacto(g), x + cw / 2, y + ch / 2 + 12);
+      ctx.textAlign = 'left';
+    }
+  }
+
+  const rodapeY = topo + (dc.celulas.length / 7) * (ch + gap) + 26;
+  ctx.fillStyle = '#8b98a9'; ctx.font = F(600, 15);
+  ctx.fillText(`Melhor sequência no mês: ${dc.melhorSeq}d${dc.maxDia > 0 ? '  ·  melhor dia: +R$ ' + fmtCompacto(dc.maxDia) : ''}`, pad, rodapeY);
+  ctx.fillStyle = '#5a6676'; ctx.textAlign = 'right'; ctx.font = F(700, 15);
+  const nome = S.config.nome || 'você';
+  ctx.fillText(`@${(S.config.usuario || nome).replace('@', '')} · feito com Crava`, W - pad, rodapeY);
+  ctx.textAlign = 'left';
+}
+
 async function compartilharCalendario() {
   const btn = $('btnCompartilharCal');
   const midia = S.config.calMidia;
-  const painel = $('calPanel');
-  const r = painel.getBoundingClientRect();
-  const W = Math.round(r.width * 2), H = Math.round(r.height * 2);
   const op = (S.config.calMidiaOp ?? 35) / 100;
   const txtOriginal = btn.textContent;
   btn.textContent = 'Gerando…';
   try {
-    // conteúdo do painel (sem o fundo) em SVG->imagem, via foreignObject
-    const clone = painel.cloneNode(true);
-    const bg = clone.querySelector('.cal-bg'); if (bg) bg.remove();
-    clone.style.backgroundImage = '';
-    clone.style.margin = '0';
-    const estilos = [...document.styleSheets]
-      .map(ss => { try { return [...ss.cssRules].map(x => x.cssText).join('\n'); } catch { return ''; } })
-      .join('\n');
-    const html =
-      '<div xmlns="http://www.w3.org/1999/xhtml" data-theme="' + (S.config.tema || 'escuro') +
-      '" data-cor="' + (S.config.cor || 'azul') + '"><style>' + estilos + '</style>' + clone.outerHTML + '</div>';
-    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '">' +
-      '<foreignObject width="100%" height="100%" transform="scale(2)">' + html + '</foreignObject></svg>';
-    const conteudo = new Image();
-    await new Promise((ok, err) => {
-      conteudo.onload = ok; conteudo.onerror = err;
-      conteudo.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-    });
-
+    const dc = dadosCal();
+    const linhas = dc.celulas.length / 7;
+    const W = 1120, H = 228 + linhas * 102 + 48;
     const cv = document.createElement('canvas');
     cv.width = W; cv.height = H;
     const ctx = cv.getContext('2d');
-    const pintaBase = (fonte) => {
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--panel').trim() || '#12161d';
-      ctx.fillRect(0, 0, W, H);
-      if (fonte) {
-        const fw = fonte.naturalWidth || fonte.width, fh = fonte.naturalHeight || fonte.height;
-        const esc = Math.max(W / fw, H / fh);
-        ctx.globalAlpha = op;
-        ctx.drawImage(fonte, (W - fw * esc) / 2, (H - fh * esc) / 2, fw * esc, fh * esc);
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = 'rgba(8,12,24,0.35)';
-        ctx.fillRect(0, 0, W, H);
-      }
-      ctx.drawImage(conteudo, 0, 0, W, H);
-    };
 
     if (midia && midia.tipo === 'gif' && calGifFrames && calGifFrames.length) {
       const { GIFEncoder, quantize, applyPalette } = await import('./lib/gifenc.esm.js');
-      const outW = Math.round(r.width), outH = Math.round(r.height);
+      const outW = Math.round(W * 0.6), outH = Math.round(H * 0.6);
       const mini = document.createElement('canvas');
       mini.width = outW; mini.height = outH;
       const mctx = mini.getContext('2d');
       const enc = GIFEncoder();
       const passo = Math.ceil(calGifFrames.length / 60);
       for (let i = 0; i < calGifFrames.length; i += passo) {
-        pintaBase(calGifFrames[i]);
+        desenharCalCanvas(ctx, W, H, dc, calGifFrames[i], op);
         mctx.drawImage(cv, 0, 0, outW, outH);
         const dados = mctx.getImageData(0, 0, outW, outH).data;
         const paleta = quantize(dados, 256);
@@ -1442,7 +1520,8 @@ async function compartilharCalendario() {
       enc.finish();
       await window.api.saveGif(enc.bytes());
     } else {
-      pintaBase(midia && CAL_MEDIA_IMG.complete && CAL_MEDIA_IMG.naturalWidth ? CAL_MEDIA_IMG : null);
+      const fonte = midia && CAL_MEDIA_IMG.complete && CAL_MEDIA_IMG.naturalWidth ? CAL_MEDIA_IMG : null;
+      desenharCalCanvas(ctx, W, H, dc, fonte, op);
       window.api.copyImage(cv.toDataURL('image/png'));
     }
   } catch (err) {
