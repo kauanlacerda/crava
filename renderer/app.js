@@ -547,10 +547,10 @@ const COLUNAS_PGTO = [
 
 // as colunas seguem SÓ a etapa do trabalho; o pagamento é um selo no card
 const COLUNAS_TRAB = [
-  { id: 'fila', i18n: 'colFila', cor: 'var(--muted)', filtro: j => j.status === 'aceito' },
+  { id: 'esperando_pgto', i18n: 'colEsperandoPgto', cor: 'var(--amber)', filtro: j => j.status === 'aceito' && recebidoDe(j) <= 0 },
+  { id: 'fila', i18n: 'colFila', cor: 'var(--muted)', filtro: j => j.status === 'aceito' && recebidoDe(j) > 0 },
   { id: 'fazendo', i18n: 'colFazendo', cor: 'var(--blue)', filtro: j => j.status === 'fazendo' },
-  { id: 'entregue', i18n: 'colEntregue', cor: 'var(--amber)', filtro: j => j.status === 'entregue' },
-  { id: 'aprovado', i18n: 'colAprovado', cor: 'var(--green)', filtro: j => j.status === 'aprovado' }
+  { id: 'entregue', i18n: 'colEntregue', cor: 'var(--green)', filtro: j => j.status === 'entregue' || j.status === 'aprovado' }
 ];
 const colunasAtuais = () => COLUNAS_TRAB;
 
@@ -581,6 +581,7 @@ function cardKanbanHTML(j) {
   acts.push(`<div class="mini-btn" onclick="event.stopPropagation();excluir('${j.id}')">✕</div>`);
   const prazo = prazoTexto(j.prazo);
   const pend = est === 'a_converter' ? (j.valor.m === 'RBX' ? t('aVender') : t('aCair')) : '';
+  const selo = j.status === 'aprovado' ? `<span class="kb-selo-aprovado">${t('aprovadoSelo')}</span>` : '';
   const linhaDinheiro = `
     <div class="kb-dinheiro ${est}" onclick="event.stopPropagation();abrirRecebimento('${j.id}')" title="${t('recebTitulo')}">
       <span class="kb-din-valor">${est === 'parcial'
@@ -592,7 +593,7 @@ function cardKanbanHTML(j) {
     </div>`;
   return `
     <div class="kb-card ${classeUrgencia(j)}" draggable="true" data-id="${j.id}">
-      <div class="kb-titulo">${esc(j.titulo)}</div>
+      <div class="kb-titulo">${esc(j.titulo)}${selo}</div>
       <div class="kb-meta">
         <span class="kb-cliente">${esc(j.cliente || t('semCliente'))}</span>
         ${prazo ? `<span class="kb-prazo ${prazoClasse(j.prazo)}">${prazo}</span>` : ''}
@@ -608,7 +609,7 @@ function renderTodos() {
 
   const html = COLUNAS_TRAB.map(col => {
     let lista = todos.filter(col.filtro);
-    if (col.id === 'aprovado' || col.id === 'na_conta') {
+    if (col.id === 'entregue') {
       // não pagos primeiro (dinheiro parado), depois os mais recentes
       lista.sort((a, b) => {
         const pa = estagioPgto(a) === 'na_conta' ? 1 : 0, pb = estagioPgto(b) === 'na_conta' ? 1 : 0;
@@ -645,9 +646,9 @@ function renderTodos() {
         </div>
         <div class="kb-lista">
           ${lista.length ? lista.map(cardKanbanHTML).join('') : `<div class="kb-vazio">${t('colVazia')}</div>`}
-          ${(col.id === 'aprovado' || col.id === 'na_conta') && totalPagos > lista.length && !verTodosPagos
+          ${(col.id === 'entregue') && totalPagos > lista.length && !verTodosPagos
             ? `<div class="kb-vertodos" onclick="alternarVerTodos()">${t('verTodos')} (${totalPagos})</div>` : ''}
-          ${(col.id === 'aprovado' || col.id === 'na_conta') && verTodosPagos
+          ${(col.id === 'entregue') && verTodosPagos
             ? `<div class="kb-vertodos" onclick="alternarVerTodos()">${t('verRecentes')}</div>` : ''}
         </div>
       </div>`;
@@ -689,16 +690,19 @@ function ligarDragDrop() {
 async function moverPara(id, coluna) {
   const j = S.jobs.find(x => x.id === id);
   if (!j) return;
-  if (coluna === 'fila') { acumularTempo(j); j.status = 'aceito'; j.pausado = false; }
+  if (coluna === 'esperando_pgto') {
+    acumularTempo(j); j.status = 'aceito'; j.pausado = false;
+    if (recebidoDe(j) > 0) { await salvar(); return abrirRecebimento(id); } // já tem dinheiro: ajusta
+  }
+  else if (coluna === 'fila') {
+    acumularTempo(j); j.status = 'aceito'; j.pausado = false;
+    if (recebidoDe(j) <= 0) { await salvar(); return abrirRecebimento(id); } // entra na fila ao receber
+  }
   else if (coluna === 'fazendo') { return tornarAtivo(id); }
   else if (coluna === 'entregue') {
     if (j.status === 'fazendo') return avancar(id);   // conta a entrega e celebra
     j.status = 'entregue';
     if (!j.entregueEm) j.entregueEm = new Date().toISOString();
-  }
-  else if (coluna === 'aprovado') {
-    if (!j.entregueEm) j.entregueEm = new Date().toISOString();
-    j.status = 'aprovado';
   }
   await salvar();
 }

@@ -1273,3 +1273,11 @@ input:focus, select:focus { border-color: var(--blue); }
 .din-item .mini-btn { flex-shrink: 0; }
 .din-vazio { font-size: 11.5px; font-weight: 600; color: var(--faint); text-align: center; padding: 18px 0; }
 @media (max-width: 1180px) { .dinheiro-painel { grid-template-columns: 1fr; } }
+
+/* selo de aprovado no titulo do card */
+.kb-selo-aprovado {
+  display: inline-block; margin-left: 6px; vertical-align: middle;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.3px; text-transform: uppercase;
+  color: var(--green); background: var(--green-bg);
+  border-radius: 5px; padding: 2px 5px;
+}
