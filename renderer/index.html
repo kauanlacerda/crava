@@ -10,7 +10,7 @@
 <div class="app">
   <div class="sidebar">
     <div class="logo">
-      <img class="logo-croc" src="../assets/croc/croc-01.png" alt="">
+      <img class="logo-croc" id="logoImg" src="../assets/macaco/macaco-02.png" alt="">
       <div class="logo-name">Crava</div>
     </div>
     <div class="nav-item active" data-view="hoje">
@@ -155,6 +155,13 @@
           </div>
         </div>
         <div class="config-row">
+          <div><div class="config-k">Mascote</div><div class="config-sub">Muda o bichinho e o esquema de cores do app inteiro</div></div>
+          <div class="tema-picker" id="mascotePicker">
+            <div class="tema-opt" data-mascote="azul">🐵 Macaco azul</div>
+            <div class="tema-opt" data-mascote="gato">🐱 Gato laranja</div>
+          </div>
+        </div>
+        <div class="config-row">
           <div><div class="config-k">Glow da tela inicial</div><div class="config-sub">Cards coloridos e vibrantes; desligado volta ao estilo discreto do design antigo</div></div>
           <div class="tema-picker" id="glowPicker">
             <div class="tema-opt" data-glow="on">Ligado</div>
@@ -213,7 +220,7 @@
 <!-- ================= MODAL: cofre ================= -->
 <div class="overlay" id="ovCofre">
   <div class="modal" style="align-items:center;text-align:center">
-    <img src="../assets/croc/croc-19.png" alt="" style="width:84px;height:auto;image-rendering:pixelated">
+    <img id="cofreImg" src="../assets/macaco/macaco-06.png" alt="" style="width:84px;height:auto;image-rendering:pixelated">
     <div class="modal-title">Pagamento recebido!</div>
     <div style="font-size:13px;font-weight:600;color:var(--muted)" id="cofreDetalhe"></div>
     <div style="font-size:22px;font-weight:800;color:var(--green)" id="cofreValor"></div>
@@ -227,7 +234,7 @@
 <!-- ================= MODAL: meta batida ================= -->
 <div class="overlay" id="ovMeta">
   <div class="modal" style="align-items:center;text-align:center;border-color:var(--blue-border)">
-    <img src="../assets/croc/croc-14.png" alt="" style="width:96px;height:auto;image-rendering:pixelated">
+    <img id="metaImg" src="../assets/macaco/macaco-03.png" alt="" style="width:96px;height:auto;image-rendering:pixelated">
     <div class="modal-title" style="font-size:20px">Meta batida!</div>
     <div style="font-size:13px;font-weight:600;color:var(--muted)" id="metaDetalhe"></div>
     <div class="badge-chip bc-amber" id="metaStreak"></div>

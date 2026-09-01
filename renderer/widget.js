@@ -1,6 +1,15 @@
 let S = null;
 const hoje = () => new Date().toISOString().slice(0, 10);
 
+const SPR_W = {
+  azul: { vazio: '../assets/macaco/macaco-05.png', meta: '../assets/macaco/macaco-06.png', ativo: '../assets/macaco/macaco-02.png' },
+  gato: { vazio: '../assets/gato/gato-16.png', meta: '../assets/gato/gato-14.png', ativo: '../assets/gato/gato-18.png' }
+};
+function sprW(slot) {
+  const m = S && S.config.mascote === 'gato' ? 'gato' : 'azul';
+  return SPR_W[m][slot];
+}
+
 function fmtTimer(ms) {
   const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
   const mm = String(m).padStart(2, '0'), ss = String(s % 60).padStart(2, '0');
@@ -34,7 +43,7 @@ function render() {
       <div class="top"><div class="dot" style="background:#5a6676"></div><div class="tag" style="color:#8b98a9">SEM TRABALHO ATIVO</div>
         <div class="prog-txt">hoje ${feitos}/${meta}</div><div class="segs">${segs}</div></div>
       <div class="vazio">
-        <img src="../assets/croc/${feitos >= meta ? 'croc-14.png' : 'croc-16.png'}" alt="" style="width:52px;height:auto;image-rendering:pixelated">
+        <img src="${sprW(feitos >= meta ? 'meta' : 'vazio')}" alt="" style="width:52px;height:auto;image-rendering:pixelated">
         <div>${feitos >= meta ? 'Meta batida — jogo liberado! 🎮' : 'Abre o Crava e escolhe o próximo.'}</div>
       </div>
       <div class="btns no-drag">
@@ -50,7 +59,7 @@ function render() {
     <div><div class="title">${esc(ativo.titulo)}</div>
       <div class="sub">${esc(ativo.cliente || '')} · ${fmtValor(ativo.valor)} ${prazoTexto(ativo.prazo)}</div></div>
     <div class="mid"><div class="timer">${fmtTimer(t)}</div><div class="hint">focado nesse<br>trabalho</div>
-      <img src="../assets/croc/croc-18.png" alt="" style="width:46px;height:auto;image-rendering:pixelated;margin-left:auto"></div>
+      <img src="${sprW('ativo')}" alt="" style="width:46px;height:auto;image-rendering:pixelated;margin-left:auto"></div>
     <div class="btns no-drag">
       <div class="btn-main" id="btnConcluir">✓ Concluir etapa</div>
       <div class="btn-sq" id="btnPausa" title="Pausar">| |</div>

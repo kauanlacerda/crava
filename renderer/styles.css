@@ -641,3 +641,47 @@ input:focus, select:focus { border-color: var(--blue); }
   background: var(--panel2);
 }
 .mes-vazio { color: var(--faint); font-weight: 700; }
+
+/* ================================================================
+   TEMA GATO LARANJA — base laranja, escuro e claro
+   (o tema azul/macaco continua sendo o conjunto padrao acima)
+   ================================================================ */
+:root[data-mascote="gato"] {
+  /* escuro laranja (padrao do tema gato) */
+  --bg: #131008;
+  --panel: #1b160d;
+  --panel2: #241d10;
+  --panel-dim: #18130b;
+  --border: #2b2313;
+  --border2: #3a2f1a;
+  --border-dim: #251e11;
+  --blue: #ff9a3d;
+  --blue-bg: #2f2410;
+  --blue-border: #9a6426;
+  --blue-glow: rgba(255, 154, 61, 0.14);
+  --vivid-blue-a: #ffab4d;
+  --vivid-blue-b: #e86f0e;
+  --vivid-green-a: #2fd97a;
+  --vivid-green-b: #16a34a;
+  --vivid-orange-a: #ffd34d;
+  --vivid-orange-b: #eaa210;
+}
+:root[data-theme="claro"][data-mascote="gato"] {
+  --bg: #faf4ea;
+  --panel: #ffffff;
+  --panel2: #faf5ec;
+  --panel-dim: #fdfaf4;
+  --border: #efe3d0;
+  --border2: #e6d7bf;
+  --border-dim: #f3ead9;
+  --blue: #e2700c;
+  --blue-bg: #fdf0df;
+  --blue-border: #f5c894;
+  --blue-glow: rgba(226, 112, 12, 0.10);
+}
+:root[data-mascote="gato"] .btn-primary { box-shadow: 0 6px 16px rgba(234, 122, 16, 0.35); }
+:root[data-mascote="gato"] .stat-card.solid-blue { box-shadow: 0 10px 26px rgba(232, 111, 14, 0.42); }
+:root[data-mascote="gato"] .user-avatar,
+:root[data-mascote="gato"] .perfil-avatar {
+  background: linear-gradient(135deg, #ffab4d, #e86f0e);
+}

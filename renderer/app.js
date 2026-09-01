@@ -161,6 +161,8 @@ $('metaFechar').onclick = () => $('ovMeta').classList.remove('open');
 // ---------- Render ----------
 function render() {
   document.documentElement.dataset.theme = S.config.tema || 'escuro';
+  document.documentElement.dataset.mascote = S.config.mascote || 'azul';
+  atualizarSprites();
 
   // saudação e data
   const h = new Date().getHours();
@@ -351,7 +353,7 @@ function renderFila() {
     html += `<div class="section-label" style="margin-top:12px">CONCLUÍDOS HOJE · ${feitos.length}</div>`;
     html += `<div class="job-grid" style="margin-top:9px">${feitos.map(j => jobRowHTML(j, null, true)).join('')}</div>`;
   }
-  if (!html) html = `<div class="empty-state"><img src="../assets/croc/croc-20.png" alt="" style="width:64px;height:auto;image-rendering:pixelated;opacity:0.8"><div class="big">Dia limpo</div><div>Ctrl+Shift+N captura um pedido novo em 5 segundos.</div></div>`;
+  if (!html) html = `<div class="empty-state"><img src="${spr('espiar')}" alt="" style="width:64px;height:auto;image-rendering:pixelated;opacity:0.85"><div class="big">Dia limpo</div><div>Ctrl+Shift+N captura um pedido novo em 5 segundos.</div></div>`;
   $('filaArea').innerHTML = html;
 }
 
@@ -538,10 +540,16 @@ function renderConfig() {
     el.classList.toggle('sel', el.dataset.tema === (S.config.tema || 'escuro')));
   document.querySelectorAll('#glowPicker .tema-opt').forEach(el =>
     el.classList.toggle('sel', el.dataset.glow === (S.config.glowCards !== false ? 'on' : 'off')));
+  document.querySelectorAll('#mascotePicker .tema-opt').forEach(el =>
+    el.classList.toggle('sel', el.dataset.mascote === (S.config.mascote || 'azul')));
 }
 $('glowPicker').onclick = async (e) => {
   const g = e.target.dataset.glow;
   if (g) { S.config.glowCards = g === 'on'; await salvar(); }
+};
+$('mascotePicker').onclick = async (e) => {
+  const m = e.target.dataset.mascote;
+  if (m) { S.config.mascote = m; await salvar(); }
 };
 $('temaPicker').onclick = async (e) => {
   const t = e.target.dataset.tema;
@@ -610,14 +618,44 @@ function rrect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// mascote oficial: crocodilo pixel (assets/croc/)
+// ---------- Mascotes por tema ----------
+const SPRITES = {
+  azul: {
+    logo: '../assets/macaco/macaco-02.png',
+    shareHead: '../assets/macaco/macaco-02.png',
+    shareBig: '../assets/macaco/macaco-03.png',
+    metaModal: '../assets/macaco/macaco-03.png',
+    cofre: '../assets/macaco/macaco-06.png',
+    espiar: '../assets/macaco/macaco-01.png'
+  },
+  gato: {
+    logo: '../assets/gato/gato-01.png',
+    shareHead: '../assets/gato/gato-01.png',
+    shareBig: '../assets/gato/gato-14.png',
+    metaModal: '../assets/gato/gato-14.png',
+    cofre: '../assets/gato/gato-19.png',
+    espiar: '../assets/gato/gato-20.png'
+  }
+};
+function spr(slot) {
+  const m = S && S.config.mascote === 'gato' ? 'gato' : 'azul';
+  return SPRITES[m][slot];
+}
+
 const MASCOTE_IMG = new Image();
-MASCOTE_IMG.src = '../assets/croc/croc-14.png';
 const HEAD_IMG = new Image();
-HEAD_IMG.src = '../assets/croc/croc-01.png';
 HEAD_IMG.onload = () => { if ($('view-share').classList.contains('open')) drawShareCard(); };
 MASCOTE_IMG.onload = () => { if ($('view-share').classList.contains('open')) drawShareCard(); };
 document.fonts.ready.then(() => { if ($('view-share').classList.contains('open')) drawShareCard(); });
+
+function atualizarSprites() {
+  const big = spr('shareBig'), head = spr('shareHead');
+  if (!MASCOTE_IMG.src.includes(big.replace('../', ''))) MASCOTE_IMG.src = big;
+  if (!HEAD_IMG.src.includes(head.replace('../', ''))) HEAD_IMG.src = head;
+  $('logoImg').src = spr('logo');
+  $('metaImg').src = spr('metaModal');
+  $('cofreImg').src = spr('cofre');
+}
 
 function drawShareCard() {
   const cv = $('shareCanvas'), ctx = cv.getContext('2d');

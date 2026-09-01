@@ -84,6 +84,16 @@ function toggleWidget() {
   else widgetWin.show();
 }
 
+// icone da janela/bandeja acompanha o mascote escolhido
+function atualizarIcones() {
+  try {
+    const m = store.get().config.mascote === 'gato' ? 'icon-gato.png' : 'icon-azul.png';
+    const img = nativeImage.createFromPath(path.join(__dirname, 'assets', m));
+    if (tray) tray.setImage(img.resize({ width: 16, height: 16 }));
+    if (mainWin && !mainWin.isDestroyed()) mainWin.setIcon(img);
+  } catch { /* segue com o icone padrao */ }
+}
+
 // ---------- Alertas de prazo (a cada 30 min) ----------
 
 function checarPrazos() {
@@ -138,6 +148,7 @@ if (!lock) {
     createWidget();
     createCapture();
     createTray();
+    atualizarIcones();
 
     const atalho = store.get().config.atalho || 'CommandOrControl+Shift+N';
     try {
@@ -159,7 +170,7 @@ if (!lock) {
 // ---------- IPC ----------
 
 ipcMain.handle('state:get', () => store.get());
-ipcMain.handle('state:set', (_e, s) => { store.set(s); broadcast(); return true; });
+ipcMain.handle('state:set', (_e, s) => { store.set(s); broadcast(); atualizarIcones(); return true; });
 ipcMain.on('main:show', () => { mainWin.show(); mainWin.focus(); });
 ipcMain.on('widget:toggle', toggleWidget);
 ipcMain.on('widget:hide', () => widgetWin && widgetWin.hide());
