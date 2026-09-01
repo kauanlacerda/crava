@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
   getState: () => ipcRenderer.invoke('state:get'),
@@ -12,6 +12,8 @@ contextBridge.exposeInMainWorld('api', {
   copyImage: (dataURL) => ipcRenderer.send('clipboard:image', dataURL),
   saveGif: (bytes) => ipcRenderer.invoke('gif:save', bytes),
   saveMidia: (dataURL) => ipcRenderer.invoke('midia:save', dataURL),
+  pathDoArquivo: (file) => { try { return webUtils.getPathForFile(file); } catch { return null; } },
+  importMidia: (caminho, ehGif) => ipcRenderer.invoke('midia:import', caminho, ehGif),
   readMidia: (p) => ipcRenderer.invoke('midia:read', p),
   clearMidia: () => ipcRenderer.send('midia:clear'),
   quit: () => ipcRenderer.send('app:quit')

@@ -1108,18 +1108,25 @@ $('btnMidia').onclick = () => $('midiaInput').click();
 $('midiaInput').onchange = () => {
   const f = $('midiaInput').files[0];
   if (!f) return;
-  if (f.size > 15 * 1024 * 1024) { alert('Arquivo muito grande (máx. 15 MB).'); return; }
-  const r = new FileReader();
-  r.onload = async () => {
-    const p = await window.api.saveMidia(r.result);
+  if (f.size > 100 * 1024 * 1024) { alert('Arquivo muito grande (máx. 100 MB).'); return; }
+  const ehGif = f.type === 'image/gif';
+  const instalar = async (p) => {
     if (!p) { alert('Não consegui salvar a mídia.'); return; }
-    S.config.shareMidia = { tipo: f.type === 'image/gif' ? 'gif' : 'foto', path: p };
+    S.config.shareMidia = { tipo: ehGif ? 'gif' : 'foto', path: p };
     MEDIA_IMG.src = midiaSrc(S.config.shareMidia);
     await salvar();
     prepararGifPreview();
     drawShareCard();
   };
-  r.readAsDataURL(f);
+  const caminho = window.api.pathDoArquivo(f);
+  if (caminho) {
+    // caminho real: copia direto no disco, sem base64 (rápido pra arquivo grande)
+    window.api.importMidia(caminho, ehGif).then(instalar);
+  } else {
+    const r = new FileReader();
+    r.onload = async () => instalar(await window.api.saveMidia(r.result));
+    r.readAsDataURL(f);
+  }
   $('midiaInput').value = '';
 };
 $('btnMidiaRemover').onclick = async () => {

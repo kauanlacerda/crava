@@ -202,6 +202,19 @@ ipcMain.handle('midia:save', (_e, dataURL) => {
   fs.writeFileSync(p, Buffer.from(m[2], 'base64'));
   return p;
 });
+// importa direto por caminho (sem base64 — aguenta arquivos grandes)
+ipcMain.handle('midia:import', (_e, caminho, ehGif) => {
+  const fs = require('fs');
+  try {
+    const ext = ehGif ? 'gif' : 'png';
+    for (const e of ['gif', 'png']) {
+      try { fs.unlinkSync(path.join(app.getPath('userData'), 'share-midia.' + e)); } catch { }
+    }
+    const p = path.join(app.getPath('userData'), 'share-midia.' + ext);
+    fs.copyFileSync(caminho, p);
+    return p;
+  } catch { return null; }
+});
 ipcMain.handle('midia:read', (_e, p) => {
   try { return require('fs').readFileSync(p); } catch { return null; }
 });
