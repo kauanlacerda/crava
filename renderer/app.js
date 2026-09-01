@@ -192,6 +192,8 @@ function novoCofre(confirmado) {
   return {
     data: hoje(),
     valor: cofreJob ? fmtValor({ q: cofreJob.valor.q * S.config.cofrePct / 100, m: cofreJob.valor.m }) : '',
+    q: cofreJob ? cofreJob.valor.q * S.config.cofrePct / 100 : 0,
+    m: cofreJob ? cofreJob.valor.m : 'BRL',
     titulo: cofreJob ? cofreJob.titulo : '',
     confirmado
   };
@@ -245,6 +247,7 @@ function render() {
   renderConfig();
   renderCalendario();
   try { desenharViz(); } catch { }
+  try { renderCarteira(); renderMoedas(); calcularConversao(); } catch { }
 }
 
 // ---------- Stat cards (fileira do topo, como no design) ----------
@@ -1150,6 +1153,179 @@ $('midiaOpacidade').oninput = () => {
 $('midiaOpacidade').onchange = async () => { await salvar(); drawShareCard(); };
 
 
+
+// ================= CARTEIRA · MOEDAS · CONVERSOR =================
+
+// valor de um cofre em R$ equivalente (novos guardam q/m; antigos, só texto)
+function cofreEquiv(c) {
+  if (typeof c.q === 'number') {
+    if (c.m === 'BRL') return c.q;
+    if (c.m === 'USD') return c.q * S.config.cotacaoUSD;
+    return (c.q / 1000) * S.config.cotacaoRBX1k;
+  }
+  const num = parseFloat(String(c.valor || '').replace(/[^\d,.-]/g, '').replace(/\.(?=\d{3})/g, '').replace(',', '.'));
+  return isNaN(num) ? 0 : num;
+}
+function totalGuardado() {
+  return S.stats.cofres.filter(c => c.confirmado).reduce((a, c) => a + cofreEquiv(c), 0);
+}
+
+// ---------- Carteira ----------
+let carteiraFrente = 0; // 0 = guardado, 1 = livre
+function renderCarteira() {
+  const recebido = totalPagoBRLequiv();
+  const guardado = totalGuardado();
+  const livre = Math.max(0, recebido - guardado);
+  const pct = recebido > 0 ? Math.round(guardado / recebido * 100) : 0;
+  const pendentes = S.stats.cofres.filter(c => !c.confirmado).length;
+
+  const cartoes = [
+    { rot: 'GUARDADO NO COFRE', val: guardado, sub: `${pct}% de tudo que entrou`, cls: 'verde' },
+    { rot: 'LIVRE / JÁ GASTO', val: livre, sub: `de R$ ${fmtNum(Math.round(recebido))} recebidos`, cls: 'azul' }
+  ];
+  $('carteiraPalco').innerHTML = cartoes.map((c, i) => {
+    const pos = (i - carteiraFrente + 2) % 2; // 0 = frente, 1 = atrás
+    return `<div class="cartao ${c.cls} ${pos === 0 ? 'frente' : 'atras'}">
+      <div class="cartao-topo">
+        <div class="cartao-chip"></div>
+        <img class="cartao-mascote" src="${spr('logo')}" alt="">
+      </div>
+      <div class="cartao-rot">${c.rot}</div>
+      <div class="cartao-val">R$ ${fmtNum(Math.round(c.val))}</div>
+      <div class="cartao-sub">${c.sub}</div>
+    </div>`;
+  }).join('');
+
+  $('carteiraLinhas').innerHTML = `
+    <div class="cart-linha"><span>Recebido no total</span><b>R$ ${fmtNum(Math.round(recebido))}</b></div>
+    <div class="cart-linha"><span>Guardado</span><b class="c-green">R$ ${fmtNum(Math.round(guardado))}</b></div>
+    <div class="cart-linha"><span>Meta do cofre</span><b>${S.config.cofrePct}%</b></div>
+    ${pendentes ? `<div class="cart-linha alerta"><span>Cofres pendentes</span><b class="c-amber">${pendentes}</b></div>` : ''}`;
+}
+$('btnTrocarCarteira').onclick = () => { carteiraFrente = (carteiraFrente + 1) % 2; renderCarteira(); };
+$('carteiraPalco').onclick = () => { carteiraFrente = (carteiraFrente + 1) % 2; renderCarteira(); };
+
+// ---------- Moedas do mês (donut) ----------
+let moedasMes = hoje().slice(0, 7);
+const MOEDA_COR = { BRL: '#2fd39c', USD: '#339dff', RBX: '#f5b74e' };
+const MOEDA_NOME = { BRL: 'Real', USD: 'Dólar', RBX: 'Robux' };
+
+function renderMoedas() {
+  const [a, m] = moedasMes.split('-').map(Number);
+  $('moedasMes').textContent = new Date(a, m - 1, 1)
+    .toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }).replace('.', '');
+
+  const bruto = { BRL: 0, USD: 0, RBX: 0 };
+  for (const j of S.jobs) {
+    if (j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 7) === moedasMes) bruto[j.valor.m] += Number(j.valor.q);
+  }
+  const equiv = {
+    BRL: bruto.BRL,
+    USD: bruto.USD * S.config.cotacaoUSD,
+    RBX: (bruto.RBX / 1000) * S.config.cotacaoRBX1k
+  };
+  const total = equiv.BRL + equiv.USD + equiv.RBX;
+
+  const cv = $('donutCanvas'), ctx = cv.getContext('2d');
+  const W = cv.width, R = W / 2, raio = R - 14, esp = 34;
+  ctx.clearRect(0, 0, W, W);
+  ctx.lineWidth = esp;
+  ctx.lineCap = 'butt';
+  if (total <= 0) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+    ctx.beginPath(); ctx.arc(R, R, raio - esp / 2, 0, Math.PI * 2); ctx.stroke();
+  } else {
+    let ang = -Math.PI / 2;
+    for (const k of ['BRL', 'USD', 'RBX']) {
+      if (equiv[k] <= 0) continue;
+      const fatia = (equiv[k] / total) * Math.PI * 2;
+      ctx.strokeStyle = MOEDA_COR[k];
+      ctx.beginPath();
+      ctx.arc(R, R, raio - esp / 2, ang + 0.03, ang + fatia - 0.03);
+      ctx.stroke();
+      ang += fatia;
+    }
+  }
+
+  const maior = ['BRL', 'USD', 'RBX'].sort((x, y) => equiv[y] - equiv[x])[0];
+  const pctMaior = total > 0 ? Math.round(equiv[maior] / total * 100) : 0;
+  $('donutCentro').innerHTML = total > 0
+    ? `<div class="donut-pct">${pctMaior}%</div><div class="donut-sub">em ${MOEDA_NOME[maior]}</div>`
+    : `<div class="donut-pct" style="font-size:20px">—</div><div class="donut-sub">sem entradas</div>`;
+
+  $('donutLegenda').innerHTML = ['BRL', 'USD', 'RBX'].map(k => {
+    const pct = total > 0 ? Math.round(equiv[k] / total * 100) : 0;
+    const cru = k === 'BRL' ? MOEDA.BRL.fmt(bruto.BRL) : k === 'USD' ? MOEDA.USD.fmt(bruto.USD) : MOEDA.RBX.fmt(bruto.RBX);
+    return `<div class="leg-item">
+      <span class="leg-dot" style="background:${MOEDA_COR[k]}"></span>
+      <span class="leg-nome">${MOEDA_NOME[k]}</span>
+      <span class="leg-val">${bruto[k] > 0 ? cru : '—'}</span>
+      <b class="leg-pct">${pct}%</b>
+    </div>`;
+  }).join('');
+}
+document.querySelector('.trio-card .trio-head [data-moe="prev"]').parentElement.addEventListener('click', (e) => {
+  const acao = e.target.dataset.moe;
+  if (!acao) return;
+  let [a, m] = moedasMes.split('-').map(Number);
+  m += acao === 'next' ? 1 : -1;
+  if (m === 0) { m = 12; a--; }
+  if (m === 13) { m = 1; a++; }
+  moedasMes = `${a}-${String(m).padStart(2, '0')}`;
+  renderMoedas();
+});
+
+// ---------- Conversor ----------
+let cotacaoUSDonline = null, cotacaoQuando = '';
+async function buscarCotacao() {
+  try {
+    const r = await fetch('https://open.er-api.com/v6/latest/USD');
+    const j = await r.json();
+    if (j && j.rates && j.rates.BRL) {
+      cotacaoUSDonline = j.rates.BRL;
+      cotacaoQuando = new Date().toLocaleDateString('pt-BR');
+      $('cotacaoInfo').textContent = `US$ 1 = R$ ${cotacaoUSDonline.toFixed(2)}`;
+      $('convRodape').textContent = `cotação online de ${cotacaoQuando} · Robux pela config (1k = R$ ${S.config.cotacaoRBX1k})`;
+      calcularConversao();
+      return;
+    }
+    throw new Error('resposta inválida');
+  } catch {
+    $('cotacaoInfo').textContent = `US$ 1 = R$ ${Number(S.config.cotacaoUSD).toFixed(2)}`;
+    $('convRodape').textContent = 'sem internet — usando as cotações das configurações';
+  }
+}
+function taxaUSD() { return cotacaoUSDonline || S.config.cotacaoUSD; }
+function paraBRL(q, m) {
+  if (m === 'BRL') return q;
+  if (m === 'USD') return q * taxaUSD();
+  return (q / 1000) * S.config.cotacaoRBX1k;
+}
+function deBRL(v, m) {
+  if (m === 'BRL') return v;
+  if (m === 'USD') return v / taxaUSD();
+  return (v / S.config.cotacaoRBX1k) * 1000;
+}
+function calcularConversao() {
+  const q = parseFloat($('convValor').value) || 0;
+  const de = $('convDe').value, para = $('convPara').value;
+  const res = deBRL(paraBRL(q, de), para);
+  $('convResultado').textContent = para === 'BRL' ? MOEDA.BRL.fmt(Math.round(res * 100) / 100)
+    : para === 'USD' ? MOEDA.USD.fmt(Math.round(res * 100) / 100)
+    : MOEDA.RBX.fmt(Math.round(res));
+}
+$('convValor').oninput = calcularConversao;
+$('convDe').onchange = calcularConversao;
+$('convPara').onchange = calcularConversao;
+$('btnConvTrocar').onclick = () => {
+  const a = $('convDe').value;
+  $('convDe').value = $('convPara').value;
+  $('convPara').value = a;
+  $('btnConvTrocar').classList.add('girando');
+  setTimeout(() => $('btnConvTrocar').classList.remove('girando'), 400);
+  calcularConversao();
+};
+
 // ---------- Visualizer de lucro mensal (stream graph) ----------
 let vizMeses = 8;
 
@@ -1841,5 +2017,6 @@ Object.assign(window, { tornarAtivo, pausarRetomar, voltarFila, avancar, ciclarP
   if (verificarInsignias()) await window.api.saveState(S);
   render();
   window.api.onState((s) => { S = s; render(); });
+  buscarCotacao();
   setInterval(render, 60 * 1000); // atualiza prazos/saudação
 })();

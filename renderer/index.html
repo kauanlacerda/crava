@@ -173,6 +173,59 @@
         </div>
       </div>
       </div>
+
+      <!-- ===== trio: carteira · moedas · conversor ===== -->
+      <div class="trio-wrap">
+
+        <div class="trio-card" id="carteiraCard">
+          <div class="trio-head">
+            <div class="trio-titulo">Carteira</div>
+            <div class="mini-btn" id="btnTrocarCarteira" title="Trocar cartão">⇄</div>
+          </div>
+          <div class="carteira-palco" id="carteiraPalco"></div>
+          <div class="carteira-linhas" id="carteiraLinhas"></div>
+        </div>
+
+        <div class="trio-card">
+          <div class="trio-head">
+            <div class="trio-titulo">Moedas</div>
+            <div style="flex-grow:1"></div>
+            <div class="mini-btn" data-moe="prev">‹</div>
+            <div class="trio-mes" id="moedasMes">—</div>
+            <div class="mini-btn" data-moe="next">›</div>
+          </div>
+          <div class="donut-wrap">
+            <canvas id="donutCanvas" width="360" height="360"></canvas>
+            <div class="donut-centro" id="donutCentro"></div>
+          </div>
+          <div class="donut-legenda" id="donutLegenda"></div>
+        </div>
+
+        <div class="trio-card">
+          <div class="trio-head">
+            <div class="trio-titulo">Conversor</div>
+            <div style="flex-grow:1"></div>
+            <div class="trio-cotacao" id="cotacaoInfo">—</div>
+          </div>
+          <div class="conv-bloco">
+            <div class="conv-rot">Você tem</div>
+            <div class="conv-linha">
+              <select id="convDe"><option value="BRL">R$ Real</option><option value="USD">US$ Dólar</option><option value="RBX">Robux</option></select>
+              <input id="convValor" type="number" min="0" value="1000">
+            </div>
+          </div>
+          <div class="conv-troca" id="btnConvTrocar" title="Inverter">⇅</div>
+          <div class="conv-bloco">
+            <div class="conv-rot">Equivale a</div>
+            <div class="conv-linha">
+              <select id="convPara"><option value="USD">US$ Dólar</option><option value="BRL">R$ Real</option><option value="RBX">Robux</option></select>
+              <div class="conv-resultado" id="convResultado">—</div>
+            </div>
+          </div>
+          <div class="conv-rodape" id="convRodape">usando as cotações das configurações</div>
+        </div>
+
+      </div>
     </div>
 
     <!-- calendário de lucro (abre pelo botão no card) -->
