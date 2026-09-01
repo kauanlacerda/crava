@@ -157,7 +157,20 @@
         <div class="btn btn-primary" id="btnCopiarCard" style="padding:9px 16px;font-size:12px">Copiar imagem</div>
       </div>
       </div>
-      <div class="cal-panel" id="calPanel"></div>
+      <div class="share-col">
+        <div class="cal-panel" id="calPanel"></div>
+        <div class="share-bar">
+          <div class="mini-btn" id="btnCalFundo">Fundo</div>
+          <div class="mini-btn" id="btnCalFundoRemover" style="display:none">✕</div>
+          <input type="file" id="calMidiaInput" accept="image/*" style="display:none">
+          <div id="calOpacidadeWrap" class="opacidade-wrap" style="display:none">
+            <span class="share-label" style="letter-spacing:0">Opacidade</span>
+            <input type="range" id="calOpacidade" min="10" max="100" value="35">
+          </div>
+          <div style="flex-grow:1"></div>
+          <div class="btn btn-primary" id="btnCompartilharCal" style="padding:9px 16px;font-size:12px">Compartilhar</div>
+        </div>
+      </div>
       </div>
     </div>
 

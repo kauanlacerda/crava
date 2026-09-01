@@ -189,28 +189,30 @@ ipcMain.on('clipboard:image', (_e, dataURL) => {
   clipboard.writeImage(nativeImage.createFromDataURL(dataURL));
   new Notification({ title: 'Card copiado!', body: 'Cola no Discord ou no X com Ctrl+V.', icon: ICON }).show();
 });
-// mídia do share card vive em arquivo próprio (não incha o JSON de dados)
-ipcMain.handle('midia:save', (_e, dataURL) => {
+// mídia vive em arquivo próprio (não incha o JSON de dados).
+// slot: 'card' (share card) ou 'cal' (calendário) — fundos independentes.
+function limparSlot(slot) {
+  const fs = require('fs');
+  for (const e of ['gif', 'png']) {
+    try { fs.unlinkSync(path.join(app.getPath('userData'), `midia-${slot}.${e}`)); } catch { }
+  }
+}
+ipcMain.handle('midia:save', (_e, dataURL, slot = 'card') => {
   const fs = require('fs');
   const m = String(dataURL).match(/^data:(image\/[\w+]+);base64,(.+)$/s);
   if (!m) return null;
   const ext = m[1] === 'image/gif' ? 'gif' : 'png';
-  for (const e of ['gif', 'png']) {
-    try { fs.unlinkSync(path.join(app.getPath('userData'), 'share-midia.' + e)); } catch { }
-  }
-  const p = path.join(app.getPath('userData'), 'share-midia.' + ext);
+  limparSlot(slot);
+  const p = path.join(app.getPath('userData'), `midia-${slot}.${ext}`);
   fs.writeFileSync(p, Buffer.from(m[2], 'base64'));
   return p;
 });
 // importa direto por caminho (sem base64 — aguenta arquivos grandes)
-ipcMain.handle('midia:import', (_e, caminho, ehGif) => {
+ipcMain.handle('midia:import', (_e, caminho, ehGif, slot = 'card') => {
   const fs = require('fs');
   try {
-    const ext = ehGif ? 'gif' : 'png';
-    for (const e of ['gif', 'png']) {
-      try { fs.unlinkSync(path.join(app.getPath('userData'), 'share-midia.' + e)); } catch { }
-    }
-    const p = path.join(app.getPath('userData'), 'share-midia.' + ext);
+    limparSlot(slot);
+    const p = path.join(app.getPath('userData'), `midia-${slot}.${ehGif ? 'gif' : 'png'}`);
     fs.copyFileSync(caminho, p);
     return p;
   } catch { return null; }
@@ -218,12 +220,7 @@ ipcMain.handle('midia:import', (_e, caminho, ehGif) => {
 ipcMain.handle('midia:read', (_e, p) => {
   try { return require('fs').readFileSync(p); } catch { return null; }
 });
-ipcMain.on('midia:clear', () => {
-  const fs = require('fs');
-  for (const e of ['gif', 'png']) {
-    try { fs.unlinkSync(path.join(app.getPath('userData'), 'share-midia.' + e)); } catch { }
-  }
-});
+ipcMain.on('midia:clear', (_e, slot = 'card') => limparSlot(slot));
 
 ipcMain.handle('gif:save', async (_e, bytes) => {
   const { dialog } = require('electron');

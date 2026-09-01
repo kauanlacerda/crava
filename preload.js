@@ -11,10 +11,10 @@ contextBridge.exposeInMainWorld('api', {
   saveCapture: (job) => ipcRenderer.send('capture:save', job),
   copyImage: (dataURL) => ipcRenderer.send('clipboard:image', dataURL),
   saveGif: (bytes) => ipcRenderer.invoke('gif:save', bytes),
-  saveMidia: (dataURL) => ipcRenderer.invoke('midia:save', dataURL),
+  saveMidia: (dataURL, slot) => ipcRenderer.invoke('midia:save', dataURL, slot),
   pathDoArquivo: (file) => { try { return webUtils.getPathForFile(file); } catch { return null; } },
-  importMidia: (caminho, ehGif) => ipcRenderer.invoke('midia:import', caminho, ehGif),
+  importMidia: (caminho, ehGif, slot) => ipcRenderer.invoke('midia:import', caminho, ehGif, slot),
   readMidia: (p) => ipcRenderer.invoke('midia:read', p),
-  clearMidia: () => ipcRenderer.send('midia:clear'),
+  clearMidia: (slot) => ipcRenderer.send('midia:clear', slot),
   quit: () => ipcRenderer.send('app:quit')
 });

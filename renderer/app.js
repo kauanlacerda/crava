@@ -883,6 +883,10 @@ function atualizarSprites() {
       prepararGifPreview();
     }
   }
+  if (S.config.calMidia) {
+    const alvoCal = midiaSrc(S.config.calMidia);
+    if (alvoCal && CAL_MEDIA_IMG.src !== alvoCal) { CAL_MEDIA_IMG.src = alvoCal; prepararCalGif(); }
+  }
   const fav = S.config.insigniaFavorita;
   if (fav && !FAV_IMG.src.includes(`insignias/${fav}.png`)) FAV_IMG.src = `../assets/insignias/${fav}.png`;
 }
@@ -1233,6 +1237,7 @@ function renderCalendario() {
       <span>no ano: <b class="c-green">R$ ${fmtNum(Math.round(totalAno))}</b></span>
     </div>
     <div class="cal-grid ${calModo === 'calor' ? 'modo-calor' : ''}">${grid}</div>`;
+  try { pintarFundoCal(); } catch { }
 }
 $('calPanel').onclick = (e) => {
   const acao = e.target.dataset.cal;
@@ -1252,6 +1257,198 @@ $('calPanel').onclick = (e) => {
       el.classList.toggle('sel', el.dataset.cal === calModo));
   }
 };
+
+// ---------- Fundo e compartilhamento do calendário ----------
+const CAL_MEDIA_IMG = new Image();
+CAL_MEDIA_IMG.onload = () => renderCalendario();
+let calGifFrames = null, calGifDelays = null, calGifIdx = 0, calGifTimer = null, calGifPreparando = false;
+
+function pararCalGif() { if (calGifTimer) { clearTimeout(calGifTimer); calGifTimer = null; } }
+function iniciarCalGif() {
+  pararCalGif();
+  if (!calGifFrames || !calGifFrames.length) return;
+  const tick = () => {
+    if ($('view-share').classList.contains('open')) {
+      calGifIdx = (calGifIdx + 1) % calGifFrames.length;
+      pintarFundoCal();
+    }
+    calGifTimer = setTimeout(tick, calGifDelays[calGifIdx]);
+  };
+  calGifTimer = setTimeout(tick, calGifDelays[0]);
+}
+async function prepararCalGif() {
+  const midia = S.config.calMidia;
+  pararCalGif();
+  calGifFrames = null; calGifIdx = 0;
+  if (!midia || midia.tipo !== 'gif' || calGifPreparando) return;
+  calGifPreparando = true;
+  try {
+    const buf = await midiaBuffer(midia);
+    const dec = new ImageDecoder({ data: buf, type: 'image/gif' });
+    await dec.tracks.ready;
+    await dec.completed.catch(() => { });
+    const total = Math.min(dec.tracks.selectedTrack.frameCount || 1, 90);
+    const fr = [], dl = [];
+    for (let i = 0; i < total; i++) {
+      const { image, duration } = await dec.decode({ frameIndex: i });
+      fr.push(await createImageBitmap(image));
+      dl.push(Math.max(20, (duration || 70000) / 1000));
+      image.close();
+    }
+    calGifFrames = fr; calGifDelays = dl; calGifIdx = 0;
+    iniciarCalGif();
+  } catch { }
+  calGifPreparando = false;
+  pintarFundoCal();
+}
+
+// pinta o fundo do painel (imagem estática via CSS; GIF quadro a quadro em canvas)
+function pintarFundoCal() {
+  const painel = $('calPanel');
+  const midia = S.config.calMidia;
+  const op = (S.config.calMidiaOp ?? 35) / 100;
+  let cv = painel.querySelector('.cal-bg');
+  if (!midia) {
+    if (cv) cv.remove();
+    painel.style.backgroundImage = '';
+    painel.classList.remove('com-fundo');
+    return;
+  }
+  painel.classList.add('com-fundo');
+  if (midia.tipo === 'gif' && calGifFrames && calGifFrames.length) {
+    painel.style.backgroundImage = '';
+    if (!cv) {
+      cv = document.createElement('canvas');
+      cv.className = 'cal-bg';
+      painel.prepend(cv);
+    }
+    const r = painel.getBoundingClientRect();
+    cv.width = Math.max(1, Math.round(r.width));
+    cv.height = Math.max(1, Math.round(r.height));
+    const ctx = cv.getContext('2d');
+    const img = calGifFrames[calGifIdx];
+    const esc = Math.max(cv.width / img.width, cv.height / img.height);
+    const dw = img.width * esc, dh = img.height * esc;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.globalAlpha = op;
+    ctx.drawImage(img, (cv.width - dw) / 2, (cv.height - dh) / 2, dw, dh);
+    ctx.globalAlpha = 1;
+  } else {
+    if (cv) cv.remove();
+    painel.style.backgroundImage =
+      `linear-gradient(rgba(8,12,24,${(1 - op).toFixed(2)}),rgba(8,12,24,${(1 - op).toFixed(2)})),url("${midiaSrc(midia)}")`;
+  }
+  $('btnCalFundoRemover').style.display = '';
+  $('calOpacidadeWrap').style.display = '';
+  if (document.activeElement !== $('calOpacidade')) $('calOpacidade').value = S.config.calMidiaOp ?? 35;
+}
+
+$('btnCalFundo').onclick = () => $('calMidiaInput').click();
+$('calMidiaInput').onchange = () => {
+  const f = $('calMidiaInput').files[0];
+  if (!f) return;
+  if (f.size > 100 * 1024 * 1024) { alert('Arquivo muito grande (máx. 100 MB).'); return; }
+  const ehGif = f.type === 'image/gif';
+  const instalar = async (p) => {
+    if (!p) { alert('Não consegui salvar a mídia.'); return; }
+    S.config.calMidia = { tipo: ehGif ? 'gif' : 'foto', path: p };
+    CAL_MEDIA_IMG.src = midiaSrc(S.config.calMidia);
+    await salvar();
+    prepararCalGif();
+    pintarFundoCal();
+  };
+  const caminho = window.api.pathDoArquivo(f);
+  if (caminho) window.api.importMidia(caminho, ehGif, 'cal').then(instalar);
+  else { const r = new FileReader(); r.onload = async () => instalar(await window.api.saveMidia(r.result, 'cal')); r.readAsDataURL(f); }
+  $('calMidiaInput').value = '';
+};
+$('btnCalFundoRemover').onclick = async () => {
+  delete S.config.calMidia;
+  window.api.clearMidia('cal');
+  pararCalGif(); calGifFrames = null;
+  $('btnCalFundoRemover').style.display = 'none';
+  $('calOpacidadeWrap').style.display = 'none';
+  await salvar();
+  pintarFundoCal();
+};
+$('calOpacidade').oninput = () => { S.config.calMidiaOp = +$('calOpacidade').value; pintarFundoCal(); };
+$('calOpacidade').onchange = async () => { await salvar(); };
+
+// compartilhar: imagem do calendário (PNG no clipboard; GIF animado salvo em arquivo)
+async function compartilharCalendario() {
+  const btn = $('btnCompartilharCal');
+  const midia = S.config.calMidia;
+  const painel = $('calPanel');
+  const r = painel.getBoundingClientRect();
+  const W = Math.round(r.width * 2), H = Math.round(r.height * 2);
+  const op = (S.config.calMidiaOp ?? 35) / 100;
+  const txtOriginal = btn.textContent;
+  btn.textContent = 'Gerando…';
+  try {
+    // conteúdo do painel (sem o fundo) em SVG->imagem, via foreignObject
+    const clone = painel.cloneNode(true);
+    const bg = clone.querySelector('.cal-bg'); if (bg) bg.remove();
+    clone.style.backgroundImage = '';
+    clone.style.margin = '0';
+    const estilos = [...document.styleSheets]
+      .map(ss => { try { return [...ss.cssRules].map(x => x.cssText).join('\n'); } catch { return ''; } })
+      .join('\n');
+    const html =
+      '<div xmlns="http://www.w3.org/1999/xhtml" data-theme="' + (S.config.tema || 'escuro') +
+      '" data-cor="' + (S.config.cor || 'azul') + '"><style>' + estilos + '</style>' + clone.outerHTML + '</div>';
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '">' +
+      '<foreignObject width="100%" height="100%" transform="scale(2)">' + html + '</foreignObject></svg>';
+    const conteudo = new Image();
+    await new Promise((ok, err) => {
+      conteudo.onload = ok; conteudo.onerror = err;
+      conteudo.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    });
+
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+    const pintaBase = (fonte) => {
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--panel').trim() || '#12161d';
+      ctx.fillRect(0, 0, W, H);
+      if (fonte) {
+        const fw = fonte.naturalWidth || fonte.width, fh = fonte.naturalHeight || fonte.height;
+        const esc = Math.max(W / fw, H / fh);
+        ctx.globalAlpha = op;
+        ctx.drawImage(fonte, (W - fw * esc) / 2, (H - fh * esc) / 2, fw * esc, fh * esc);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = 'rgba(8,12,24,0.35)';
+        ctx.fillRect(0, 0, W, H);
+      }
+      ctx.drawImage(conteudo, 0, 0, W, H);
+    };
+
+    if (midia && midia.tipo === 'gif' && calGifFrames && calGifFrames.length) {
+      const { GIFEncoder, quantize, applyPalette } = await import('./lib/gifenc.esm.js');
+      const outW = Math.round(r.width), outH = Math.round(r.height);
+      const mini = document.createElement('canvas');
+      mini.width = outW; mini.height = outH;
+      const mctx = mini.getContext('2d');
+      const enc = GIFEncoder();
+      const passo = Math.ceil(calGifFrames.length / 60);
+      for (let i = 0; i < calGifFrames.length; i += passo) {
+        pintaBase(calGifFrames[i]);
+        mctx.drawImage(cv, 0, 0, outW, outH);
+        const dados = mctx.getImageData(0, 0, outW, outH).data;
+        const paleta = quantize(dados, 256);
+        enc.writeFrame(applyPalette(dados, paleta), outW, outH, { palette: paleta, delay: Math.max(20, calGifDelays[i] * passo) });
+      }
+      enc.finish();
+      await window.api.saveGif(enc.bytes());
+    } else {
+      pintaBase(midia && CAL_MEDIA_IMG.complete && CAL_MEDIA_IMG.naturalWidth ? CAL_MEDIA_IMG : null);
+      window.api.copyImage(cv.toDataURL('image/png'));
+    }
+  } catch (err) {
+    alert('Não consegui gerar a imagem: ' + err.message);
+  }
+  btn.textContent = txtOriginal;
+}
+$('btnCompartilharCal').onclick = compartilharCalendario;
 
 // GIF animado: decodifica com ImageDecoder (nativo) e re-encoda com gifenc
 async function gerarGifAnimado() {
