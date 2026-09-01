@@ -68,9 +68,9 @@ function createTray() {
   let img;
   try { img = nativeImage.createFromPath(ICON); } catch { img = nativeImage.createEmpty(); }
   tray = new Tray(img.resize({ width: 16, height: 16 }));
-  tray.setToolTip('Cravado');
+  tray.setToolTip('GRND');
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: 'Abrir o Cravado', click: () => { mainWin.show(); mainWin.focus(); } },
+    { label: 'Abrir o GRND', click: () => { mainWin.show(); mainWin.focus(); } },
     { label: 'Mostrar/ocultar widget', click: toggleWidget },
     { type: 'separator' },
     { label: 'Sair de verdade', click: () => { isQuitting = true; app.quit(); } }
@@ -115,6 +115,17 @@ if (!lock) {
   app.on('second-instance', () => { if (mainWin) { mainWin.show(); mainWin.focus(); } });
 
   app.whenReady().then(() => {
+    // migração: dados da era "Cravado" seguem valendo no GRND
+    try {
+      const fs = require('fs');
+      const antigo = path.join(app.getPath('appData'), 'Cravado', 'cravado-data.json');
+      const novo = path.join(app.getPath('userData'), 'cravado-data.json');
+      if (!fs.existsSync(novo) && fs.existsSync(antigo)) {
+        fs.mkdirSync(app.getPath('userData'), { recursive: true });
+        fs.copyFileSync(antigo, novo);
+      }
+    } catch { /* sem dados antigos, segue */ }
+
     store = new Store(app.getPath('userData'));
     store.backupDiario();
 

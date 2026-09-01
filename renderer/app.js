@@ -1,4 +1,4 @@
-// Cravado — lógica da janela principal
+// GRND — lógica da janela principal
 let S = null; // estado completo {config, jobs, stats}
 
 const $ = (id) => document.getElementById(id);
@@ -535,7 +535,7 @@ function drawShareCard() {
   for (const [dx, dy] of [[0, -22], [0, 22], [-22, 0], [22, 0]]) {
     ctx.beginPath(); ctx.moveTo(86 + dx * 0.55, 82 + dy * 0.55); ctx.lineTo(86 + dx, 82 + dy); ctx.stroke();
   }
-  ctx.fillStyle = '#eef2f9'; ctx.font = F(800, 30); ctx.fillText('Cravado', 132, 92);
+  ctx.fillStyle = '#eef2f9'; ctx.font = F(800, 30); ctx.fillText('GRND', 132, 92);
   ctx.fillStyle = '#7d8cab'; ctx.font = F(700, 22); ctx.textAlign = 'right';
   ctx.fillText(mes, W - 56, 88); ctx.textAlign = 'left';
 
@@ -590,7 +590,7 @@ function drawShareCard() {
 
   ctx.fillStyle = '#7d8cab'; ctx.font = F(700, 18); ctx.textAlign = 'right';
   ctx.fillText('feito com', W - 152, ay + 22);
-  ctx.fillText('Cravado', W - 152, ay + 46); ctx.textAlign = 'left';
+  ctx.fillText('GRND', W - 152, ay + 46); ctx.textAlign = 'left';
   // QR decorativo
   rrect(ctx, W - 132, ay - 4, 76, 76, 14); ctx.fillStyle = '#eef2f9'; ctx.fill();
   ctx.fillStyle = c1;
