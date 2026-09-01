@@ -578,3 +578,8 @@ input:focus, select:focus { border-color: var(--blue); }
 .sidebar { margin: 20px 6px 20px 20px; }
 .topbar { padding: 20px 30px 4px 24px; }
 .search { border-radius: 14px; padding: 13px 18px; }
+
+/* mais respiro entre a UI e as bordas da janela */
+.sidebar { margin: 26px 10px 26px 26px; }
+.topbar { padding: 28px 36px 6px 28px; }
+.main { padding: 20px 36px 30px 28px; }
