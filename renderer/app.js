@@ -63,7 +63,7 @@ function totalPagoBRLequiv() {
   return S.jobs.filter(j => j.pagamento === 'pago').reduce((a, j) => {
     if (j.liquidado) return a + realizadoBRL(j);
     if (j.valor.m === 'BRL') return a + Number(j.valor.q);
-    if (j.valor.m === 'USD') return a + Number(j.valor.q) * c.cotacaoUSD;
+    if (j.valor.m === 'USD') return a + Number(j.valor.q) * taxaUSD();
     return a + (Number(j.valor.q) / 1000) * c.cotacaoRBX1k;
   }, 0);
 }
@@ -242,6 +242,8 @@ function render() {
   document.documentElement.dataset.theme = S.config.tema || 'escuro';
   document.documentElement.dataset.cor = S.config.cor || 'azul';
   atualizarSprites();
+  pintarVizFundo();
+  try { desenharViz(); } catch { }
 
   // saudação e data
   const h = new Date().getHours();
@@ -965,6 +967,7 @@ function renderConfig() {
   setIf('cfgSlots', S.config.slots);
   setIf('cfgCofre', S.config.cofrePct);
   setIf('cfgUSD', S.config.cotacaoUSD);
+  pintarCotacao();
   setIf('cfgRBX', S.config.cotacaoRBX1k);
   document.querySelectorAll('#temaPicker .tema-opt').forEach(el =>
     el.classList.toggle('sel', el.dataset.tema === (S.config.tema || 'escuro')));
@@ -1510,7 +1513,7 @@ function precisaLiquidar(j) {
   return j.pagamento === 'pago' && j.valor.m !== 'BRL' && !j.liquidado;
 }
 function estimativaBRL(j) {
-  if (j.valor.m === 'USD') return Number(j.valor.q) * (typeof taxaUSD === 'function' ? taxaUSD() : S.config.cotacaoUSD);
+  if (j.valor.m === 'USD') return Number(j.valor.q) * taxaUSD();
   return (Number(j.valor.q) / 1000) * S.config.cotacaoRBX1k;
 }
 function abrirLiquidacao(id) {
@@ -1562,7 +1565,7 @@ function pendenteLiquidar() {
 function cofreEquiv(c) {
   if (typeof c.q === 'number') {
     if (c.m === 'BRL') return c.q;
-    if (c.m === 'USD') return c.q * S.config.cotacaoUSD;
+    if (c.m === 'USD') return c.q * taxaUSD();
     return (c.q / 1000) * S.config.cotacaoRBX1k;
   }
   const num = parseFloat(String(c.valor || '').replace(/[^\d,.-]/g, '').replace(/\.(?=\d{3})/g, '').replace(',', '.'));
@@ -1636,7 +1639,7 @@ function renderMoedas() {
     bruto[j.valor.m] += Number(j.valor.q);
     equiv[j.valor.m] += j.liquidado ? realizadoBRL(j)
       : j.valor.m === 'BRL' ? Number(j.valor.q)
-      : j.valor.m === 'USD' ? Number(j.valor.q) * S.config.cotacaoUSD
+      : j.valor.m === 'USD' ? Number(j.valor.q) * taxaUSD()
       : (Number(j.valor.q) / 1000) * S.config.cotacaoRBX1k;
   }
   const total = equiv.BRL + equiv.USD + equiv.RBX;
@@ -1690,27 +1693,78 @@ document.querySelector('.trio-card .trio-head [data-moe="prev"]').parentElement.
   renderMoedas();
 });
 
-// ---------- Conversor ----------
-let cotacaoUSDonline = null, cotacaoQuando = '';
-async function buscarCotacao() {
-  try {
-    const r = await fetch('https://open.er-api.com/v6/latest/USD');
-    const j = await r.json();
-    if (j && j.rates && j.rates.BRL) {
-      cotacaoUSDonline = j.rates.BRL;
-      cotacaoQuando = new Date().toLocaleDateString('pt-BR');
-      $('cotacaoInfo').textContent = `US$ 1 = R$ ${cotacaoUSDonline.toFixed(2)}`;
-      $('convRodape').textContent = `${t('cotacaoOnline')} ${cotacaoQuando} · ${t('robuxPelaConfig')} (1k = R$ ${S.config.cotacaoRBX1k})`;
-      calcularConversao();
-      return;
-    }
-    throw new Error('resposta inválida');
-  } catch {
-    $('cotacaoInfo').textContent = `US$ 1 = R$ ${Number(S.config.cotacaoUSD).toFixed(2)}`;
-    $('convRodape').textContent = t('semInternet');
-  }
+// ---------- Cotação do dólar, ao vivo ----------
+// A taxa vem da internet e vale pra TUDO no app (carteira, donut, cofre, conversor).
+// Sem internet, cai na última cotação guardada; sem nenhuma, no valor manual das configs.
+let cotacaoUSDonline = null, cotacaoQuando = '', cotacaoAoVivo = false, ultimaBusca = 0;
+
+function taxaUSD() {
+  return cotacaoUSDonline || Number(S && S.config && S.config.cotacaoUSD) || 5.4;
 }
-function taxaUSD() { return cotacaoUSDonline || S.config.cotacaoUSD; }
+
+function quandoTexto() {
+  if (!cotacaoQuando) return '';
+  const d = new Date(cotacaoQuando);
+  if (isNaN(d)) return '';
+  const loc = (S.config.idioma || 'pt') === 'en' ? 'en-US' : 'pt-BR';
+  return d.toLocaleString(loc, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+function pintarCotacao() {
+  const val = taxaUSD();
+  const info = $('cotacaoInfo');
+  if (info) info.textContent = `US$ 1 = R$ ${val.toFixed(2)}`;
+
+  const rod = $('convRodape');
+  if (rod) {
+    const rbx = `${t('robuxPelaConfig')} (1k = R$ ${S.config.cotacaoRBX1k})`;
+    rod.textContent = cotacaoAoVivo ? `${t('cotacaoOnline')} ${quandoTexto()} · ${rbx}`
+      : cotacaoUSDonline ? `${t('cotacaoUltima')} ${quandoTexto()} · ${rbx}`
+      : t('semInternet');
+  }
+
+  const selo = $('cfgUSDaoVivo');
+  if (selo) {
+    selo.classList.toggle('vivo', cotacaoAoVivo);
+    selo.innerHTML = cotacaoAoVivo
+      ? `<span class="ponto-vivo"></span>${t('aoVivo')} · US$ 1 = R$ ${val.toFixed(2)}`
+      : cotacaoUSDonline ? `${t('cotacaoUltima')} ${quandoTexto()} · R$ ${val.toFixed(2)}`
+      : t('cotacaoManualUso');
+  }
+  try { calcularConversao(); } catch { }
+}
+
+async function buscarCotacao() {
+  ultimaBusca = Date.now();
+  // enquanto a nova não chega, usa a última que ficou guardada
+  if (!cotacaoUSDonline && S && S.config && S.config.cotacaoUSDauto) {
+    cotacaoUSDonline = Number(S.config.cotacaoUSDauto);
+    cotacaoQuando = S.config.cotacaoUSDautoEm || '';
+  }
+  pintarCotacao();
+
+  try {
+    const r = await fetch('https://open.er-api.com/v6/latest/USD', { cache: 'no-store' });
+    const j = await r.json();
+    const taxa = j && j.rates && Number(j.rates.BRL);
+    if (!taxa) throw new Error('resposta inválida');
+
+    const mudou = Math.abs(taxa - (Number(S.config.cotacaoUSDauto) || 0)) >= 0.01;
+    cotacaoUSDonline = taxa;
+    cotacaoAoVivo = true;
+    cotacaoQuando = new Date().toISOString();
+
+    if (mudou) {
+      S.config.cotacaoUSDauto = taxa;
+      S.config.cotacaoUSDautoEm = cotacaoQuando;
+      try { await window.api.saveState(S); } catch { }
+    }
+  } catch {
+    cotacaoAoVivo = false; // offline: segue com a última guardada
+  }
+  pintarCotacao();
+  try { render(); } catch { }
+}
 function paraBRL(q, m) {
   if (m === 'BRL') return q;
   if (m === 'USD') return q * taxaUSD();
@@ -1777,8 +1831,21 @@ function curva(ctx, pts, mover = true) {
   ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
 }
 
+// Fundo do gráfico: 'auto' acompanha o tema do app, 'preto' e 'branco' fixam.
+// As cores do próprio gráfico (azul → verde) não mudam — só o fundo e os textos.
+function paletaViz() {
+  const escolha = S.config.vizFundo || 'auto';
+  const escuro = escolha === 'auto' ? (S.config.tema || 'escuro') !== 'claro' : escolha === 'preto';
+  return escuro
+    ? { fundo: '#0b0e13', titulo: '#e8edf4', rotulo: '#8b98a9', fraco: '#5a6676',
+        haste: 'rgba(255,255,255,0.35)', selo: '#0b0e13', seloBorda: 'rgba(255,255,255,0.18)', seloTxt: '#eef2f9' }
+    : { fundo: '#ffffff', titulo: '#0f1723', rotulo: '#5d6b7d', fraco: '#93a0b0',
+        haste: 'rgba(15,23,35,0.22)', selo: '#ffffff', seloBorda: 'rgba(15,23,35,0.16)', seloTxt: '#0f1723' };
+}
+
 function desenharViz() {
   const cv = $('vizCanvas'); if (!cv) return;
+  const P = paletaViz();
   const larguraCss = cv.parentElement.clientWidth;
   if (!larguraCss) return; // aba escondida: desenha quando abrir
   if (cv.width !== larguraCss * 2) cv.width = larguraCss * 2;
@@ -1787,7 +1854,7 @@ function desenharViz() {
   const F = (w, sz, fam) => `${w} ${sz}px ${fam || 'Manrope'}, sans-serif`;
 
   rrect(ctx, 0, 0, W, H, 36);
-  ctx.fillStyle = '#0b0e13'; ctx.fill();
+  ctx.fillStyle = P.fundo; ctx.fill();
   ctx.save();
   rrect(ctx, 0, 0, W, H, 36); ctx.clip();
 
@@ -1797,7 +1864,7 @@ function desenharViz() {
   // ---- topo: título + estatísticas ----
   const pad = 44;
   ctx.textAlign = 'left';
-  ctx.fillStyle = '#e8edf4'; ctx.font = F(700, 26, "'Baloo 2'");
+  ctx.fillStyle = P.titulo; ctx.font = F(700, 26, "'Baloo 2'");
   ctx.fillText(t('lucro'), pad, 58);
 
   const semana = ganhoEquivPeriodo(diaMenos(6), hoje());
@@ -1821,9 +1888,9 @@ function desenharViz() {
   let cx = pad;
   const larg = (W - pad * 2) / 3;
   for (const [rot, val, dif, sub] of cols) {
-    ctx.fillStyle = '#8b98a9'; ctx.font = F(700, 19);
+    ctx.fillStyle = P.rotulo; ctx.font = F(700, 19);
     ctx.fillText(rot, cx, 108);
-    ctx.fillStyle = '#e8edf4'; ctx.font = F(800, 40, "'Baloo 2'");
+    ctx.fillStyle = P.titulo; ctx.font = F(800, 40, "'Baloo 2'");
     const txt = 'R$ ' + fmtCompacto(val);
     ctx.fillText(txt, cx, 154);
     if (dif) {
@@ -1832,7 +1899,7 @@ function desenharViz() {
       ctx.font = F(800, 18);
       ctx.fillText(dif, cx + w + 12, 150);
     }
-    ctx.fillStyle = '#5a6676'; ctx.font = F(600, 16);
+    ctx.fillStyle = P.fraco; ctx.font = F(600, 16);
     ctx.fillText(sub, cx, 180);
     cx += larg;
   }
@@ -1882,25 +1949,37 @@ function desenharViz() {
   for (const d of destaques) {
     const x = xs[d.i];
     const topoY = meio - maxMeia * norm[d.i];
-    ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 2;
+    ctx.strokeStyle = P.haste; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(x, topoY); ctx.lineTo(x, meio + maxMeia * norm[d.i]); ctx.stroke();
     const rot = 'R$ ' + fmtCompacto(d.valor);
     ctx.font = F(800, 19);
     const w = ctx.measureText(rot).width + 28;
     rrect(ctx, x - w / 2, topoY - 40, w, 32, 16);
-    ctx.fillStyle = '#0b0e13'; ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.fillStyle = '#eef2f9';
+    ctx.fillStyle = P.selo; ctx.fill();
+    ctx.strokeStyle = P.seloBorda; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = P.seloTxt;
     ctx.fillText(rot, x, topoY - 18);
   }
 
   // ---- meses na base ----
-  ctx.fillStyle = '#5a6676'; ctx.font = F(700, 17);
+  ctx.fillStyle = P.fraco; ctx.font = F(700, 17);
   for (let i = 0; i < serie.length; i++) ctx.fillText(serie[i].nome, xs[i], H - 34);
   ctx.textAlign = 'left';
   ctx.restore();
 }
 
+$('vizFundo').onclick = async (e) => {
+  const f = e.target.dataset.fundo;
+  if (!f) return;
+  S.config.vizFundo = f;
+  await salvar();
+  desenharViz();
+};
+function pintarVizFundo() {
+  const alvo = S.config.vizFundo || 'auto';
+  document.querySelectorAll('#vizFundo .mini-btn').forEach(b =>
+    b.classList.toggle('sel', b.dataset.fundo === alvo));
+}
 $('vizMenos').onclick = () => { vizMeses = Math.max(4, vizMeses - 2); desenharViz(); };
 $('vizMais').onclick = () => { vizMeses = Math.min(14, vizMeses + 2); desenharViz(); };
 $('btnCopiarViz').onclick = () => window.api.copyImage($('vizCanvas').toDataURL('image/png'));
@@ -2423,7 +2502,7 @@ function migrarLiquidacao() {
       j.liquidado = true;
       j.liquidadoEm = j.pagoEm;
       j.liquidadoBRL = j.valor.m === 'BRL' ? Number(j.valor.q)
-        : j.valor.m === 'USD' ? Number(j.valor.q) * S.config.cotacaoUSD
+        : j.valor.m === 'USD' ? Number(j.valor.q) * taxaUSD()
         : (Number(j.valor.q) / 1000) * S.config.cotacaoRBX1k;
       mudou = true;
     }
@@ -2439,6 +2518,11 @@ function migrarLiquidacao() {
   render();
   window.api.onState((s) => { S = s; window.S = s; render(); });
   buscarCotacao();
+  setInterval(buscarCotacao, 15 * 60 * 1000);
+  window.addEventListener('online', () => buscarCotacao());
+  window.addEventListener('focus', () => {
+    if (Date.now() - ultimaBusca > 5 * 60 * 1000) buscarCotacao();
+  });
   setInterval(() => {
     const main = document.querySelector('.main');
     main.classList.add('sem-anim');

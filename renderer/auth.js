@@ -197,6 +197,45 @@ function agendarEnvio() {
   setInterval(() => { if (usuario && !modoOffline) sincronizar(false); }, 5 * 60 * 1000);
 })();
 
+// ---------- novidades da versão ----------
+// A lista de mudanças mora no repositório (docs/novidades.json), então dá pra
+// escrever as notas de cada versão sem mexer no código do app.
+const URL_NOVIDADES = 'https://raw.githubusercontent.com/kauanlacerda/crava/main/docs/novidades.json';
+let novidadesCache = null;
+
+async function carregarNovidades() {
+  if (novidadesCache) return novidadesCache;
+  try {
+    const r = await fetch(URL_NOVIDADES, { cache: 'no-store' });
+    novidadesCache = await r.json();
+  } catch { novidadesCache = {}; }
+  return novidadesCache;
+}
+
+async function mostrarNovidades(versao) {
+  const ov = document.getElementById('ovNovidades');
+  if (!ov) return;
+  const idioma = (window.S && window.S.config && window.S.config.idioma) === 'en' ? 'en' : 'pt';
+  const todas = await carregarNovidades();
+  const item = todas[versao] || todas['v' + versao] || null;
+  const linhas = item ? (item[idioma] || item.pt || []) : [];
+
+  document.getElementById('novidadesTitulo').textContent = t('novidadesTitulo');
+  document.getElementById('novidadesVersao').textContent = `v${versao} · ${t('novidadesNesta')}`;
+  document.getElementById('novidadesLista').innerHTML = linhas.length
+    ? linhas.map(l => `<li>${String(l).replace(/</g, '&lt;')}</li>`).join('')
+    : `<li>${t('novidadesVazio')}</li>`;
+  try { document.getElementById('novidadesMascote').src = spr('metaModal'); } catch { }
+  ov.classList.add('open');
+}
+
+(() => {
+  const ov = document.getElementById('ovNovidades');
+  if (!ov) return;
+  document.getElementById('btnNovidadesOk').onclick = () => ov.classList.remove('open');
+  ov.onclick = (e) => { if (e.target === ov) ov.classList.remove('open'); };
+})();
+
 // ---------- aviso de atualização ----------
 (() => {
   const faixa = document.getElementById('faixaUpdate');
@@ -208,12 +247,16 @@ function agendarEnvio() {
   const fill = document.getElementById('updateBarraFill');
   let estado = 'disponivel';
 
+  let versaoNova = '';
+  const btnNotas = document.getElementById('btnUpdateNotas');
+  if (btnNotas) btnNotas.onclick = () => mostrarNovidades(versaoNova);
   const mostrar = () => faixa.classList.add('aberta');
   document.getElementById('btnUpdateFechar').onclick = () => faixa.classList.remove('aberta');
 
   window.api.onUpdate((tipo, d) => {
     if (tipo === 'disponivel') {
       estado = 'disponivel';
+      versaoNova = d.versao;
       titulo.textContent = t('updateTitulo');
       sub.textContent = `${t('updateVersao')} ${d.versao}`;
       btn.textContent = t('updateBaixar');
@@ -253,10 +296,18 @@ function agendarEnvio() {
   };
   setTimeout(tentarMascote, 1500);
 
-  // mostra a versão nas configurações
-  window.api.versaoApp().then(v => {
+  // mostra a versão nas configurações e abre as novidades na primeira vez
+  window.api.versaoApp().then(async (v) => {
     const el = document.getElementById('versaoApp');
     if (el) el.textContent = 'v' + v;
+    if (el) el.onclick = () => mostrarNovidades(v);
+    await new Promise(r => setTimeout(r, 2500)); // deixa o app carregar o estado
+    if (!window.S || !window.S.stats) return;
+    if (window.S.stats.versaoVista === v) return;
+    const primeiraVez = !window.S.stats.versaoVista;
+    window.S.stats.versaoVista = v;
+    try { await window.api.saveState(window.S); } catch { }
+    if (!primeiraVez) mostrarNovidades(v); // instalação nova não precisa do aviso
   }).catch(() => { });
 })();
 

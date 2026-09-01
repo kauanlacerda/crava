@@ -14,8 +14,11 @@ const DEFAULTS = {
     cor: 'azul',
     idioma: 'pt',
     glowCards: true,
-    cotacaoUSD: 5.4,
+    cotacaoUSD: 5.4,        // reserva: só vale quando não dá pra buscar a cotação online
+    cotacaoUSDauto: 0,      // última cotação vinda da internet
+    cotacaoUSDautoEm: '',
     cotacaoRBX1k: 28,
+    vizFundo: 'auto',       // fundo do gráfico de lucro: auto | preto | branco
     nome: 'você'
   },
   jobs: [],
@@ -27,7 +30,8 @@ const DEFAULTS = {
     historico: {},
     cofres: [],
     notificados: {},
-    insigniasGanhas: {}
+    insigniasGanhas: {},
+    versaoVista: ''
   }
 };
 

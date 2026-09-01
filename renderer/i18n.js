@@ -146,6 +146,12 @@ const I18N = {
     metaDiaria: 'Meta diária (trabalhos)', slotsSimultaneos: 'Slots simultâneos',
     cofrePct: 'Cofre (% de cada pagamento)', cotacaoUSD: 'Cotação US$ → R$',
     cotacaoRBX: '1.000 Robux → R$', salvarConfig: 'Salvar configurações',
+    aoVivo: 'ao vivo', cotacaoUltima: 'última cotação de',
+    cotacaoManualUso: 'sem internet — usando o valor manual acima',
+    fundoAuto: 'Auto', fundoPreto: 'Preto', fundoBranco: 'Branco',
+    verNovidades: 'Novidades', entendi: 'Entendi',
+    novidadesTitulo: 'O que tem de novo', novidadesNesta: 'nesta versão',
+    novidadesVazio: 'Não consegui carregar a lista de mudanças agora. Dá uma olhada no GitHub.',
 
     // widget / notificações
     semTrabalhoAtivo: 'SEM TRABALHO ATIVO', pausado: 'PAUSADO',
@@ -291,6 +297,12 @@ const I18N = {
     metaDiaria: 'Daily goal (jobs)', slotsSimultaneos: 'Concurrent slots',
     cofrePct: 'Savings (% of each payment)', cotacaoUSD: 'Rate US$ → R$',
     cotacaoRBX: '1,000 Robux → R$', salvarConfig: 'Save settings',
+    aoVivo: 'live', cotacaoUltima: 'last rate from',
+    cotacaoManualUso: 'offline — using the manual value above',
+    fundoAuto: 'Auto', fundoPreto: 'Black', fundoBranco: 'White',
+    verNovidades: "What's new", entendi: 'Got it',
+    novidadesTitulo: "What's new", novidadesNesta: 'in this version',
+    novidadesVazio: "Couldn't load the changelog right now. Take a look on GitHub.",
 
     semTrabalhoAtivo: 'NO ACTIVE JOB', pausado: 'PAUSED',
     abreEscolhe: 'Open Crava and pick the next one.',
