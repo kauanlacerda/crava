@@ -42,15 +42,26 @@ const ocupados = () => S.jobs.filter(j => j.pagamento !== 'pago').length;
 function concluidosHoje() {
   return S.jobs.filter(j => j.entregueEm && j.entregueEm.slice(0, 10) === hoje());
 }
+// quanto virou dinheiro de verdade (R$) e quando
+function realizadoBRL(j) { return j.liquidado ? Number(j.liquidadoBRL || 0) : 0; }
+function dataRealizado(j) { return j.liquidadoEm || j.pagoEm || ''; }
+
+// R$: tudo que virou real no mês (inclui robux/dólar já vendidos)
+// USD/RBX: o que entrou nessa moeda e AINDA não foi convertido
 function ganhoMes(moeda) {
   const mes = hoje().slice(0, 7);
+  if (moeda === 'BRL') {
+    return S.jobs.filter(j => j.liquidado && dataRealizado(j).slice(0, 7) === mes)
+      .reduce((a, j) => a + realizadoBRL(j), 0);
+  }
   return S.jobs
-    .filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 7) === mes && j.valor.m === moeda)
+    .filter(j => j.pagamento === 'pago' && !j.liquidado && j.valor.m === moeda && j.pagoEm && j.pagoEm.slice(0, 7) === mes)
     .reduce((a, j) => a + Number(j.valor.q), 0);
 }
 function totalPagoBRLequiv() {
   const c = S.config;
   return S.jobs.filter(j => j.pagamento === 'pago').reduce((a, j) => {
+    if (j.liquidado) return a + realizadoBRL(j);
     if (j.valor.m === 'BRL') return a + Number(j.valor.q);
     if (j.valor.m === 'USD') return a + Number(j.valor.q) * c.cotacaoUSD;
     return a + (Number(j.valor.q) / 1000) * c.cotacaoRBX1k;
@@ -531,13 +542,8 @@ function entregasDoMes(mes) {
   return S.jobs.filter(j => j.entregueEm && j.entregueEm.slice(0, 7) === mes);
 }
 function ganhoEquivDoMes(mes) {
-  const c = S.config;
-  return S.jobs.filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 7) === mes)
-    .reduce((a, j) => {
-      if (j.valor.m === 'BRL') return a + Number(j.valor.q);
-      if (j.valor.m === 'USD') return a + Number(j.valor.q) * c.cotacaoUSD;
-      return a + (Number(j.valor.q) / 1000) * c.cotacaoRBX1k;
-    }, 0);
+  return S.jobs.filter(j => j.liquidado && dataRealizado(j).slice(0, 7) === mes)
+    .reduce((a, j) => a + realizadoBRL(j), 0);
 }
 function mesesComAtividade() {
   const set = new Set();
@@ -1279,8 +1285,8 @@ function renderCarteira() {
     ${aLiquidar ? `<div class="cart-linha alerta"><span>${t('cartEsperandoConversao')}</span><b class="c-amber">${aLiquidar}</b></div>` : ''}
     ${pendentesCofre ? `<div class="cart-linha alerta"><span>${t('cartCofresPendentes')}</span><b class="c-amber">${pendentesCofre}</b></div>` : ''}`;
 }
-$('btnTrocarCarteira').onclick = () => { carteiraFrente = (carteiraFrente + 1) % 2; renderCarteira(); };
-$('carteiraPalco').onclick = () => { carteiraFrente = (carteiraFrente + 1) % 2; renderCarteira(); };
+$('btnTrocarCarteira').onclick = () => { carteiraFrente = (carteiraFrente + 1) % 3; renderCarteira(); };
+$('carteiraPalco').onclick = () => { carteiraFrente = (carteiraFrente + 1) % 3; renderCarteira(); };
 
 // ---------- Moedas do mês (donut) ----------
 let moedasMes = hoje().slice(0, 7);
@@ -1293,14 +1299,17 @@ function renderMoedas() {
     .toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }).replace('.', '');
 
   const bruto = { BRL: 0, USD: 0, RBX: 0 };
+  const equiv = { BRL: 0, USD: 0, RBX: 0 };
   for (const j of S.jobs) {
-    if (j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 7) === moedasMes) bruto[j.valor.m] += Number(j.valor.q);
+    if (j.pagamento !== 'pago') continue;
+    const quando = dataRealizado(j).slice(0, 7);
+    if (quando !== moedasMes) continue;
+    bruto[j.valor.m] += Number(j.valor.q);
+    equiv[j.valor.m] += j.liquidado ? realizadoBRL(j)
+      : j.valor.m === 'BRL' ? Number(j.valor.q)
+      : j.valor.m === 'USD' ? Number(j.valor.q) * S.config.cotacaoUSD
+      : (Number(j.valor.q) / 1000) * S.config.cotacaoRBX1k;
   }
-  const equiv = {
-    BRL: bruto.BRL,
-    USD: bruto.USD * S.config.cotacaoUSD,
-    RBX: (bruto.RBX / 1000) * S.config.cotacaoRBX1k
-  };
   const total = equiv.BRL + equiv.USD + equiv.RBX;
 
   const cv = $('donutCanvas'), ctx = cv.getContext('2d');
@@ -1407,13 +1416,8 @@ $('btnConvTrocar').onclick = () => {
 let vizMeses = 8;
 
 function ganhoEquivPeriodo(de, ate) {
-  const c = S.config;
-  return S.jobs.filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 10) >= de && j.pagoEm.slice(0, 10) <= ate)
-    .reduce((a, j) => {
-      if (j.valor.m === 'BRL') return a + Number(j.valor.q);
-      if (j.valor.m === 'USD') return a + Number(j.valor.q) * c.cotacaoUSD;
-      return a + (Number(j.valor.q) / 1000) * c.cotacaoRBX1k;
-    }, 0);
+  return S.jobs.filter(j => j.liquidado && dataRealizado(j).slice(0, 10) >= de && dataRealizado(j).slice(0, 10) <= ate)
+    .reduce((a, j) => a + realizadoBRL(j), 0);
 }
 function diaMenos(n) {
   return new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
@@ -1471,12 +1475,8 @@ function desenharViz() {
   const mesAtual = ganhoEquivDoMes(hoje().slice(0, 7));
   const mesAnt = serie.length > 1 ? serie[serie.length - 2].valor : 0;
   const anoKey = hoje().slice(0, 4);
-  const ano = S.jobs.filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 4) === anoKey)
-    .reduce((a, j) => {
-      if (j.valor.m === 'BRL') return a + Number(j.valor.q);
-      if (j.valor.m === 'USD') return a + Number(j.valor.q) * S.config.cotacaoUSD;
-      return a + (Number(j.valor.q) / 1000) * S.config.cotacaoRBX1k;
-    }, 0);
+  const ano = S.jobs.filter(j => j.liquidado && dataRealizado(j).slice(0, 4) === anoKey)
+    .reduce((a, j) => a + realizadoBRL(j), 0);
 
   const variacao = (atual, ant) => {
     if (!ant) return atual > 0 ? '+100%' : '—';
@@ -1581,14 +1581,8 @@ let calMes = hoje().slice(0, 7);
 let calModo = 'valores'; // 'calor' (mapa de calor) | 'valores'
 
 function ganhoEquivDoDia(dia) {
-  const c = S.config;
-  return S.jobs
-    .filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 10) === dia)
-    .reduce((a, j) => {
-      if (j.valor.m === 'BRL') return a + Number(j.valor.q);
-      if (j.valor.m === 'USD') return a + Number(j.valor.q) * c.cotacaoUSD;
-      return a + (Number(j.valor.q) / 1000) * c.cotacaoRBX1k;
-    }, 0);
+  return S.jobs.filter(j => j.liquidado && dataRealizado(j).slice(0, 10) === dia)
+    .reduce((a, j) => a + realizadoBRL(j), 0);
 }
 function fmtCompacto(v) {
   if (v >= 1000000) return (v / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'M';
@@ -1616,12 +1610,8 @@ function renderCalendario() {
   for (const g of ganhos) { seq = g > 0 ? seq + 1 : 0; if (seq > melhorSeq) melhorSeq = seq; }
 
   const totalAno = S.jobs
-    .filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 4) === String(ano))
-    .reduce((a, j) => {
-      if (j.valor.m === 'BRL') return a + Number(j.valor.q);
-      if (j.valor.m === 'USD') return a + Number(j.valor.q) * S.config.cotacaoUSD;
-      return a + (Number(j.valor.q) / 1000) * S.config.cotacaoRBX1k;
-    }, 0);
+    .filter(j => j.liquidado && dataRealizado(j).slice(0, 4) === String(ano))
+    .reduce((a, j) => a + realizadoBRL(j), 0);
 
   const hj = hoje();
   const dows = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -1829,12 +1819,8 @@ function dadosCal() {
   let seq = 0, melhorSeq = 0;
   for (const g of ganhos) { seq = g > 0 ? seq + 1 : 0; if (seq > melhorSeq) melhorSeq = seq; }
   const totalAno = S.jobs
-    .filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 4) === String(ano))
-    .reduce((a, j) => {
-      if (j.valor.m === 'BRL') return a + Number(j.valor.q);
-      if (j.valor.m === 'USD') return a + Number(j.valor.q) * S.config.cotacaoUSD;
-      return a + (Number(j.valor.q) / 1000) * S.config.cotacaoRBX1k;
-    }, 0);
+    .filter(j => j.liquidado && dataRealizado(j).slice(0, 4) === String(ano))
+    .reduce((a, j) => a + realizadoBRL(j), 0);
   const celulas = [];
   for (let i = 0; i < offset; i++) celulas.push(null);
   for (let d = 1; d <= diasNoMes; d++) celulas.push(d);
@@ -2089,8 +2075,24 @@ function esc(s) { return String(s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;',
 Object.assign(window, { tornarAtivo, pausarRetomar, voltarFila, avancar, ciclarPagamento, excluir, cobrei, separeiCofre, escolherFavorita, abrirLiquidacao });
 
 // ---------- Boot ----------
+function migrarLiquidacao() {
+  let mudou = false;
+  for (const j of S.jobs) {
+    if (j.pagamento === 'pago' && j.liquidado === undefined) {
+      j.liquidado = true;
+      j.liquidadoEm = j.pagoEm;
+      j.liquidadoBRL = j.valor.m === 'BRL' ? Number(j.valor.q)
+        : j.valor.m === 'USD' ? Number(j.valor.q) * S.config.cotacaoUSD
+        : (Number(j.valor.q) / 1000) * S.config.cotacaoRBX1k;
+      mudou = true;
+    }
+  }
+  return mudou;
+}
+
 (async () => {
   S = await window.api.getState();
+  if (migrarLiquidacao()) await window.api.saveState(S);
   if (verificarInsignias()) await window.api.saveState(S);
   render();
   window.api.onState((s) => { S = s; render(); });
