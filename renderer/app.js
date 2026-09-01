@@ -57,7 +57,11 @@ function totalPagoBRLequiv() {
 }
 
 // ---------- Persistência ----------
-async function salvar() { await window.api.saveState(S); render(); }
+async function salvar() {
+  try { verificarInsignias(); } catch { }
+  await window.api.saveState(S);
+  render();
+}
 
 // ---------- Ações ----------
 async function tornarAtivo(id) {
@@ -377,42 +381,149 @@ function renderTodos() {
 }
 
 // ---------- Insígnias ----------
-const INSIGNIAS = [
-  { id: 'semana', nome: 'Semana Cravada', desc: '7 dias de meta seguidos', cor: 'var(--flame)', check: () => S.stats.maxStreak >= 7,
-    icon: '<path d="M12 22c4.4 0 7-2.8 7-6.5 0-2.5-1.4-4.6-3-6.5-.5 1.2-1.3 2-2.5 2.5C13.8 9 14 5.5 11 2c-.3 3-1.5 4.7-3 6.2C6.4 9.8 5 11.9 5 15.5 5 19.2 7.6 22 12 22z"/>' },
-  { id: 'dez-k', nome: 'Primeiros 10k', desc: 'R$ 10.000 faturados (equiv.)', cor: 'var(--green)', check: () => totalPagoBRLequiv() >= 10000,
-    icon: '<circle cx="12" cy="12" r="9"/><path d="M14.5 9.2c-.5-.7-1.4-1.2-2.5-1.2-1.7 0-3 1-3 2.2s1.1 1.8 3 2c2 .2 3 .9 3 2.1 0 1.2-1.3 2.2-3 2.2-1.1 0-2-.5-2.5-1.2"/><path d="M12 6.5V8"/><path d="M12 16.5V18"/>' },
-  { id: 'maquina', nome: 'Máquina', desc: '5 trabalhos num dia', cor: 'var(--blue)', check: () => Object.values(S.stats.historico).some(n => n >= 5),
-    icon: '<path d="M13 2L4.1 12.5a1 1 0 0 0 .8 1.5H11l-1 8 8.9-10.5a1 1 0 0 0-.8-1.5H13z"/>' },
-  { id: 'poupador', nome: 'Poupador', desc: '10 cofres confirmados', cor: '#ff8fa3', check: () => S.stats.cofres.filter(c => c.confirmado).length >= 10,
-    icon: '<rect x="3" y="8" width="18" height="12" rx="3"/><path d="M12 8V5"/><circle cx="12" cy="3.5" r="1.5"/><circle cx="16" cy="13" r="1"/><path d="M7 20v1.5"/><path d="M17 20v1.5"/>' },
-  { id: 'ferro', nome: 'Mês de Ferro', desc: '30 dias de meta seguidos', cor: 'var(--flame)', check: () => S.stats.maxStreak >= 30 },
-  { id: 'cem-k', nome: 'Clube dos 100k', desc: 'R$ 100.000 no total (equiv.)', cor: 'var(--green)', check: () => totalPagoBRLequiv() >= 100000 },
-  { id: 'pontual', nome: 'Pontualidade', desc: '5+ entregas no mês, zero atraso', cor: 'var(--blue)', check: checaPontualidade },
-  { id: 'cobrado', nome: 'Sempre Cobrado', desc: '10 cobranças feitas no aviso', cor: 'var(--amber)', check: () => S.jobs.filter(j => j.cobradoEm).length >= 10 }
-];
-function checaPontualidade() {
-  const mes = hoje().slice(0, 7);
-  const doMes = S.jobs.filter(j => j.entregueEm && j.entregueEm.slice(0, 7) === mes);
-  return doMes.length >= 5 && doMes.every(j => !j.prazo || j.entregueEm.slice(0, 10) <= j.prazo);
+// Helpers de métricas
+function totalMoedaPaga(m) {
+  return S.jobs.filter(j => j.pagamento === 'pago' && j.valor.m === m)
+    .reduce((a, j) => a + Number(j.valor.q), 0);
 }
+function entregasDoMes(mes) {
+  return S.jobs.filter(j => j.entregueEm && j.entregueEm.slice(0, 7) === mes);
+}
+function ganhoEquivDoMes(mes) {
+  const c = S.config;
+  return S.jobs.filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 7) === mes)
+    .reduce((a, j) => {
+      if (j.valor.m === 'BRL') return a + Number(j.valor.q);
+      if (j.valor.m === 'USD') return a + Number(j.valor.q) * c.cotacaoUSD;
+      return a + (Number(j.valor.q) / 1000) * c.cotacaoRBX1k;
+    }, 0);
+}
+function mesesComAtividade() {
+  const set = new Set();
+  for (const j of S.jobs) {
+    if (j.entregueEm) set.add(j.entregueEm.slice(0, 7));
+    if (j.pagoEm) set.add(j.pagoEm.slice(0, 7));
+  }
+  return [...set].sort().reverse();
+}
+function algumMesPontual() {
+  return mesesComAtividade().some(mes => {
+    const doMes = entregasDoMes(mes);
+    return doMes.length >= 5 && doMes.every(j => !j.prazo || j.entregueEm.slice(0, 10) <= j.prazo);
+  });
+}
+
+const IC = {
+  flame: '<path d="M12 22c4.4 0 7-2.8 7-6.5 0-2.5-1.4-4.6-3-6.5-.5 1.2-1.3 2-2.5 2.5C13.8 9 14 5.5 11 2c-.3 3-1.5 4.7-3 6.2C6.4 9.8 5 11.9 5 15.5 5 19.2 7.6 22 12 22z"/>',
+  bolt: '<path d="M13 2L4.1 12.5a1 1 0 0 0 .8 1.5H11l-1 8 8.9-10.5a1 1 0 0 0-.8-1.5H13z"/>',
+  coin: '<circle cx="12" cy="12" r="9"/><path d="M14.5 9.2c-.5-.7-1.4-1.2-2.5-1.2-1.7 0-3 1-3 2.2s1.1 1.8 3 2c2 .2 3 .9 3 2.1 0 1.2-1.3 2.2-3 2.2-1.1 0-2-.5-2.5-1.2"/><path d="M12 6.5V8"/><path d="M12 16.5V18"/>',
+  relogio: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  robux: '<rect x="6.5" y="6.5" width="11" height="11" rx="1.5" transform="rotate(45 12 12)"/><rect x="10" y="10" width="4" height="4" rx="0.5" transform="rotate(45 12 12)"/>',
+  coroa: '<path d="M3 18h18"/><path d="M4 18l-1-9 5.5 4L12 5l3.5 8L21 9l-1 9z"/>',
+  calendario: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="M3 10h18"/><path d="M9 15l2 2 4-4"/>',
+  dolar: '<path d="M12 2v20"/><path d="M17 6.5c-.8-1.2-2.5-2-5-2-3 0-5 1.5-5 3.6 0 2.2 2 3 5 3.4 3.3.5 5 1.4 5 3.6 0 2.1-2 3.6-5 3.6-2.5 0-4.2-.8-5-2"/>'
+};
+
+// Categorias: dia, mês, prazo, dinheiro (R$/US$/Robux)
+const INSIGNIAS = [
+  { id: 'maquina', nome: 'Máquina', desc: '5 entregas num único dia', cor: 'var(--blue)', icon: IC.bolt,
+    check: () => Object.values(S.stats.historico).some(n => n >= 5) },
+  { id: 'semana', nome: 'Semana Cravada', desc: '7 dias de meta seguidos', cor: 'var(--flame)', icon: IC.flame,
+    check: () => S.stats.maxStreak >= 7 },
+  { id: 'ferro', nome: 'Mês de Ferro', desc: '30 dias de meta seguidos', cor: 'var(--flame)', icon: IC.flame,
+    check: () => S.stats.maxStreak >= 30 },
+  { id: 'monstro', nome: 'Mês Monstro', desc: '20 entregas num mês', cor: 'var(--blue)', icon: IC.calendario,
+    check: () => mesesComAtividade().some(m => entregasDoMes(m).length >= 20) },
+  { id: 'mes-ouro', nome: 'Mês de Ouro', desc: 'R$ 20.000 recebidos num mês (equiv.)', cor: 'var(--amber)', icon: IC.coin,
+    check: () => mesesComAtividade().some(m => ganhoEquivDoMes(m) >= 20000) },
+  { id: 'pontual', nome: 'Pontualidade', desc: 'Mês com 5+ entregas e zero atraso', cor: 'var(--green)', icon: IC.relogio,
+    check: algumMesPontual },
+  { id: 'dez-k', nome: 'Primeiros 10k', desc: 'R$ 10.000 no total (equiv.)', cor: 'var(--green)', icon: IC.coin,
+    check: () => totalPagoBRLequiv() >= 10000 },
+  { id: 'cem-k', nome: 'Clube dos 100k', desc: 'R$ 100.000 no total (equiv.)', cor: 'var(--green)', icon: IC.coin,
+    check: () => totalPagoBRLequiv() >= 100000 },
+  { id: 'gringo', nome: 'Gringo', desc: 'US$ 1.000 recebidos no total', cor: 'var(--blue)', icon: IC.dolar,
+    check: () => totalMoedaPaga('USD') >= 1000 },
+  { id: 'robuxeiro', nome: 'Robuxeiro', desc: '100.000 Robux recebidos', cor: '#2fd39c', icon: IC.robux,
+    check: () => totalMoedaPaga('RBX') >= 100000 },
+  { id: 'rei-robux', nome: 'Rei dos Robux', desc: '1.000.000 Robux recebidos', cor: 'var(--amber)', icon: IC.coroa,
+    check: () => totalMoedaPaga('RBX') >= 1000000 }
+];
 const CADEADO = '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>';
 
+// registra a data em que cada insígnia foi conquistada (uma vez só)
+function verificarInsignias() {
+  let mudou = false;
+  for (const b of INSIGNIAS) {
+    if (!S.stats.insigniasGanhas) S.stats.insigniasGanhas = {};
+    if (!S.stats.insigniasGanhas[b.id] && b.check()) {
+      S.stats.insigniasGanhas[b.id] = hoje();
+      mudou = true;
+      try { new Notification('Insígnia desbloqueada! 🏅', { body: b.nome }); } catch { }
+    }
+  }
+  return mudou;
+}
+
+function fmtMes(mes) {
+  const [a, m] = mes.split('-');
+  const nomes = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  return `${nomes[+m - 1]}/${a}`;
+}
+
 function renderInsignias() {
+  const ganhas = S.stats.insigniasGanhas || {};
   let n = 0;
   $('insigniasGrid').innerHTML = INSIGNIAS.map(b => {
-    const ok = b.check();
+    const data = ganhas[b.id];
+    const ok = !!data;
     if (ok) n++;
     return `
       <div class="insignia ${ok ? '' : 'locked'}" ${ok ? `style="border-color:${b.cor}66"` : ''}>
         <div class="insignia-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${ok ? b.cor : 'var(--faint)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ok && b.icon ? b.icon : CADEADO}</svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${ok ? b.cor : 'var(--faint)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ok ? b.icon : CADEADO}</svg>
         </div>
         <div class="insignia-name">${b.nome}</div>
         <div class="insignia-desc">${b.desc}</div>
+        ${ok ? `<div class="insignia-data">conquistada em ${data.split('-').reverse().join('/')}</div>` : ''}
       </div>`;
   }).join('');
   $('insigniasCount').textContent = `· ${n} de ${INSIGNIAS.length}`;
+  renderHistorico();
+}
+
+// ---------- Histórico mensal ----------
+function renderHistorico() {
+  const meses = mesesComAtividade();
+  const ganhas = S.stats.insigniasGanhas || {};
+  if (!meses.length) { $('historicoMeses').innerHTML = ''; return; }
+  $('historicoMeses').innerHTML = `<div class="section-label" style="margin-top:16px">HISTÓRICO POR MÊS</div>` +
+    meses.map(mes => {
+      const doMes = entregasDoMes(mes);
+      const atrasos = doMes.filter(j => j.prazo && j.entregueEm.slice(0, 10) > j.prazo).length;
+      const g = { BRL: 0, USD: 0, RBX: 0 };
+      for (const j of S.jobs) {
+        if (j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 7) === mes) g[j.valor.m] += Number(j.valor.q);
+      }
+      const partes = [];
+      if (g.BRL) partes.push(MOEDA.BRL.fmt(g.BRL));
+      if (g.USD) partes.push(MOEDA.USD.fmt(g.USD));
+      if (g.RBX) partes.push(MOEDA.RBX.fmt(g.RBX));
+      const insMes = INSIGNIAS.filter(b => ganhas[b.id] && ganhas[b.id].slice(0, 7) === mes);
+      return `
+        <div class="mes-row">
+          <div class="mes-nome">${fmtMes(mes)}</div>
+          <div class="mes-stats">
+            <span><b>${doMes.length}</b> entrega${doMes.length === 1 ? '' : 's'}</span>
+            <span class="${atrasos ? 'c-red' : 'c-green'}"><b>${atrasos}</b> atraso${atrasos === 1 ? '' : 's'}</span>
+            <span class="c-green">${partes.length ? partes.join(' · ') : 'nada recebido'}</span>
+          </div>
+          <div class="mes-insignias">${insMes.map(b =>
+            `<span class="mes-badge" style="border-color:${b.cor}66;color:${b.cor}" title="${b.desc}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${b.cor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${b.icon}</svg>
+              ${b.nome}</span>`).join('') || '<span class="mes-vazio">—</span>'}</div>
+        </div>`;
+    }).join('');
 }
 
 // ---------- Config ----------
@@ -668,6 +779,7 @@ Object.assign(window, { tornarAtivo, pausar, avancar, ciclarPagamento, excluir, 
 // ---------- Boot ----------
 (async () => {
   S = await window.api.getState();
+  if (verificarInsignias()) await window.api.saveState(S);
   render();
   window.api.onState((s) => { S = s; render(); });
   setInterval(render, 60 * 1000); // atualiza prazos/saudação

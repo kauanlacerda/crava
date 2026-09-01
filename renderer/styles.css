@@ -615,3 +615,29 @@ input:focus, select:focus { border-color: var(--blue); }
 .badge-chip { font-size: 12px; padding: 8px 13px; }
 .mini-btn { font-size: 12px; padding: 9px 13px; }
 .job-row svg { width: 24px; height: 24px; }
+
+/* data de conquista na insignia */
+.insignia-data { font-size: 10px; font-weight: 700; color: var(--faint); margin-top: 2px; }
+
+/* historico mensal */
+.mes-row {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 18px; padding: 16px 20px; margin-top: 10px;
+  display: flex; align-items: center; gap: 18px; box-shadow: var(--shadow-soft);
+}
+.mes-nome {
+  font-family: 'Baloo 2', 'Manrope', sans-serif;
+  font-size: 17px; font-weight: 800; width: 92px; flex-shrink: 0;
+  text-transform: capitalize;
+}
+.mes-stats { display: flex; gap: 16px; font-size: 13px; font-weight: 600; color: var(--muted); flex-shrink: 0; }
+.mes-stats b { color: var(--text); font-weight: 800; }
+.mes-stats .c-green b, .mes-stats .c-red b { color: inherit; }
+.mes-insignias { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; justify-content: flex-end; }
+.mes-badge {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 800;
+  border: 1px solid; border-radius: 999px; padding: 5px 11px;
+  background: var(--panel2);
+}
+.mes-vazio { color: var(--faint); font-weight: 700; }

@@ -24,7 +24,8 @@ const DEFAULTS = {
     recompensaMostrada: '',
     historico: {},
     cofres: [],
-    notificados: {}
+    notificados: {},
+    insigniasGanhas: {}
   }
 };
 
