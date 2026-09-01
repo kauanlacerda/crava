@@ -832,3 +832,8 @@ input:focus, select:focus { border-color: var(--blue); }
 .cal-grid.modo-calor .cal-dia,
 .cal-grid.modo-calor .cal-val { opacity: 0; }
 .cal-grid.modo-calor .cal-cell.hoje { outline-offset: 3px; }
+
+/* estica so pro lado: celulas com altura fixa, painel nao cresce pra baixo */
+.share-wrap { align-items: flex-start; }
+.cal-cell { aspect-ratio: auto; height: 52px; }
+.cal-week { height: 52px; }
