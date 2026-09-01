@@ -426,15 +426,21 @@ function jobRowHTML(j, num, dim) {
 
 function renderFila() {
   const fila = S.jobs.filter(j => j.status === 'aceito');
-  const feitos = S.jobs.filter(j => j.entregueEm && j.entregueEm.slice(0, 10) === hoje());
+  const feitosHoje = S.jobs.filter(j => j.entregueEm && j.entregueEm.slice(0, 10) === hoje());
+  const esperandoPgto = feitosHoje.filter(j => j.pagamento !== 'pago');
+  const pagos = feitosHoje.filter(j => j.pagamento === 'pago');
   let html = '';
   if (fila.length) {
     html += `<div class="section-label">NA FILA · ${fila.length}</div>`;
     html += `<div class="job-grid" style="margin-top:9px">${fila.map((j, i) => jobRowHTML(j, i + 2, false)).join('')}</div>`;
   }
-  if (feitos.length) {
-    html += `<div class="section-label" style="margin-top:12px">CONCLUÍDOS HOJE · ${feitos.length}</div>`;
-    html += `<div class="job-grid" style="margin-top:9px">${feitos.map(j => jobRowHTML(j, null, true)).join('')}</div>`;
+  if (esperandoPgto.length) {
+    html += `<div class="section-label" style="margin-top:12px">CONCLUÍDOS HOJE — ESPERANDO PAGAMENTO · ${esperandoPgto.length}</div>`;
+    html += `<div class="job-grid" style="margin-top:9px">${esperandoPgto.map(j => jobRowHTML(j, null, false)).join('')}</div>`;
+  }
+  if (pagos.length) {
+    html += `<div class="section-label" style="margin-top:12px">CONCLUÍDOS HOJE — PAGOS ✓ · ${pagos.length}</div>`;
+    html += `<div class="job-grid" style="margin-top:9px">${pagos.map(j => jobRowHTML(j, null, true)).join('')}</div>`;
   }
   if (!html) html = `<div class="empty-state"><img src="${spr('espiar')}" alt="" style="width:64px;height:auto;image-rendering:pixelated;opacity:0.85"><div class="big">Dia limpo</div><div>Ctrl+Shift+N captura um pedido novo em 5 segundos.</div></div>`;
   $('filaArea').innerHTML = html;
