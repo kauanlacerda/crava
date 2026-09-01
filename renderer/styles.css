@@ -1517,3 +1517,11 @@ input:focus, select:focus { border-color: var(--blue); }
   to { opacity: 0.5; transform: translateY(0); }
 }
 .insignia.locked { animation-name: fadeUpTravada; }
+
+
+/* piscada ao copiar (Ctrl+C) e ao colar (Ctrl+V) um trabalho */
+.card-colado { animation: piscaCard 0.7s var(--ease); }
+@keyframes piscaCard {
+  0% { box-shadow: 0 0 0 2px var(--blue), 0 0 22px var(--blue-glow); }
+  100% { box-shadow: 0 0 0 0 transparent, 0 0 0 transparent; }
+}

@@ -467,7 +467,7 @@ function jobRowHTML(j, num, dim) {
   if (precisaLiquidar(j)) acts.push(`<div class="mini-btn liquidar" onclick="abrirLiquidacao('${j.id}')">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</div>`);
   acts.push(`<div class="mini-btn" onclick="excluir('${j.id}')">✕</div>`);
   return `
-    <div class="job-row ${dim ? 'dim' : ''}">
+    <div class="job-row ${dim ? 'dim' : ''}" data-id="${j.id}">
       <div class="job-main">
         ${num ? `<div class="job-num">${num}</div>` :
           `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>`}
@@ -2638,9 +2638,61 @@ $('npSalvar').onclick = async () => {
   $('ovNovo').classList.remove('open');
   await salvar();
 };
-document.addEventListener('keydown', (e) => {
+// ---------- Copiar e colar um trabalho ----------
+// Ctrl+C com o mouse em cima do card copia; Ctrl+V cola uma cópia na mesma
+// coluna. A cópia leva título, cliente, valor e prazo — e nasce sem pagamento,
+// porque é um trabalho novo parecido, não o mesmo dinheiro contado duas vezes.
+let cardSobMouse = null;
+let jobCopiado = null;
+
+document.addEventListener('mouseover', (e) => {
+  const card = e.target.closest && e.target.closest('.kb-card[data-id], .job-row[data-id]');
+  cardSobMouse = card ? card.dataset.id : null;
+});
+
+function digitando() {
+  const a = document.activeElement;
+  return a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable);
+}
+
+function piscarCard(id) {
+  const el = document.querySelector('[data-id="' + id + '"]');
+  if (!el) return;
+  el.classList.add('card-colado');
+  setTimeout(() => el.classList.remove('card-colado'), 700);
+}
+
+document.addEventListener('keydown', async (e) => {
   if (e.key === 'Escape') document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open'));
   if (e.ctrlKey && e.key.toLowerCase() === 'k') { e.preventDefault(); $('searchInput').focus(); }
+  if (!e.ctrlKey || digitando()) return;
+
+  if (e.key.toLowerCase() === 'c' && cardSobMouse) {
+    const j = S.jobs.find(x => x.id === cardSobMouse);
+    if (!j) return;
+    e.preventDefault();
+    jobCopiado = { titulo: j.titulo, cliente: j.cliente, valor: { ...j.valor }, prazo: j.prazo, status: j.status };
+    piscarCard(j.id);
+  }
+
+  if (e.key.toLowerCase() === 'v' && jobCopiado) {
+    e.preventDefault();
+    const novo = {
+      id: 'j' + Date.now(),
+      titulo: jobCopiado.titulo,
+      cliente: jobCopiado.cliente,
+      valor: { ...jobCopiado.valor },
+      prazo: jobCopiado.prazo,
+      status: jobCopiado.status === 'fazendo' ? 'aceito' : jobCopiado.status, // um ativo por vez
+      pagamento: 'nao_pago',
+      recebido: 0,
+      criadoEm: new Date().toISOString()
+    };
+    S.jobs.push(novo);
+    silenciarAnimacoes();
+    await salvar();
+    piscarCard(novo.id);
+  }
 });
 
 function esc(s) { return String(s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }

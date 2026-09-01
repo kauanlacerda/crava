@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('api', {
   getState: () => ipcRenderer.invoke('state:get'),
   saveState: (s) => ipcRenderer.invoke('state:set', s),
   zerarPedido: () => ipcRenderer.invoke('app:zerar-pedido'),
+  focarJanela: () => ipcRenderer.send('app:focar'),
   onState: (cb) => ipcRenderer.on('state:changed', (_e, s) => cb(s)),
   showMain: () => ipcRenderer.send('main:show'),
   toggleWidget: () => ipcRenderer.send('widget:toggle'),

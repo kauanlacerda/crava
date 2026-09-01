@@ -1,4 +1,16 @@
 {
+  "1.0.8": {
+    "pt": [
+      "A janela do Ctrl+Shift+N não some mais quando você troca de programa. Dá pra ler o pedido no Discord com ela aberta do lado.",
+      "Ctrl+C com o mouse em cima de um card copia o trabalho; Ctrl+V cola uma cópia. A cópia nasce sem pagamento — é um trabalho novo parecido, não o mesmo dinheiro contado duas vezes.",
+      "Corrigido: depois de sair da conta, a tela de login não aceitava digitação até fechar e abrir o app."
+    ],
+    "en": [
+      "The Ctrl+Shift+N window no longer disappears when you switch apps. You can read the order on Discord with it open beside you.",
+      "Ctrl+C while hovering a card copies the job; Ctrl+V pastes a copy. The copy starts unpaid — it is a similar new job, not the same money counted twice.",
+      "Fixed: after signing out, the login screen would not accept typing until you closed and reopened the app."
+    ]
+  },
   "1.0.7": {
     "pt": [
       "Correção importante: ao criar uma conta nova num PC que já tinha sido usado, o app copiava os trabalhos, o nome e a foto da conta anterior pra dentro dela. Agora os dados sabem de qual conta são e nunca passam de uma pra outra.",

@@ -216,8 +216,17 @@ function atualizarCardConta() {
 
 $$('btnSincronizar').onclick = () => sincronizar(false);
 $$('btnEntrarConfig').onclick = () => { mostrarLogin(true); trocarAba('entrar'); };
+let sairArmado = 0;
 $$('btnSair').onclick = async () => {
-  if (!confirm(t('confirmaSair'))) return;
+  const btn = $$('btnSair');
+  if (Date.now() > sairArmado) {          // confirma no próprio botão, sem diálogo do sistema
+    sairArmado = Date.now() + 5000;
+    btn.textContent = t('confirmaSair');
+    setTimeout(() => { if (Date.now() > sairArmado) btn.textContent = t('btnSair'); }, 5200);
+    return;
+  }
+  sairArmado = 0;
+  btn.textContent = t('btnSair');
   // sobe o que ainda não subiu antes de largar a conta
   try { await sincronizar(false); } catch { }
   await sair();
@@ -228,6 +237,9 @@ $$('btnSair').onclick = async () => {
   jaSincronizou = false;
   atualizarCardConta();
   mostrarLogin(true);
+  // devolve o teclado pra tela de login
+  try { window.api.focarJanela(); } catch { }
+  setTimeout(() => { try { $$('loginEmail').focus(); } catch { } }, 60);
 };
 
 // envia pra nuvem sempre que salvar (com respiro de 3s)

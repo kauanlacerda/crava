@@ -50,7 +50,8 @@ function createCapture() {
     webPreferences: { preload: path.join(__dirname, 'preload.js') }
   });
   captureWin.loadFile(path.join(__dirname, 'renderer', 'capture.html'));
-  captureWin.on('blur', () => captureWin.hide());
+  // Antes ela sumia ao perder o foco, o que atrapalhava justamente o uso normal:
+  // dar alt+tab pro Discord pra ler o pedido enquanto anota. Fecha no Esc ou no ✕.
   captureWin.on('close', (e) => {
     if (!isQuitting) { e.preventDefault(); captureWin.hide(); }
   });
@@ -229,6 +230,11 @@ ipcMain.handle('update:checar', async () => {
 // estado vazio, limpando a nuvem junto. Sem isso a nuvem sempre vence, porque
 // cada abertura renova o carimbo de hora dela.
 ipcMain.handle('app:zerar-pedido', () => process.argv.includes('--zerar-tudo'));
+// Depois de um diálogo nativo (o confirmar do logout) a janela ficava sem
+// receber teclado até ser refocada na mão.
+ipcMain.on('app:focar', () => {
+  if (mainWin && !mainWin.isDestroyed()) { mainWin.focus(); mainWin.webContents.focus(); }
+});
 ipcMain.handle('state:get', () => store.get());
 ipcMain.handle('state:set', (_e, s) => { store.set(s); broadcast(); atualizarIcones(); return true; });
 ipcMain.on('main:show', () => { mainWin.show(); mainWin.focus(); });
