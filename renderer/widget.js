@@ -34,6 +34,7 @@ function render() {
       <div class="top"><div class="dot" style="background:#5a6676"></div><div class="tag" style="color:#8b98a9">SEM TRABALHO ATIVO</div>
         <div class="prog-txt">hoje ${feitos}/${meta}</div><div class="segs">${segs}</div></div>
       <div class="vazio">
+        <img src="../assets/croc/${feitos >= meta ? 'croc-14.png' : 'croc-16.png'}" alt="" style="width:52px;height:auto;image-rendering:pixelated">
         <div>${feitos >= meta ? 'Meta batida — jogo liberado! 🎮' : 'Abre o Crava e escolhe o próximo.'}</div>
       </div>
       <div class="btns no-drag">
@@ -48,7 +49,8 @@ function render() {
       <div class="prog-txt">hoje ${feitos}/${meta}</div><div class="segs">${segs}</div></div>
     <div><div class="title">${esc(ativo.titulo)}</div>
       <div class="sub">${esc(ativo.cliente || '')} · ${fmtValor(ativo.valor)} ${prazoTexto(ativo.prazo)}</div></div>
-    <div class="mid"><div class="timer">${fmtTimer(t)}</div><div class="hint">focado nesse<br>trabalho</div></div>
+    <div class="mid"><div class="timer">${fmtTimer(t)}</div><div class="hint">focado nesse<br>trabalho</div>
+      <img src="../assets/croc/croc-18.png" alt="" style="width:46px;height:auto;image-rendering:pixelated;margin-left:auto"></div>
     <div class="btns no-drag">
       <div class="btn-main" id="btnConcluir">✓ Concluir etapa</div>
       <div class="btn-sq" id="btnPausa" title="Pausar">| |</div>

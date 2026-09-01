@@ -347,7 +347,7 @@ function renderFila() {
     html += `<div class="section-label" style="margin-top:12px">CONCLUÍDOS HOJE · ${feitos.length}</div>`;
     html += `<div class="job-grid" style="margin-top:9px">${feitos.map(j => jobRowHTML(j, null, true)).join('')}</div>`;
   }
-  if (!html) html = `<div class="empty-state"><div class="big">Dia limpo</div><div>Ctrl+Shift+N captura um pedido novo em 5 segundos.</div></div>`;
+  if (!html) html = `<div class="empty-state"><img src="../assets/croc/croc-20.png" alt="" style="width:64px;height:auto;image-rendering:pixelated;opacity:0.8"><div class="big">Dia limpo</div><div>Ctrl+Shift+N captura um pedido novo em 5 segundos.</div></div>`;
   $('filaArea').innerHTML = html;
 }
 
@@ -499,9 +499,12 @@ function rrect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// mascote oficial: crocodilo pixel (assets/mascote.png)
+// mascote oficial: crocodilo pixel (assets/croc/)
 const MASCOTE_IMG = new Image();
-MASCOTE_IMG.src = '../assets/mascote.png';
+MASCOTE_IMG.src = '../assets/croc/croc-14.png';
+const HEAD_IMG = new Image();
+HEAD_IMG.src = '../assets/croc/croc-01.png';
+HEAD_IMG.onload = () => { if ($('view-share').classList.contains('open')) drawShareCard(); };
 MASCOTE_IMG.onload = () => { if ($('view-share').classList.contains('open')) drawShareCard(); };
 document.fonts.ready.then(() => { if ($('view-share').classList.contains('open')) drawShareCard(); });
 
@@ -521,9 +524,10 @@ function drawShareCard() {
   const mes = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
 
   // topo: mascote + nome + mês (como o card da GMGN)
-  if (MASCOTE_IMG.complete && MASCOTE_IMG.naturalWidth) {
+  if (HEAD_IMG.complete && HEAD_IMG.naturalWidth) {
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(MASCOTE_IMG, 52, 44, 72, 72);
+    const hw = 72, hh = hw * HEAD_IMG.naturalHeight / HEAD_IMG.naturalWidth;
+    ctx.drawImage(HEAD_IMG, 52, 44, hw, hh);
     ctx.imageSmoothingEnabled = true;
   }
   ctx.fillStyle = '#eef2f9'; ctx.font = "28px 'Press Start 2P', Manrope, monospace"; ctx.fillText('CRAVA', 140, 92);
@@ -543,7 +547,8 @@ function drawShareCard() {
   // mascote
   if (mascoteOn && MASCOTE_IMG.complete && MASCOTE_IMG.naturalWidth) {
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(MASCOTE_IMG, W - 300, 108, 240, 240);
+    const mh = 230, mw = mh * MASCOTE_IMG.naturalWidth / MASCOTE_IMG.naturalHeight;
+    ctx.drawImage(MASCOTE_IMG, W - mw - 64, 116, mw, mh);
     ctx.imageSmoothingEnabled = true;
   }
 
