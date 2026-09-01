@@ -947,3 +947,8 @@ input:focus, select:focus { border-color: var(--blue); }
 .modal-cal { width: min(1060px, 94vw); max-height: 92vh; overflow-y: auto; gap: 12px; }
 .modal-cal .cal-panel { border: none; box-shadow: none; padding: 6px 4px; }
 .modal-cal .share-bar { width: 100%; }
+
+/* card do mes: coluna com a largura do card (a regra de esticar era do calendario) */
+.share-wrap > .share-col:last-child { flex: 0 0 auto; min-width: 0; }
+.share-wrap > .share-col { width: max-content; }
+.share-wrap > .share-col .share-bar { width: 100%; }
