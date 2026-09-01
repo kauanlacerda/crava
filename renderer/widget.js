@@ -34,10 +34,10 @@ function render() {
       <div class="top"><div class="dot" style="background:#5a6676"></div><div class="tag" style="color:#8b98a9">SEM TRABALHO ATIVO</div>
         <div class="prog-txt">hoje ${feitos}/${meta}</div><div class="segs">${segs}</div></div>
       <div class="vazio">
-        <div>${feitos >= meta ? 'Meta batida — jogo liberado! 🎮' : 'Abre o GRND e escolhe o próximo.'}</div>
+        <div>${feitos >= meta ? 'Meta batida — jogo liberado! 🎮' : 'Abre o Crava e escolhe o próximo.'}</div>
       </div>
       <div class="btns no-drag">
-        <div class="btn-main" onclick="window.api.showMain()">Abrir o GRND</div>
+        <div class="btn-main" onclick="window.api.showMain()">Abrir o Crava</div>
         <div class="btn-sq" onclick="window.api.hideWidget()">✕</div>
       </div>`;
     return;

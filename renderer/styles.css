@@ -590,3 +590,11 @@ input:focus, select:focus { border-color: var(--blue); }
 .job-main { flex-grow: 1; min-width: 0; }
 .job-foot { flex-shrink: 0; gap: 12px; }
 .job-foot .foot-spacer { display: none; }
+
+/* mascote crocodilo + wordmark pixel (pegada GMGN) */
+.logo-croc { width: 40px; height: 40px; image-rendering: pixelated; }
+.logo-name {
+  font-family: 'Press Start 2P', 'Baloo 2', monospace;
+  font-size: 14px; text-transform: uppercase; letter-spacing: 0;
+  font-weight: 400; margin-top: 2px;
+}

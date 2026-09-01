@@ -68,9 +68,9 @@ function createTray() {
   let img;
   try { img = nativeImage.createFromPath(ICON); } catch { img = nativeImage.createEmpty(); }
   tray = new Tray(img.resize({ width: 16, height: 16 }));
-  tray.setToolTip('GRND');
+  tray.setToolTip('Crava');
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: 'Abrir o GRND', click: () => { mainWin.show(); mainWin.focus(); } },
+    { label: 'Abrir o Crava', click: () => { mainWin.show(); mainWin.focus(); } },
     { label: 'Mostrar/ocultar widget', click: toggleWidget },
     { type: 'separator' },
     { label: 'Sair de verdade', click: () => { isQuitting = true; app.quit(); } }
@@ -115,14 +115,19 @@ if (!lock) {
   app.on('second-instance', () => { if (mainWin) { mainWin.show(); mainWin.focus(); } });
 
   app.whenReady().then(() => {
-    // migração: dados da era "Cravado" seguem valendo no GRND
+    // migração: dados das eras "GRND" e "Cravado" seguem valendo no Crava
     try {
       const fs = require('fs');
-      const antigo = path.join(app.getPath('appData'), 'Cravado', 'cravado-data.json');
       const novo = path.join(app.getPath('userData'), 'cravado-data.json');
-      if (!fs.existsSync(novo) && fs.existsSync(antigo)) {
-        fs.mkdirSync(app.getPath('userData'), { recursive: true });
-        fs.copyFileSync(antigo, novo);
+      if (!fs.existsSync(novo)) {
+        for (const antigoNome of ['GRND', 'Cravado']) {
+          const antigo = path.join(app.getPath('appData'), antigoNome, 'cravado-data.json');
+          if (fs.existsSync(antigo)) {
+            fs.mkdirSync(app.getPath('userData'), { recursive: true });
+            fs.copyFileSync(antigo, novo);
+            break;
+          }
+        }
       }
     } catch { /* sem dados antigos, segue */ }
 

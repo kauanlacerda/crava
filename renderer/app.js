@@ -1,4 +1,4 @@
-// GRND — lógica da janela principal
+// Crava — lógica da janela principal
 let S = null; // estado completo {config, jobs, stats}
 
 const $ = (id) => document.getElementById(id);
@@ -499,17 +499,11 @@ function rrect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// mascote pixel art (16x16) — [x, y, w, h, cor]
-const MASCOTE = [
-  [3, 2, 2, 2, '#1f6fd9'], [11, 2, 2, 2, '#1f6fd9'],
-  [4, 3, 1, 1, '#339dff'], [11, 3, 1, 1, '#339dff'],
-  [3, 4, 10, 7, '#339dff'], [4, 11, 8, 1, '#339dff'],
-  [5, 6, 2, 2, '#ffffff'], [9, 6, 2, 2, '#ffffff'],
-  [6, 7, 1, 1, '#0c1322'], [10, 7, 1, 1, '#0c1322'],
-  [7, 9, 2, 1, '#0c1322'],
-  [4, 8, 1, 1, '#ff8fa3'], [11, 8, 1, 1, '#ff8fa3'],
-  [12, 10, 1, 1, '#b5722f'], [13, 9, 1, 1, '#b5722f'], [14, 8, 1, 1, '#b5722f'], [15, 7, 1, 1, '#ff5c8a']
-];
+// mascote oficial: crocodilo pixel (assets/mascote.png)
+const MASCOTE_IMG = new Image();
+MASCOTE_IMG.src = '../assets/mascote.png';
+MASCOTE_IMG.onload = () => { if ($('view-share').classList.contains('open')) drawShareCard(); };
+document.fonts.ready.then(() => { if ($('view-share').classList.contains('open')) drawShareCard(); });
 
 function drawShareCard() {
   const cv = $('shareCanvas'), ctx = cv.getContext('2d');
@@ -526,16 +520,13 @@ function drawShareCard() {
   const F = (w, s) => `${w} ${s}px Manrope, "Segoe UI", sans-serif`;
   const mes = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
 
-  // topo: logo + nome + mês
-  const lg = ctx.createLinearGradient(56, 52, 116, 112);
-  lg.addColorStop(0, '#3b82f6'); lg.addColorStop(1, '#1d4ed8');
-  rrect(ctx, 56, 52, 60, 60, 18); ctx.fillStyle = lg; ctx.fill();
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.arc(86, 82, 13, 0, 7); ctx.stroke();
-  for (const [dx, dy] of [[0, -22], [0, 22], [-22, 0], [22, 0]]) {
-    ctx.beginPath(); ctx.moveTo(86 + dx * 0.55, 82 + dy * 0.55); ctx.lineTo(86 + dx, 82 + dy); ctx.stroke();
+  // topo: mascote + nome + mês (como o card da GMGN)
+  if (MASCOTE_IMG.complete && MASCOTE_IMG.naturalWidth) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(MASCOTE_IMG, 52, 44, 72, 72);
+    ctx.imageSmoothingEnabled = true;
   }
-  ctx.fillStyle = '#eef2f9'; ctx.font = F(800, 30); ctx.fillText('GRND', 132, 92);
+  ctx.fillStyle = '#eef2f9'; ctx.font = "28px 'Press Start 2P', Manrope, monospace"; ctx.fillText('CRAVA', 140, 92);
   ctx.fillStyle = '#7d8cab'; ctx.font = F(700, 22); ctx.textAlign = 'right';
   ctx.fillText(mes, W - 56, 88); ctx.textAlign = 'left';
 
@@ -550,11 +541,10 @@ function drawShareCard() {
   if (subs.length) { ctx.fillStyle = '#9fb0d0'; ctx.font = F(700, 26); ctx.fillText('+ ' + subs.join(' · '), 56, 314); }
 
   // mascote
-  if (mascoteOn) {
-    const px = 13, ox = W - 56 - 16 * px, oy = 150;
-    for (const [x, y, w, h, cor] of MASCOTE) {
-      ctx.fillStyle = cor; ctx.fillRect(ox + x * px, oy + y * px, w * px, h * px);
-    }
+  if (mascoteOn && MASCOTE_IMG.complete && MASCOTE_IMG.naturalWidth) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(MASCOTE_IMG, W - 300, 108, 240, 240);
+    ctx.imageSmoothingEnabled = true;
   }
 
   // stats
@@ -590,7 +580,7 @@ function drawShareCard() {
 
   ctx.fillStyle = '#7d8cab'; ctx.font = F(700, 18); ctx.textAlign = 'right';
   ctx.fillText('feito com', W - 152, ay + 22);
-  ctx.fillText('GRND', W - 152, ay + 46); ctx.textAlign = 'left';
+  ctx.fillText('Crava', W - 152, ay + 46); ctx.textAlign = 'left';
   // QR decorativo
   rrect(ctx, W - 132, ay - 4, 76, 76, 14); ctx.fillStyle = '#eef2f9'; ctx.fill();
   ctx.fillStyle = c1;
