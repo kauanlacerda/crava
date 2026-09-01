@@ -197,9 +197,17 @@ function configurarAtualizacoes() {
     avisarJanela('update:erro', { msg: String(e && e.message || e) });
   });
 
-  const checar = () => autoUpdater.checkForUpdates().catch(() => { });
-  setTimeout(checar, 8000);                    // pouco depois de abrir
-  setInterval(checar, 4 * 60 * 60 * 1000);     // e a cada 4 horas
+  let ultimaChecagem = 0;
+  const checar = (forcar) => {
+    // no máximo uma checagem a cada 5 min, pra não ficar batendo à toa
+    if (!forcar && Date.now() - ultimaChecagem < 5 * 60 * 1000) return;
+    ultimaChecagem = Date.now();
+    autoUpdater.checkForUpdates().catch(() => { });
+  };
+  setTimeout(() => checar(true), 8000);        // pouco depois de abrir
+  setInterval(() => checar(true), 20 * 60 * 1000); // e a cada 20 min com o app aberto
+  // e também quando você volta pra janela — o aviso aparece sem precisar fechar o app
+  app.on('browser-window-focus', () => checar(false));
 }
 
 ipcMain.handle('update:baixar', async () => {
