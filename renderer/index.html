@@ -7,6 +7,47 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<!-- ================= TELA DE LOGIN ================= -->
+<div class="tela-login" id="telaLogin">
+  <div class="login-caixa">
+    <div class="login-marca">
+      <img id="loginMascote" src="../assets/macaco/azul/macaco-02.png" alt="">
+      <div class="login-wordmark">CRAVA</div>
+    </div>
+    <div class="login-sub" id="loginSub" data-i18n="loginSub">Entra pra sincronizar seus trabalhos em qualquer PC</div>
+
+    <div class="login-abas">
+      <div class="login-aba sel" data-aba="entrar" data-i18n="abaEntrar">Entrar</div>
+      <div class="login-aba" data-aba="criar" data-i18n="abaCriar">Criar conta</div>
+    </div>
+
+    <div class="login-campos">
+      <div class="field so-criar" style="display:none">
+        <label data-i18n="seuNome">Seu nome</label>
+        <input id="loginNome" type="text" placeholder="sak" autocomplete="name">
+      </div>
+      <div class="field so-criar" style="display:none">
+        <label data-i18n="seuUsuario">Nome de usuário</label>
+        <input id="loginUsuario" type="text" placeholder="sak" autocomplete="username">
+      </div>
+      <div class="field">
+        <label data-i18n="email">Email</label>
+        <input id="loginEmail" type="email" placeholder="voce@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label data-i18n="senha">Senha</label>
+        <input id="loginSenha" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div class="login-esqueci so-entrar" id="btnEsqueci" data-i18n="esqueciSenha">Esqueci minha senha</div>
+    </div>
+
+    <div class="login-aviso" id="loginAviso"></div>
+
+    <div class="btn btn-primary login-botao" id="btnEntrar" data-i18n="abaEntrar">Entrar</div>
+    <div class="login-offline" id="btnOffline" data-i18n="usarOffline">Usar sem conta (só neste PC)</div>
+  </div>
+</div>
+
 <div class="app">
   <div class="sidebar">
     <div class="logo">
@@ -127,10 +168,17 @@
         <div style="margin-bottom:4px"><div class="config-k" data-i18n="insigniaDestaque">Insígnia de destaque</div><div class="config-sub" data-i18n="insigniaDestaqueSub">Aparece ao lado do seu nome e no card do mês.</div></div>
         <div class="fav-picker" id="favPicker"></div>
       </div>
-      <div class="config-card">
+      <div class="config-card" id="cardConta">
         <div class="config-row">
-          <div><div class="config-k" data-i18n="contaLogin">Conta e login</div><div class="config-sub" data-i18n="contaLoginSub">Sincronização entre PCs e login com senha chegam na próxima fase.</div></div>
-          <div class="badge-chip bc-muted" data-i18n="emBreve">EM BREVE</div>
+          <div>
+            <div class="config-k" data-i18n="contaLogin">Conta e login</div>
+            <div class="config-sub" id="contaStatus">—</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <div class="mini-btn" id="btnSincronizar" data-i18n="btnSincronizar">Sincronizar agora</div>
+            <div class="mini-btn" id="btnSair" data-i18n="btnSair">Sair</div>
+            <div class="mini-btn primary" id="btnEntrarConfig" style="display:none" data-i18n="btnEntrarConta">Entrar na conta</div>
+          </div>
         </div>
       </div>
       <div class="btn btn-primary" id="btnSalvarPerfil" data-i18n="salvarPerfil">Salvar perfil</div>
@@ -404,7 +452,10 @@
   </div>
 </div>
 
+<script src="lib/supabase.js"></script>
 <script src="i18n.js"></script>
+<script src="nuvem.js"></script>
 <script src="app.js"></script>
+<script src="auth.js"></script>
 </body>
 </html>

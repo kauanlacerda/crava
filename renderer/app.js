@@ -2393,10 +2393,11 @@ function migrarLiquidacao() {
 
 (async () => {
   S = await window.api.getState();
+  window.S = S;
   if (migrarLiquidacao()) await window.api.saveState(S);
   if (verificarInsignias()) await window.api.saveState(S);
   render();
-  window.api.onState((s) => { S = s; render(); });
+  window.api.onState((s) => { S = s; window.S = s; render(); });
   buscarCotacao();
   setInterval(() => {
     const main = document.querySelector('.main');

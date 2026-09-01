@@ -16,6 +16,7 @@
     "electron@33.4.11": true
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
     "gifenc": "^1.0.3"
   }
 }
