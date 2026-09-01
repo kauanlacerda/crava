@@ -856,3 +856,25 @@ input:focus, select:focus { border-color: var(--blue); }
 .cal-panel > .cal-bg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
 .cal-panel.com-fundo > *:not(.cal-bg) { position: relative; z-index: 1; }
 .cal-panel.com-fundo .cal-cell { backdrop-filter: blur(2px); }
+
+/* coluna do calendario volta a esticar ate o fim; so a grade e centralizada */
+.share-wrap > .share-col:last-child { flex: 1; min-width: 420px; }
+.share-wrap > .share-col:last-child .cal-panel { width: 100%; }
+.share-wrap > .share-col:last-child .share-bar { width: 100%; }
+
+/* liquid glass: com fundo, celulas viram vidro translucido */
+.cal-panel.com-fundo .cal-cell:not(.vazia) {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.cal-panel.com-fundo .cal-week {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.cal-panel.com-fundo .cal-titulo,
+.cal-panel.com-fundo .cal-totais,
+.cal-panel.com-fundo .cal-dow { text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); }
+.cal-panel.com-fundo .cal-dia { text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5); }
