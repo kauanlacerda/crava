@@ -304,10 +304,12 @@ async function mostrarNovidades(versao) {
     await new Promise(r => setTimeout(r, 2500)); // deixa o app carregar o estado
     if (!window.S || !window.S.stats) return;
     if (window.S.stats.versaoVista === v) return;
-    const primeiraVez = !window.S.stats.versaoVista;
+    // instalação zerada não precisa do aviso; quem já usava, sim
+    const appZerado = !(window.S.jobs || []).length
+      && !Object.keys(window.S.stats.historico || {}).length;
     window.S.stats.versaoVista = v;
     try { await window.api.saveState(window.S); } catch { }
-    if (!primeiraVez) mostrarNovidades(v); // instalação nova não precisa do aviso
+    if (!appZerado) mostrarNovidades(v);
   }).catch(() => { });
 })();
 

@@ -1,4 +1,20 @@
 {
+  "1.0.4": {
+    "pt": [
+      "Cotação do dólar ao vivo: o app busca a taxa real na internet e usa ela em tudo — carteira, cofre, rosquinha de moedas e conversor. Atualiza sozinha a cada 15 minutos e quando você volta pro app.",
+      "Sem internet ele guarda a última cotação e continua contando certo; o valor manual das configurações virou só a reserva.",
+      "O gráfico de Lucro agora acompanha o tema — no tema claro ele fica claro.",
+      "Botões Auto / Preto / Branco no gráfico de Lucro, pra escolher o fundo na mão.",
+      "Esta telinha: a cada atualização o app te conta o que mudou. Dá pra reabrir clicando na versão, nas Configurações."
+    ],
+    "en": [
+      "Live USD rate: the app pulls the real exchange rate and uses it everywhere — wallet, savings, currency donut and converter. Refreshes on its own every 15 minutes and when you come back to the app.",
+      "Offline it keeps the last rate and keeps the math right; the manual value in settings is now just the fallback.",
+      "The Profit graph now follows the theme — it goes light on the light theme.",
+      "Auto / Black / White buttons on the Profit graph, to pick the background yourself.",
+      "This little screen: every update tells you what changed. Reopen it by clicking the version in Settings."
+    ]
+  },
   "1.0.3": {
     "pt": [
       "Cotação do dólar ao vivo: o app busca a taxa real na internet e usa ela em tudo — carteira, cofre, rosquinha de moedas e conversor. Atualiza sozinha a cada 15 minutos e quando você volta pro app.",
