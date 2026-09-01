@@ -1,4 +1,18 @@
 {
+  "1.2.0": {
+    "pt": [
+      "Tutorial de seis telas na primeira abertura, e cada passo leva você até a aba que está explicando. Dá pra rever em Configurações.",
+      "Correção importante de datas: o app usava o fuso de Londres pra saber que dia era. A partir das 21h ele já achava que era o dia seguinte — trabalho entregue de noite caía no dia errado, o streak podia quebrar sozinho e a meta do dia zerava cedo. Agora usa o relógio do seu PC.",
+      "Prazo marcado pra hoje dizia \"amanhã\". A conta media horas restantes e arredondava pra cima; agora compara datas.",
+      "A tela não pisca mais a cada ação. A animação de entrada roda na primeira vez e ao trocar de aba, não a cada salvamento."
+    ],
+    "en": [
+      "Six-screen tour on the first run, and each step takes you to the tab it is explaining. You can replay it in Settings.",
+      "Important date fix: the app used London time to know what day it was. After 9pm it already thought it was the next day — work delivered at night landed on the wrong day, the streak could break on its own and the daily goal reset early. Now it uses your computer clock.",
+      "A deadline set for today said \"tomorrow\". The math measured remaining hours and rounded up; now it compares dates.",
+      "The screen no longer flickers on every action. The entry animation runs on the first paint and when switching tabs, not on every save."
+    ]
+  },
   "1.1.0": {
     "pt": [
       "Correção de perda de dados: pedidos anotados pelo Ctrl+Shift+N podiam sumir. Eles iam pro disco sem atualizar a marca de hora, e a sincronização os descartava achando que a nuvem estava mais nova. Se você usa a captura rápida, atualiza.",

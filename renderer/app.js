@@ -2,9 +2,14 @@
 let S = null; // estado completo {config, jobs, stats}
 
 const $ = (id) => document.getElementById(id);
-const hoje = () => new Date().toISOString().slice(0, 10);
+// toISOString() devolve a data em UTC. Aqui é UTC-3, então a partir das 21h o
+// app já achava que era o dia seguinte: trabalho entregue de noite caía no dia
+// errado, o streak podia quebrar e o calendário pintava o quadrado errado.
+const dataLocal = (d = new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const hoje = () => dataLocal();
 const loc = () => (IDIOMA === 'en' ? 'en-US' : 'pt-BR');
-const ontem = () => new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+const ontem = () => dataLocal(new Date(Date.now() - 864e5));
 
 const MOEDA = {
   BRL: { fmt: (v) => `R$ ${fmtNum(v)}` },
@@ -14,9 +19,16 @@ const MOEDA = {
 function fmtNum(v) { return Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 2 }); }
 function fmtValor(valor) { return (MOEDA[valor.m] || MOEDA.BRL).fmt(valor.q); }
 
+// Contava horas restantes e arredondava pra cima, então qualquer prazo de hoje
+// com o dia ainda correndo virava 1 → "amanhã". A conta certa é entre datas.
 function diasAte(prazo) {
   if (!prazo) return null;
-  return Math.ceil((new Date(prazo + 'T23:59:59') - Date.now()) / 864e5);
+  const [a, m, d] = prazo.split('-').map(Number);
+  if (!a || !m || !d) return null;
+  const alvo = new Date(a, m - 1, d);
+  const agora = new Date();
+  const zero = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+  return Math.round((alvo - zero) / 864e5); // round, e não ceil: horário de verão desloca uma hora
 }
 function prazoTexto(prazo) {
   const d = diasAte(prazo);
@@ -72,6 +84,11 @@ function totalPagoBRLequiv() {
 // Trocar uma opção redesenha a tela inteira, e isso reiniciava as animações de
 // entrada de todos os cards (a barra do GIF e a lista de COBRAR "pulavam").
 // Silenciar as animações durante o clique resolve sem mexer no resto.
+// Só a primeira pintura da tela merece a animação de entrada. Qualquer
+// redesenho depois (salvar, sincronizar, o tique de cada minuto) refaz todo o
+// HTML — e reanimar tudo é exatamente o piscar que se via.
+let primeiraPintura = true;
+
 function silenciarAnimacoes(ms = 500) {
   const main = document.querySelector('.main');
   if (!main) return;
@@ -264,6 +281,7 @@ $('metaFechar').onclick = () => $('ovMeta').classList.remove('open');
 // ---------- Render ----------
 function render() {
   const rolagem = lerRolagem();
+  if (!primeiraPintura) silenciarAnimacoes(200);
   IDIOMA = S.config.idioma === 'en' ? 'en' : 'pt';
   aplicarIdiomaHTML();
   // o modal em modo edição não pode voltar a dizer "Novo pedido" num render
@@ -304,6 +322,7 @@ function render() {
   try { desenharViz(); } catch { }
   try { renderCarteira(); renderMoedas(); calcularConversao(); renderDinheiro(); } catch { }
   devolverRolagem(rolagem);
+  primeiraPintura = false;
 }
 
 // ---------- Stat cards (fileira do topo, como no design) ----------
@@ -659,7 +678,7 @@ function renderTodos() {
         return (dataRealizado(b) || b.entregueEm || '').localeCompare(dataRealizado(a) || a.entregueEm || '');
       });
       if (!verTodosPagos && !busca) {
-        const limite = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+        const limite = dataLocal(new Date(Date.now() - 7 * 864e5));
         lista = lista.filter(j => estagioPgto(j) !== 'na_conta' ||
           (dataRealizado(j) || j.entregueEm || '').slice(0, 10) >= limite);
       }
@@ -1046,6 +1065,52 @@ $('btnSalvarConfig').onclick = async () => {
   S.config.cotacaoRBX1k = +$('cfgRBX').value || 28;
   await salvar();
 };
+
+// ---------- Tutorial ----------
+// Seis telas curtas na primeira abertura. Cada passo pode levar a uma aba, pra
+// pessoa ver do que se está falando em vez de só ler.
+const PASSOS_TUT = [
+  { sprite: 'macaco-03.png', k: 'tut1', view: 'hoje' },
+  { sprite: 'macaco-01.png', k: 'tut2', view: 'hoje' },
+  { sprite: 'macaco-02.png', k: 'tut3', view: 'trabalhos' },
+  { sprite: 'macaco-04.png', k: 'tut4', view: 'share' },
+  { sprite: 'macaco-06.png', k: 'tut5', view: 'cofre' },
+  { sprite: 'macaco-05.png', k: 'tut6', view: 'insignias' }
+];
+let passoTut = 0;
+
+function pintarTutorial() {
+  const p = PASSOS_TUT[passoTut];
+  const cor = CORES_MASCOTE.includes(S.config.cor) ? S.config.cor : 'azul';
+  $('tutMascote').src = `../assets/macaco/${cor}/${p.sprite}`;
+  $('tutTitulo').textContent = t(p.k + 't');
+  $('tutTexto').textContent = t(p.k + 'd');
+  $('tutPontos').innerHTML = PASSOS_TUT.map((_, i) =>
+    `<span class="tut-ponto ${i === passoTut ? 'on' : ''}"></span>`).join('');
+  $('tutProximo').textContent = passoTut === PASSOS_TUT.length - 1 ? t('tutComecar') : t('tutProximo');
+  $('tutPular').style.visibility = passoTut === PASSOS_TUT.length - 1 ? 'hidden' : '';
+  if (p.view) abrirView(p.view);
+}
+
+function abrirTutorial() {
+  passoTut = 0;
+  pintarTutorial();
+  $('ovTutorial').classList.add('open');
+}
+
+async function fecharTutorial() {
+  $('ovTutorial').classList.remove('open');
+  abrirView('hoje');
+  if (!S.config.tutorialVisto) { S.config.tutorialVisto = true; await salvar(); }
+}
+
+$('tutProximo').onclick = async () => {
+  if (passoTut >= PASSOS_TUT.length - 1) { await fecharTutorial(); return; }
+  passoTut++;
+  pintarTutorial();
+};
+$('tutPular').onclick = () => fecharTutorial();
+$('btnVerTutorial').onclick = () => abrirTutorial();
 
 // ---------- Navegação ----------
 function abrirView(nome) {
@@ -1971,7 +2036,7 @@ function ganhoEquivPeriodo(de, ate) {
     .reduce((a, j) => a + realizadoBRL(j), 0);
 }
 function diaMenos(n) {
-  return new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
+  return dataLocal(new Date(Date.now() - n * 864e5));
 }
 function serieMensal(n) {
   const hojeD = new Date();
@@ -2821,16 +2886,13 @@ function migrarLiquidacao() {
     // não passam pelo saveState do renderer, então o envio é agendado aqui
     try { if (window.agendarEnvio) window.agendarEnvio(); } catch { }
   });
+  if (!S.config.tutorialVisto) setTimeout(abrirTutorial, 900);
+
   buscarCotacao();
   setInterval(buscarCotacao, 5 * 60 * 1000);
   window.addEventListener('online', () => buscarCotacao());
   window.addEventListener('focus', () => {
     if (Date.now() - ultimaBusca > 5 * 60 * 1000) buscarCotacao();
   });
-  setInterval(() => {
-    const main = document.querySelector('.main');
-    main.classList.add('sem-anim');
-    render();
-    setTimeout(() => main.classList.remove('sem-anim'), 60);
-  }, 60 * 1000); // atualiza prazos/saudação sem repetir as animações
+  setInterval(render, 60 * 1000); // atualiza prazos e saudação
 })();

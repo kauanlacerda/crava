@@ -1525,3 +1525,25 @@ input:focus, select:focus { border-color: var(--blue); }
   0% { box-shadow: 0 0 0 2px var(--blue), 0 0 22px var(--blue-glow); }
   100% { box-shadow: 0 0 0 0 transparent, 0 0 0 transparent; }
 }
+
+
+/* ---------- tutorial da primeira abertura ---------- */
+.tut-modal { max-width: 400px; text-align: center; align-items: center; }
+.tut-mascote {
+  width: 86px; height: auto; image-rendering: pixelated;
+  margin: 2px auto 10px; display: block;
+  animation: tutPula 2.4s ease-in-out infinite;
+}
+@keyframes tutPula {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+.tut-titulo { font-family: 'Baloo 2', Manrope, sans-serif; font-size: 21px; font-weight: 800; color: var(--text); }
+.tut-texto { font-size: 13.5px; line-height: 1.55; color: var(--text2); margin-top: 8px; }
+.tut-pontos { display: flex; gap: 6px; justify-content: center; margin: 18px 0 16px; }
+.tut-ponto {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--border2);
+  transition: all 0.25s var(--ease);
+}
+.tut-ponto.on { background: var(--blue); width: 20px; border-radius: 4px; }
+.tut-modal .btn-row { width: 100%; }

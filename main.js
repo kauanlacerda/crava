@@ -101,7 +101,9 @@ function atualizarIcones() {
 
 function checarPrazos() {
   const s = store.get();
-  const agora = Date.now(), hoje = new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const agora = Date.now();
+  const hoje = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   let mudou = false;
   for (const j of s.jobs) {
     if (!j.prazo || j.pagamento === 'pago' || j.status === 'aprovado') continue;

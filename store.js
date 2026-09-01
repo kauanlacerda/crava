@@ -20,6 +20,7 @@ const DEFAULTS = {
     cotacaoRBX1k: 28,
     vizFundo: 'auto',       // fundo do gráfico de lucro: auto | preto | branco
     cofreGrad: 'azul',      // degradê do card do cofre
+    tutorialVisto: false,
     nome: 'você'
   },
   jobs: [],

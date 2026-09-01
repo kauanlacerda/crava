@@ -431,12 +431,35 @@
       <div class="btn btn-primary" id="btnSalvarConfig" data-i18n="salvarConfig">Salvar configurações</div>
       <div class="config-card">
         <div class="config-row">
+          <div>
+            <div class="config-k" data-i18n="tutRever">Como o Crava funciona</div>
+            <div class="config-sub" data-i18n="tutReverSub">A apresentação rápida que aparece na primeira vez</div>
+          </div>
+          <div class="mini-btn" id="btnVerTutorial" data-i18n="tutVer">Ver de novo</div>
+        </div>
+      </div>
+      <div class="config-card">
+        <div class="config-row">
           <div><div class="config-k" data-i18n="versaoDoApp">Versão</div><div class="config-sub" id="versaoApp">—</div></div>
           <div class="mini-btn" id="btnVerificarUpdate" data-i18n="verificarUpdate">Verificar atualizações</div>
         </div>
       </div>
     </div>
   </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: tutorial ================= -->
+<div class="overlay" id="ovTutorial">
+  <div class="modal tut-modal">
+    <img class="tut-mascote" id="tutMascote" src="../assets/macaco/azul/macaco-03.png" alt="">
+    <div class="tut-titulo" id="tutTitulo">—</div>
+    <div class="tut-texto" id="tutTexto">—</div>
+    <div class="tut-pontos" id="tutPontos"></div>
+    <div class="btn-row">
+      <div class="btn btn-ghost" id="tutPular" data-i18n="tutPular">Pular</div>
+      <div class="btn btn-primary" id="tutProximo" data-i18n="tutProximo">Próximo</div>
+    </div>
   </div>
 </div>
 
