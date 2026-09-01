@@ -10,5 +10,6 @@ contextBridge.exposeInMainWorld('api', {
   closeCapture: () => ipcRenderer.send('capture:close'),
   saveCapture: (job) => ipcRenderer.send('capture:save', job),
   copyImage: (dataURL) => ipcRenderer.send('clipboard:image', dataURL),
+  saveGif: (bytes) => ipcRenderer.invoke('gif:save', bytes),
   quit: () => ipcRenderer.send('app:quit')
 });

@@ -269,7 +269,7 @@ function renderStats() {
 
 // ---------- Card do usuário / perfil ----------
 function avatarStyle() {
-  return S.config.foto ? `background-image:url(${S.config.foto})` : '';
+  return S.config.foto ? `background-image:url(${S.config.foto});background-size:cover;background-position:center` : '';
 }
 function renderUser() {
   const nome = S.config.nome || 'você';
@@ -669,6 +669,7 @@ function atualizarSprites() {
   $('logoImg').src = spr('logo');
   $('metaImg').src = spr('metaModal');
   $('cofreImg').src = spr('cofre');
+  if (S.config.shareMidia && MEDIA_IMG.src !== S.config.shareMidia.dataURL) MEDIA_IMG.src = S.config.shareMidia.dataURL;
 }
 
 function drawShareCard() {
@@ -707,13 +708,20 @@ function drawShareCard() {
   if (gr) subs.push(MOEDA.RBX.fmt(gr));
   if (subs.length) { ctx.fillStyle = '#9fb0d0'; ctx.font = F(700, 26); ctx.fillText('+ ' + subs.join(' · '), 56, 314); }
 
-  // mascote
-  if (mascoteOn && MASCOTE_IMG.complete && MASCOTE_IMG.naturalWidth) {
+  // mídia personalizada (foto/gif) ou mascote
+  const midia = S.config.shareMidia;
+  if (!SKIP_MEDIA && midia && MEDIA_IMG.complete && MEDIA_IMG.naturalWidth) {
+    desenhaMidia(ctx, MEDIA_IMG, midia.tipo === 'gif');
+  } else if (!midia && mascoteOn && MASCOTE_IMG.complete && MASCOTE_IMG.naturalWidth) {
     ctx.imageSmoothingEnabled = false;
     const mh = 230, mw = mh * MASCOTE_IMG.naturalWidth / MASCOTE_IMG.naturalHeight;
     ctx.drawImage(MASCOTE_IMG, W - mw - 64, 116, mw, mh);
     ctx.imageSmoothingEnabled = true;
   }
+
+  // controles da barra acompanham o estado da mídia
+  $('btnMidiaRemover').style.display = midia ? '' : 'none';
+  $('btnCopiarCard').textContent = midia && midia.tipo === 'gif' ? 'Salvar GIF animado' : 'Copiar imagem';
 
   // stats
   const mesKey = hoje().slice(0, 7);
@@ -784,8 +792,109 @@ $('mascoteToggle').onclick = () => {
   $('mascoteToggle').classList.toggle('on', mascoteOn);
   drawShareCard();
 };
+// ---------- Mídia personalizada no card (foto/gif, estilo GMGN) ----------
+const MEDIA_IMG = new Image();
+MEDIA_IMG.onload = () => { if ($('view-share').classList.contains('open')) drawShareCard(); };
+let SKIP_MEDIA = false;
+const MEDIA_RECT = { x: 1120 - 330, y: 96, w: 266, h: 266 };
+
+function desenhaMidia(ctx, fonte, ehGif) {
+  const r = MEDIA_RECT;
+  const fw = fonte.naturalWidth || fonte.displayWidth || fonte.codedWidth;
+  const fh = fonte.naturalHeight || fonte.displayHeight || fonte.codedHeight;
+  const esc = Math.min(r.w / fw, r.h / fh);
+  const dw = fw * esc, dh = fh * esc;
+  const dx = r.x + (r.w - dw) / 2, dy = r.y + (r.h - dh) / 2;
+  ctx.save();
+  rrect(ctx, dx, dy, dw, dh, 18);
+  ctx.clip();
+  ctx.drawImage(fonte, dx, dy, dw, dh);
+  ctx.restore();
+  if (ehGif) {
+    rrect(ctx, dx + 10, dy + dh - 36, 52, 26, 8);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = "700 16px Manrope, sans-serif";
+    ctx.fillText('GIF', dx + 22, dy + dh - 17);
+  }
+}
+
+$('btnMidia').onclick = () => $('midiaInput').click();
+$('midiaInput').onchange = () => {
+  const f = $('midiaInput').files[0];
+  if (!f) return;
+  if (f.size > 8 * 1024 * 1024) { alert('Arquivo muito grande (máx. 8 MB).'); return; }
+  const r = new FileReader();
+  r.onload = async () => {
+    S.config.shareMidia = { tipo: f.type === 'image/gif' ? 'gif' : 'foto', dataURL: r.result };
+    MEDIA_IMG.src = r.result;
+    await salvar();
+    drawShareCard();
+  };
+  r.readAsDataURL(f);
+  $('midiaInput').value = '';
+};
+$('btnMidiaRemover').onclick = async () => {
+  delete S.config.shareMidia;
+  await salvar();
+  drawShareCard();
+};
+
+// GIF animado: decodifica com ImageDecoder (nativo) e re-encoda com gifenc
+async function gerarGifAnimado() {
+  const midia = S.config.shareMidia;
+  if (!midia || midia.tipo !== 'gif') return;
+  const btn = $('btnCopiarCard');
+  btn.textContent = 'Gerando GIF…';
+  try {
+    const { GIFEncoder, quantize, applyPalette } = await import('./lib/gifenc.esm.js');
+    const buf = await (await fetch(midia.dataURL)).arrayBuffer();
+    const dec = new ImageDecoder({ data: buf, type: 'image/gif' });
+    await dec.tracks.ready;
+    await dec.completed.catch(() => { });
+    const total = dec.tracks.selectedTrack.frameCount || 1;
+    const passo = Math.ceil(total / 50); // no máx ~50 quadros no resultado
+
+    // base do card (tudo, menos a mídia animada)
+    SKIP_MEDIA = true; drawShareCard(); SKIP_MEDIA = false;
+    const cv = $('shareCanvas');
+    const base = document.createElement('canvas');
+    base.width = cv.width; base.height = cv.height;
+    base.getContext('2d').drawImage(cv, 0, 0);
+
+    const outW = 560, outH = 340;
+    const quadro = document.createElement('canvas');
+    quadro.width = cv.width; quadro.height = cv.height;
+    const qctx = quadro.getContext('2d');
+    const mini = document.createElement('canvas');
+    mini.width = outW; mini.height = outH;
+    const mctx = mini.getContext('2d');
+
+    const enc = GIFEncoder();
+    for (let i = 0; i < total; i += passo) {
+      const { image, duration } = await dec.decode({ frameIndex: i });
+      qctx.drawImage(base, 0, 0);
+      desenhaMidia(qctx, image, false);
+      image.close();
+      mctx.drawImage(quadro, 0, 0, outW, outH);
+      const dados = mctx.getImageData(0, 0, outW, outH).data;
+      const paleta = quantize(dados, 256);
+      const idx = applyPalette(dados, paleta);
+      const delayMs = Math.max(30, Math.round(((duration || 100000) / 1000) * passo));
+      enc.writeFrame(idx, outW, outH, { palette: paleta, delay: delayMs });
+    }
+    enc.finish();
+    drawShareCard();
+    await window.api.saveGif(enc.bytes());
+  } catch (err) {
+    alert('Não consegui gerar o GIF: ' + err.message);
+  }
+  drawShareCard();
+}
+
 $('btnCopiarCard').onclick = () => {
-  window.api.copyImage($('shareCanvas').toDataURL('image/png'));
+  const midia = S.config.shareMidia;
+  if (midia && midia.tipo === 'gif') gerarGifAnimado();
+  else window.api.copyImage($('shareCanvas').toDataURL('image/png'));
 };
 
 // ---------- Novo pedido ----------

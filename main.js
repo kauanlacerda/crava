@@ -189,3 +189,16 @@ ipcMain.on('clipboard:image', (_e, dataURL) => {
   clipboard.writeImage(nativeImage.createFromDataURL(dataURL));
   new Notification({ title: 'Card copiado!', body: 'Cola no Discord ou no X com Ctrl+V.', icon: ICON }).show();
 });
+ipcMain.handle('gif:save', async (_e, bytes) => {
+  const { dialog } = require('electron');
+  const fs = require('fs');
+  const { filePath } = await dialog.showSaveDialog(mainWin, {
+    title: 'Salvar card animado',
+    defaultPath: path.join(app.getPath('downloads'), 'crava-card.gif'),
+    filters: [{ name: 'GIF', extensions: ['gif'] }]
+  });
+  if (!filePath) return null;
+  fs.writeFileSync(filePath, Buffer.from(bytes));
+  new Notification({ title: 'Card GIF salvo!', body: 'Arrasta o arquivo pro Discord e ele anima.', icon: ICON }).show();
+  return filePath;
+});

@@ -724,3 +724,6 @@ input:focus, select:focus { border-color: var(--blue); }
   70% { opacity: 1; }
   100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(var(--rot)); }
 }
+
+/* fix: foto do avatar esticada — a regra de cor resetava o background-size */
+.user-avatar, .perfil-avatar { background-size: cover; background-position: center; }
