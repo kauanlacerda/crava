@@ -50,30 +50,47 @@ function render() {
       </div>`;
     return;
   }
-  const t = ativo.fazendoDesde ? Date.now() - ativo.fazendoDesde : 0;
+  const pausado = !!ativo.pausado;
+  const t = (ativo.tempoAcumulado || 0) + (!pausado && ativo.fazendoDesde ? Date.now() - ativo.fazendoDesde : 0);
   card.innerHTML = `
-    <div class="top"><div class="dot"></div><div class="tag">TRABALHO ATIVO</div>
+    <div class="top"><div class="dot" ${pausado ? 'style="background:#f5b74e"' : ''}></div>
+      <div class="tag" ${pausado ? 'style="color:#f5b74e"' : ''}>${pausado ? 'PAUSADO' : 'TRABALHO ATIVO'}</div>
       <div class="prog-txt">hoje ${feitos}/${meta}</div><div class="segs">${segs}</div></div>
     <div><div class="title">${esc(ativo.titulo)}</div>
       <div class="sub">${esc(ativo.cliente || '')} · ${fmtValor(ativo.valor)} ${prazoTexto(ativo.prazo)}</div></div>
-    <div class="mid"><div class="timer">${fmtTimer(t)}</div><div class="hint">focado nesse<br>trabalho</div>
-      <img src="${sprW('ativo')}" alt="" style="width:46px;height:auto;image-rendering:pixelated;margin-left:auto"></div>
+    <div class="mid"><div class="timer" ${pausado ? 'style="opacity:0.5"' : ''}>${fmtTimer(t)}</div>
+      <div class="hint">${pausado ? 'pausado —<br>respira aí' : 'focado nesse<br>trabalho'}</div>
+      <img src="${sprW(pausado ? 'vazio' : 'ativo')}" alt="" style="width:46px;height:auto;image-rendering:pixelated;margin-left:auto"></div>
     <div class="btns no-drag">
       <div class="btn-main" id="btnConcluir">✓ Concluir etapa</div>
-      <div class="btn-sq" id="btnPausa" title="Pausar">| |</div>
+      <div class="btn-sq" id="btnPausa" title="${pausado ? 'Retomar' : 'Pausar'}">${pausado ? '▶' : '| |'}</div>
       <div class="btn-sq" onclick="window.api.showMain()" title="Abrir janela cheia">⤢</div>
     </div>`;
   document.getElementById('btnConcluir').onclick = async () => {
+    if (ativo.fazendoDesde) {
+      ativo.tempoAcumulado = (ativo.tempoAcumulado || 0) + (Date.now() - ativo.fazendoDesde);
+      delete ativo.fazendoDesde;
+    }
+    ativo.tempoTotalMs = ativo.tempoAcumulado || 0;
+    delete ativo.tempoAcumulado;
+    ativo.pausado = false;
     ativo.status = 'entregue';
     ativo.entregueEm = new Date().toISOString();
-    delete ativo.fazendoDesde;
     const dia = hoje();
     S.stats.historico[dia] = (S.stats.historico[dia] || 0) + 1;
     await window.api.saveState(S);
   };
   document.getElementById('btnPausa').onclick = async () => {
-    ativo.status = 'aceito';
-    delete ativo.fazendoDesde;
+    if (ativo.pausado) {
+      ativo.pausado = false;
+      ativo.fazendoDesde = Date.now();
+    } else {
+      if (ativo.fazendoDesde) {
+        ativo.tempoAcumulado = (ativo.tempoAcumulado || 0) + (Date.now() - ativo.fazendoDesde);
+        delete ativo.fazendoDesde;
+      }
+      ativo.pausado = true;
+    }
     await window.api.saveState(S);
   };
 }

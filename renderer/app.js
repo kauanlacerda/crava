@@ -64,26 +64,45 @@ async function salvar() {
 }
 
 // ---------- Ações ----------
+function acumularTempo(j) {
+  if (j.fazendoDesde) {
+    j.tempoAcumulado = (j.tempoAcumulado || 0) + (Date.now() - j.fazendoDesde);
+    delete j.fazendoDesde;
+  }
+}
 async function tornarAtivo(id) {
   const j = S.jobs.find(x => x.id === id);
   if (!j) return;
   const atual = ativo();
-  if (atual && atual.id !== id) { atual.status = 'aceito'; delete atual.fazendoDesde; }
+  if (atual && atual.id !== id) { acumularTempo(atual); atual.status = 'aceito'; atual.pausado = false; }
   j.status = 'fazendo';
+  j.pausado = false;
   j.fazendoDesde = Date.now();
   await salvar();
 }
-async function pausar(id) {
+// pausa/retoma o cronômetro sem largar o trabalho
+async function pausarRetomar(id) {
   const j = S.jobs.find(x => x.id === id);
-  if (j) { j.status = 'aceito'; delete j.fazendoDesde; await salvar(); }
+  if (!j) return;
+  if (j.pausado) { j.pausado = false; j.fazendoDesde = Date.now(); }
+  else { acumularTempo(j); j.pausado = true; }
+  await salvar();
+}
+// devolve o trabalho pra fila (o antigo "pausar")
+async function voltarFila(id) {
+  const j = S.jobs.find(x => x.id === id);
+  if (j) { acumularTempo(j); j.status = 'aceito'; j.pausado = false; await salvar(); }
 }
 async function avancar(id) {
   const j = S.jobs.find(x => x.id === id);
   if (!j) return;
   if (j.status === 'fazendo') {
+    acumularTempo(j);
+    j.tempoTotalMs = j.tempoAcumulado || 0;
+    delete j.tempoAcumulado;
+    j.pausado = false;
     j.status = 'entregue';
     j.entregueEm = new Date().toISOString();
-    delete j.fazendoDesde;
     const dia = hoje();
     S.stats.historico[dia] = (S.stats.historico[dia] || 0) + 1;
     celebrar();
@@ -346,7 +365,8 @@ function renderAtivo() {
         <div class="btn btn-primary" onclick="avancar('${j.id}')">✓ ${btnLabel}</div>
         <div class="btn-row">
           ${j.pagamento !== 'pago' ? `<div class="btn btn-green" onclick="ciclarPagamento('${j.id}')" style="font-size:12px">Recebi o pgto</div>` : ''}
-          <div class="btn btn-ghost" onclick="pausar('${j.id}')" style="font-size:12px">Pausar</div>
+          <div class="btn btn-ghost" onclick="pausarRetomar('${j.id}')" style="font-size:12px">${j.pausado ? '▶ Retomar' : '⏸ Pausar'}</div>
+          <div class="btn btn-ghost" onclick="voltarFila('${j.id}')" style="font-size:12px;max-width:70px" title="Devolver pra fila">Fila</div>
         </div>
       </div>
     </div>`;
@@ -1145,7 +1165,7 @@ document.addEventListener('keydown', (e) => {
 function esc(s) { return String(s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
 
 // expõe ações pros onclick inline
-Object.assign(window, { tornarAtivo, pausar, avancar, ciclarPagamento, excluir, cobrei, separeiCofre });
+Object.assign(window, { tornarAtivo, pausarRetomar, voltarFila, avancar, ciclarPagamento, excluir, cobrei, separeiCofre });
 
 // ---------- Boot ----------
 (async () => {
