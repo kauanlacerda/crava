@@ -1,4 +1,12 @@
 {
+  "1.0.9": {
+    "pt": [
+      "Dá pra editar um trabalho: botão ✎ no card abre tudo pra mudar — título, cliente, valor, moeda, prazo e pagamento. Corrigir um valor digitado errado já acerta a carteira e o gráfico junto."
+    ],
+    "en": [
+      "You can edit a job now: the ✎ button on the card opens everything — title, client, amount, currency, deadline and payment. Fixing a wrong amount also corrects the wallet and the graph."
+    ]
+  },
   "1.0.8": {
     "pt": [
       "A janela do Ctrl+Shift+N não some mais quando você troca de programa. Dá pra ler o pedido no Discord com ela aberta do lado.",

@@ -266,6 +266,8 @@ function render() {
   const rolagem = lerRolagem();
   IDIOMA = S.config.idioma === 'en' ? 'en' : 'pt';
   aplicarIdiomaHTML();
+  // o modal em modo edição não pode voltar a dizer "Novo pedido" num render
+  if (jobEditando) { $('npTituloModal').textContent = t('editarPedido'); $('npSalvar').textContent = t('salvarMudancas'); }
   document.documentElement.dataset.theme = S.config.tema || 'escuro';
   document.documentElement.dataset.cor = S.config.cor || 'azul';
   atualizarSprites();
@@ -465,6 +467,7 @@ function jobRowHTML(j, num, dim) {
   if (j.status === 'aceito') acts.push(`<div class="mini-btn primary" onclick="tornarAtivo('${j.id}')">${t('btnCravar')}</div>`);
   if (j.status === 'entregue') acts.push(`<div class="mini-btn" onclick="avancar('${j.id}')">${t('btnAprovado')}</div>`);
   if (precisaLiquidar(j)) acts.push(`<div class="mini-btn liquidar" onclick="abrirLiquidacao('${j.id}')">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</div>`);
+  acts.push(`<div class="mini-btn" onclick="editarJob('${j.id}')" title="${t('editar')}">✎</div>`);
   acts.push(`<div class="mini-btn" onclick="excluir('${j.id}')">✕</div>`);
   return `
     <div class="job-row ${dim ? 'dim' : ''}" data-id="${j.id}">
@@ -616,6 +619,7 @@ function cardKanbanHTML(j) {
   if (j.status === 'fazendo') acts.push(`<div class="mini-btn primary" onclick="event.stopPropagation();avancar('${j.id}')">${t('btnMarcarEntregue')}</div>`);
   if (j.status === 'entregue') acts.push(`<div class="mini-btn" onclick="event.stopPropagation();avancar('${j.id}')">${t('btnAprovado')}</div>`);
   if (precisaLiquidar(j)) acts.push(`<div class="mini-btn liquidar" onclick="event.stopPropagation();abrirLiquidacao('${j.id}')">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</div>`);
+  acts.push(`<div class="mini-btn" onclick="event.stopPropagation();editarJob('${j.id}')" title="${t('editar')}">✎</div>`);
   acts.push(`<div class="mini-btn" onclick="event.stopPropagation();excluir('${j.id}')">✕</div>`);
   const prazo = prazoTexto(j.prazo);
   const pend = est === 'a_converter' ? (j.valor.m === 'RBX' ? t('aVender') : t('aCair')) : '';
@@ -2608,19 +2612,84 @@ $('btnCopiarCard').onclick = () => {
   else window.api.copyImage($('shareCanvas').toDataURL('image/png'));
 };
 
-// ---------- Novo pedido ----------
+// ---------- Novo pedido / editar ----------
+// O mesmo modal serve pros dois: com jobEditando preenchido ele salva por cima
+// do trabalho em vez de criar outro.
 let npM = 'BRL';
-$('btnNovo').onclick = () => { $('ovNovo').classList.add('open'); $('npTitulo').focus(); };
-$('npCancelar').onclick = () => $('ovNovo').classList.remove('open');
-$('npMoeda').onclick = (e) => {
-  const m = e.target.dataset.m;
-  if (!m) return;
+let jobEditando = null;
+
+function pintarMoeda(m) {
   npM = m;
   document.querySelectorAll('#npMoeda .moeda-opt').forEach(x => x.classList.toggle('sel', x.dataset.m === m));
+}
+function limparModalPedido() {
+  jobEditando = null;
+  ['npTitulo', 'npCliente', 'npValor', 'npPrazo'].forEach(i => $(i).value = '');
+  $('npPgto').value = 'nao_pago';
+  pintarMoeda('BRL');
+  $('npTituloModal').textContent = t('novoPedido');
+  $('npSalvar').textContent = t('salvarNaFila');
+}
+
+function editarJob(id) {
+  const j = S.jobs.find(x => x.id === id);
+  if (!j) return;
+  jobEditando = id;
+  $('npTitulo').value = j.titulo || '';
+  $('npCliente').value = j.cliente || '';
+  $('npValor').value = Number(j.valor.q) || 0;
+  $('npPrazo').value = j.prazo || '';
+  $('npPgto').value = j.pagamento || 'nao_pago';
+  pintarMoeda(j.valor.m || 'BRL');
+  $('npTituloModal').textContent = t('editarPedido');
+  $('npSalvar').textContent = t('salvarMudancas');
+  $('ovNovo').classList.add('open');
+  setTimeout(() => $('npValor').select(), 60);
+}
+
+$('btnNovo').onclick = () => { limparModalPedido(); $('ovNovo').classList.add('open'); $('npTitulo').focus(); };
+$('npCancelar').onclick = () => { $('ovNovo').classList.remove('open'); limparModalPedido(); };
+$('npMoeda').onclick = (e) => {
+  const m = e.target.dataset.m;
+  if (m) pintarMoeda(m);
 };
 $('npSalvar').onclick = async () => {
   const titulo = $('npTitulo').value.trim();
   if (!titulo) { $('npTitulo').focus(); return; }
+
+  if (jobEditando) {
+    const j = S.jobs.find(x => x.id === jobEditando);
+    if (j) {
+      const totalNovo = +$('npValor').value || 0;
+      j.titulo = titulo;
+      j.cliente = $('npCliente').value.trim();
+      j.valor = { q: totalNovo, m: npM };
+      j.prazo = $('npPrazo').value || '';
+
+      // o que já foi recebido não pode passar do novo total
+      if (typeof j.recebido === 'number') j.recebido = Math.min(j.recebido, totalNovo);
+
+      const pgto = $('npPgto').value;
+      if (pgto !== j.pagamento) {
+        j.pagamento = pgto;
+        if (pgto === 'pago') {
+          j.recebido = totalNovo;
+          if (!j.pagoEm) j.pagoEm = new Date().toISOString();
+        } else if (pgto === 'nao_pago') {
+          j.recebido = 0;
+          delete j.pagoEm; delete j.liquidado; delete j.liquidadoEm; delete j.liquidadoBRL;
+        }
+      }
+      // mudou o valor de algo que já caiu em R$? a conta acompanha
+      if (j.liquidado && j.valor.m === 'BRL') j.liquidadoBRL = j.recebido;
+    }
+    $('ovNovo').classList.remove('open');
+    limparModalPedido();
+    silenciarAnimacoes();
+    await salvar();
+    return;
+  }
+
   if (ocupados() >= S.config.slots &&
       !confirm(`Seus ${S.config.slots} slots estão cheios (trabalhos ainda não pagos). Aceitar mesmo assim?`)) return;
   S.jobs.push({
@@ -2634,8 +2703,8 @@ $('npSalvar').onclick = async () => {
     pagoEm: $('npPgto').value === 'pago' ? new Date().toISOString() : undefined,
     criadoEm: new Date().toISOString()
   });
-  ['npTitulo', 'npCliente', 'npValor', 'npPrazo'].forEach(i => $(i).value = '');
   $('ovNovo').classList.remove('open');
+  limparModalPedido();
   await salvar();
 };
 // ---------- Copiar e colar um trabalho ----------
