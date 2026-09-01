@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, ipcMain, globalShortcut, Notification, nativeImage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, globalShortcut, Notification, nativeImage, clipboard } = require('electron');
 const path = require('path');
 const Store = require('./store');
 
@@ -157,3 +157,7 @@ ipcMain.on('capture:save', (_e, job) => {
   new Notification({ title: 'Pedido salvo na fila', body: job.titulo, icon: ICON }).show();
 });
 ipcMain.on('app:quit', () => { isQuitting = true; app.quit(); });
+ipcMain.on('clipboard:image', (_e, dataURL) => {
+  clipboard.writeImage(nativeImage.createFromDataURL(dataURL));
+  new Notification({ title: 'Card copiado!', body: 'Cola no Discord ou no X com Ctrl+V.', icon: ICON }).show();
+});

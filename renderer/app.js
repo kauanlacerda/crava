@@ -167,12 +167,6 @@ function render() {
   // chips
   const st = streakVigente();
   $('chipStreak').textContent = `${st} ${st === 1 ? 'dia' : 'dias'}`;
-  const gb = ganhoMes('BRL'), gu = ganhoMes('USD'), gr = ganhoMes('RBX');
-  $('chipGanho').textContent = MOEDA.BRL.fmt(gb);
-  const subs = [];
-  if (gu) subs.push(MOEDA.USD.fmt(gu));
-  if (gr) subs.push(MOEDA.RBX.fmt(gr));
-  $('chipGanhoSub').textContent = subs.length ? '+ ' + subs.join(' · ') : '';
 
   // slots
   const occ = ocupados(), tot = S.config.slots;
@@ -180,19 +174,82 @@ function render() {
   $('slotsBar').innerHTML = Array.from({ length: tot }, (_, i) =>
     `<div class="slot ${i < occ ? 'on' : ''}"></div>`).join('');
 
-  // progresso do dia
-  const feitos = concluidosHoje().length, meta = S.config.metaDiaria;
-  $('progTexto').textContent = `${feitos} de ${meta} concluídos hoje`;
-  $('progFaltam').textContent = feitos >= meta ? 'meta batida! 🎮' : `faltam ${meta - feitos} pro jogo liberar`;
-  $('progBar').innerHTML = Array.from({ length: meta }, (_, i) =>
-    `<div class="seg ${i < feitos ? 'done' : i === feitos ? 'active' : ''}"></div>`).join('');
-
+  renderStats();
+  renderUser();
   renderAtivo();
   renderFila();
   renderCobrador();
   renderTodos();
   renderInsignias();
   renderConfig();
+}
+
+// ---------- Stat cards (fileira do topo, como no design) ----------
+function renderStats() {
+  const feitos = concluidosHoje().length, meta = S.config.metaDiaria;
+  const segs = Array.from({ length: meta }, (_, i) =>
+    `<div class="seg ${i < feitos ? 'done' : i === feitos ? 'active' : ''}" style="flex-grow:1"></div>`).join('');
+
+  // prazo mais próximo entre trabalhos abertos
+  const comPrazo = S.jobs.filter(j => j.prazo && (j.status !== 'aprovado' || j.pagamento !== 'pago'))
+    .sort((a, b) => a.prazo < b.prazo ? -1 : 1);
+  const prox = comPrazo[0];
+
+  // a receber = pagamento aguardando
+  const rec = { BRL: 0, USD: 0, RBX: 0 };
+  let recN = 0;
+  for (const j of S.jobs) if (j.pagamento === 'aguardando') { rec[j.valor.m] += Number(j.valor.q); recN++; }
+  const recParts = [];
+  if (rec.BRL) recParts.push(MOEDA.BRL.fmt(rec.BRL));
+  if (rec.USD) recParts.push(MOEDA.USD.fmt(rec.USD));
+  if (rec.RBX) recParts.push(MOEDA.RBX.fmt(rec.RBX));
+
+  const gb = ganhoMes('BRL'), gu = ganhoMes('USD'), gr = ganhoMes('RBX');
+  const gSubs = [];
+  if (gu) gSubs.push(MOEDA.USD.fmt(gu));
+  if (gr) gSubs.push(MOEDA.RBX.fmt(gr));
+
+  $('statRow').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">META DO DIA</div>
+      <div class="stat-value">${feitos}<span style="color:var(--faint);font-size:15px"> / ${meta}</span></div>
+      <div class="stat-segs">${segs}</div>
+      <div class="stat-sub ${feitos >= meta ? 'c-green' : 'c-blue'}">${feitos >= meta ? 'meta batida — jogo liberado!' : `faltam ${meta - feitos} pro jogo liberar`}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">PRAZO MAIS PRÓXIMO</div>
+      <div class="stat-value ${prox ? prazoClasse(prox.prazo) || 'c-amber' : ''}">${prox ? prazoTexto(prox.prazo) : '—'}</div>
+      <div class="stat-sub">${prox ? esc(prox.titulo) : 'nenhum prazo aberto'}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">A RECEBER</div>
+      <div class="stat-value c-amber">${recParts[0] || 'R$ 0'}</div>
+      <div class="stat-sub">${recParts.length > 1 ? '+ ' + recParts.slice(1).join(' · ') : `${recN} trabalho${recN === 1 ? '' : 's'} aguardando`}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">GANHO NO MÊS</div>
+      <div class="stat-value c-green">${MOEDA.BRL.fmt(gb)}</div>
+      <div class="stat-sub">${gSubs.length ? '+ ' + gSubs.join(' · ') : 'só R$ até agora'}</div>
+    </div>`;
+}
+
+// ---------- Card do usuário / perfil ----------
+function avatarStyle() {
+  return S.config.foto ? `background-image:url(${S.config.foto})` : '';
+}
+function renderUser() {
+  const nome = S.config.nome || 'você';
+  const user = S.config.usuario || '@' + nome.toLowerCase().replace(/\s+/g, '');
+  $('userName').textContent = nome;
+  $('userSub').textContent = user;
+  $('userAvatar').textContent = S.config.foto ? '' : nome[0].toUpperCase();
+  $('userAvatar').style.cssText = avatarStyle();
+  $('perfilAvatar').textContent = S.config.foto ? '' : nome[0].toUpperCase();
+  $('perfilAvatar').style.cssText = avatarStyle();
+  $('perfilNomeShow').textContent = nome;
+  $('perfilSubShow').textContent = `${user} · GFX designer`;
+  if (document.activeElement !== $('pfNome')) $('pfNome').value = nome === 'você' ? '' : nome;
+  if (document.activeElement !== $('pfUser')) $('pfUser').value = S.config.usuario || '';
 }
 
 const PIPE = ['aceito', 'fazendo', 'entregue', 'aprovado'];
@@ -349,12 +406,12 @@ function renderInsignias() {
 
 // ---------- Config ----------
 function renderConfig() {
-  $('cfgNome').value = S.config.nome || '';
-  $('cfgMeta').value = S.config.metaDiaria;
-  $('cfgSlots').value = S.config.slots;
-  $('cfgCofre').value = S.config.cofrePct;
-  $('cfgUSD').value = S.config.cotacaoUSD;
-  $('cfgRBX').value = S.config.cotacaoRBX1k;
+  const setIf = (id, v) => { if (document.activeElement !== $(id)) $(id).value = v; };
+  setIf('cfgMeta', S.config.metaDiaria);
+  setIf('cfgSlots', S.config.slots);
+  setIf('cfgCofre', S.config.cofrePct);
+  setIf('cfgUSD', S.config.cotacaoUSD);
+  setIf('cfgRBX', S.config.cotacaoRBX1k);
   document.querySelectorAll('.tema-opt').forEach(el =>
     el.classList.toggle('sel', el.dataset.tema === (S.config.tema || 'escuro')));
 }
@@ -363,7 +420,6 @@ $('temaPicker').onclick = async (e) => {
   if (t) { S.config.tema = t; await salvar(); }
 };
 $('btnSalvarConfig').onclick = async () => {
-  S.config.nome = $('cfgNome').value.trim() || 'você';
   S.config.metaDiaria = Math.max(1, +$('cfgMeta').value || 5);
   S.config.slots = Math.max(1, +$('cfgSlots').value || 3);
   S.config.cofrePct = Math.min(90, Math.max(0, +$('cfgCofre').value || 30));
@@ -373,15 +429,182 @@ $('btnSalvarConfig').onclick = async () => {
 };
 
 // ---------- Navegação ----------
-document.querySelectorAll('.nav-item').forEach(el => {
-  el.onclick = () => {
-    document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-    el.classList.add('active');
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('open'));
-    $('view-' + el.dataset.view).classList.add('open');
-  };
-});
+function abrirView(nome) {
+  document.querySelectorAll('.nav-item').forEach(x => x.classList.toggle('active', x.dataset.view === nome));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('open'));
+  $('view-' + nome).classList.add('open');
+  if (nome === 'share') drawShareCard();
+}
+document.querySelectorAll('.nav-item').forEach(el => { el.onclick = () => abrirView(el.dataset.view); });
+$('userCard').onclick = () => abrirView('perfil');
 $('btnWidget').onclick = () => window.api.toggleWidget();
+
+// ---------- Perfil ----------
+$('btnFoto').onclick = () => $('fotoInput').click();
+$('fotoInput').onchange = () => {
+  const f = $('fotoInput').files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = async () => { S.config.foto = r.result; await salvar(); };
+  r.readAsDataURL(f);
+};
+$('btnSalvarPerfil').onclick = async () => {
+  S.config.nome = $('pfNome').value.trim() || 'você';
+  let u = $('pfUser').value.trim();
+  if (u && !u.startsWith('@')) u = '@' + u;
+  S.config.usuario = u;
+  await salvar();
+};
+
+// ---------- Card do mês (share card estilo GMGN) ----------
+const FUNDOS = [
+  ['#0c1322', '#0f1d3a', '#12264e'],
+  ['#120a1e', '#1a0f2e', '#351b5e'],
+  ['#081710', '#0d2418', '#12503a'],
+  ['#1c0d05', '#2b1408', '#6e3d12']
+];
+let fundoSel = 0, mascoteOn = true;
+
+function rrect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// mascote pixel art (16x16) — [x, y, w, h, cor]
+const MASCOTE = [
+  [3, 2, 2, 2, '#1f6fd9'], [11, 2, 2, 2, '#1f6fd9'],
+  [4, 3, 1, 1, '#339dff'], [11, 3, 1, 1, '#339dff'],
+  [3, 4, 10, 7, '#339dff'], [4, 11, 8, 1, '#339dff'],
+  [5, 6, 2, 2, '#ffffff'], [9, 6, 2, 2, '#ffffff'],
+  [6, 7, 1, 1, '#0c1322'], [10, 7, 1, 1, '#0c1322'],
+  [7, 9, 2, 1, '#0c1322'],
+  [4, 8, 1, 1, '#ff8fa3'], [11, 8, 1, 1, '#ff8fa3'],
+  [12, 10, 1, 1, '#b5722f'], [13, 9, 1, 1, '#b5722f'], [14, 8, 1, 1, '#b5722f'], [15, 7, 1, 1, '#ff5c8a']
+];
+
+function drawShareCard() {
+  const cv = $('shareCanvas'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height; // 1120x680 (2x)
+  ctx.clearRect(0, 0, W, H);
+
+  // fundo
+  const [c1, c2, c3] = FUNDOS[fundoSel];
+  const g = ctx.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, c1); g.addColorStop(0.7, c2); g.addColorStop(1, c3);
+  rrect(ctx, 0, 0, W, H, 44);
+  ctx.fillStyle = g; ctx.fill();
+
+  const F = (w, s) => `${w} ${s}px Manrope, "Segoe UI", sans-serif`;
+  const mes = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
+
+  // topo: logo + nome + mês
+  const lg = ctx.createLinearGradient(56, 52, 116, 112);
+  lg.addColorStop(0, '#3b82f6'); lg.addColorStop(1, '#1d4ed8');
+  rrect(ctx, 56, 52, 60, 60, 18); ctx.fillStyle = lg; ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(86, 82, 13, 0, 7); ctx.stroke();
+  for (const [dx, dy] of [[0, -22], [0, 22], [-22, 0], [22, 0]]) {
+    ctx.beginPath(); ctx.moveTo(86 + dx * 0.55, 82 + dy * 0.55); ctx.lineTo(86 + dx, 82 + dy); ctx.stroke();
+  }
+  ctx.fillStyle = '#eef2f9'; ctx.font = F(800, 30); ctx.fillText('Cravado', 132, 92);
+  ctx.fillStyle = '#7d8cab'; ctx.font = F(700, 22); ctx.textAlign = 'right';
+  ctx.fillText(mes, W - 56, 88); ctx.textAlign = 'left';
+
+  // faturamento
+  const gb = ganhoMes('BRL'), gu = ganhoMes('USD'), gr = ganhoMes('RBX');
+  ctx.fillStyle = '#7d8cab'; ctx.font = F(700, 24); ctx.fillText('FATUREI', 56, 190);
+  ctx.fillStyle = '#34d399'; ctx.font = F(800, 84);
+  ctx.fillText(MOEDA.BRL.fmt(gb), 52, 272);
+  const subs = [];
+  if (gu) subs.push(MOEDA.USD.fmt(gu));
+  if (gr) subs.push(MOEDA.RBX.fmt(gr));
+  if (subs.length) { ctx.fillStyle = '#9fb0d0'; ctx.font = F(700, 26); ctx.fillText('+ ' + subs.join(' · '), 56, 314); }
+
+  // mascote
+  if (mascoteOn) {
+    const px = 13, ox = W - 56 - 16 * px, oy = 150;
+    for (const [x, y, w, h, cor] of MASCOTE) {
+      ctx.fillStyle = cor; ctx.fillRect(ox + x * px, oy + y * px, w * px, h * px);
+    }
+  }
+
+  // stats
+  const mesKey = hoje().slice(0, 7);
+  const trab = S.jobs.filter(j => j.entregueEm && j.entregueEm.slice(0, 7) === mesKey).length;
+  const pagosMes = S.jobs.filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 7) === mesKey);
+  const ticket = pagosMes.length ? Math.round(totalPagoBRLequiv() / Math.max(1, S.jobs.filter(j => j.pagamento === 'pago').length)) : 0;
+  const nIns = INSIGNIAS.filter(b => b.check()).length;
+  const stats = [
+    ['TRABALHOS', String(trab), '#eef2f9'],
+    ['MAIOR STREAK', `${S.stats.maxStreak} dias`, '#fbbf24'],
+    ['TICKET MÉDIO', `R$ ${fmtNum(ticket)}`, '#eef2f9'],
+    ['INSÍGNIAS', String(nIns), '#34d399']
+  ];
+  let sx = 56;
+  for (const [lab, val, cor] of stats) {
+    ctx.fillStyle = '#7d8cab'; ctx.font = F(700, 19); ctx.fillText(lab, sx, 408);
+    ctx.fillStyle = cor; ctx.font = F(800, 33); ctx.fillText(val, sx, 448);
+    sx += Math.max(ctx.measureText(val).width, ctx.measureText(lab).width) + 70;
+  }
+
+  // rodapé: avatar + nome + selo
+  const nome = S.config.nome || 'você';
+  const user = S.config.usuario || '@' + nome.toLowerCase().replace(/\s+/g, '');
+  const ay = H - 120;
+  const ag = ctx.createLinearGradient(56, ay, 120, ay + 64);
+  ag.addColorStop(0, '#3b82f6'); ag.addColorStop(1, '#1d4ed8');
+  ctx.beginPath(); ctx.arc(88, ay + 32, 32, 0, 7); ctx.fillStyle = ag; ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = F(800, 26); ctx.textAlign = 'center';
+  ctx.fillText(nome[0].toUpperCase(), 88, ay + 42); ctx.textAlign = 'left';
+  ctx.fillStyle = '#eef2f9'; ctx.font = F(800, 26); ctx.fillText(nome, 136, ay + 26);
+  ctx.fillStyle = '#7d8cab'; ctx.font = F(600, 21); ctx.fillText(`${user} · GFX pra Roblox`, 136, ay + 56);
+
+  ctx.fillStyle = '#7d8cab'; ctx.font = F(700, 18); ctx.textAlign = 'right';
+  ctx.fillText('feito com', W - 152, ay + 22);
+  ctx.fillText('Cravado', W - 152, ay + 46); ctx.textAlign = 'left';
+  // QR decorativo
+  rrect(ctx, W - 132, ay - 4, 76, 76, 14); ctx.fillStyle = '#eef2f9'; ctx.fill();
+  ctx.fillStyle = c1;
+  const QR = [[0, 0], [1, 0], [3, 0], [1, 1], [2, 1], [0, 2], [2, 2], [3, 2], [0, 3], [1, 3], [3, 3]];
+  for (const [qx, qy] of QR) ctx.fillRect(W - 132 + 12 + qx * 14, ay - 4 + 12 + qy * 14, 11, 11);
+
+  // avatar com foto (async por cima)
+  if (S.config.foto) {
+    const img = new Image();
+    img.onload = () => {
+      ctx.save();
+      ctx.beginPath(); ctx.arc(88, ay + 32, 32, 0, 7); ctx.clip();
+      ctx.drawImage(img, 56, ay, 64, 64);
+      ctx.restore();
+    };
+    img.src = S.config.foto;
+  }
+}
+
+// picker de fundo
+$('fundoPicker').innerHTML = FUNDOS.map((f, i) =>
+  `<div class="fundo-opt ${i === 0 ? 'sel' : ''}" data-i="${i}" style="background:linear-gradient(150deg,${f[1]},${f[2]})"></div>`).join('');
+$('fundoPicker').onclick = (e) => {
+  const i = e.target.dataset.i;
+  if (i === undefined) return;
+  fundoSel = +i;
+  document.querySelectorAll('.fundo-opt').forEach(x => x.classList.toggle('sel', x.dataset.i === i));
+  drawShareCard();
+};
+$('mascoteToggle').classList.add('on');
+$('mascoteToggle').onclick = () => {
+  mascoteOn = !mascoteOn;
+  $('mascoteToggle').classList.toggle('on', mascoteOn);
+  drawShareCard();
+};
+$('btnCopiarCard').onclick = () => {
+  window.api.copyImage($('shareCanvas').toDataURL('image/png'));
+};
 
 // ---------- Novo pedido ----------
 let npM = 'BRL';

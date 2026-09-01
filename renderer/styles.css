@@ -293,3 +293,62 @@ input:focus, select:focus { border-color: var(--blue); }
 ::-webkit-scrollbar { width: 9px; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------- Stat cards (fileira do topo) ---------- */
+.stat-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; }
+.stat-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 16px; padding: 13px 15px;
+  display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow);
+}
+.stat-label { font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: 0.5px; }
+.stat-value { font-size: 21px; font-weight: 800; }
+.stat-sub { font-size: 11px; font-weight: 600; color: var(--muted); }
+.stat-segs { display: flex; gap: 4px; }
+.stat-segs .seg { height: 6px; }
+
+/* ---------- Card do usuário na sidebar ---------- */
+.user-card {
+  background: var(--panel2); border: 1px solid var(--border2);
+  border-radius: 14px; padding: 10px 11px; margin-top: 6px;
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+}
+.user-card:hover { border-color: var(--blue-border); }
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, #339dff, #1f6fd9);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; color: #fff;
+  background-size: cover; background-position: center;
+}
+.user-info { flex-grow: 1; min-width: 0; }
+.user-name { font-size: 12px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-sub { font-size: 10px; font-weight: 600; color: var(--muted); }
+
+/* ---------- Perfil ---------- */
+.perfil-avatar {
+  width: 62px; height: 62px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, #339dff, #1f6fd9);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 800; color: #fff;
+  background-size: cover; background-position: center;
+}
+
+/* ---------- Card do mês ---------- */
+.share-bar {
+  width: 560px;
+  background: var(--panel); border: 1px solid var(--border2);
+  border-radius: 16px; padding: 11px 15px;
+  display: flex; align-items: center; gap: 13px; box-shadow: var(--shadow);
+}
+.share-label { font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: 0.4px; }
+.share-sep { width: 1px; height: 24px; background: var(--border2); }
+.fundo-picker { display: flex; gap: 7px; }
+.fundo-opt { width: 25px; height: 25px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+.fundo-opt.sel { border-color: var(--blue); }
+.toggle {
+  width: 34px; height: 20px; border-radius: 999px; background: var(--border2);
+  padding: 2px; cursor: pointer; display: flex; align-items: center;
+}
+.toggle.on { background: var(--blue); justify-content: flex-end; }
+.toggle .knob { width: 16px; height: 16px; border-radius: 50%; background: #fff; }

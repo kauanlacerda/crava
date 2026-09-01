@@ -9,5 +9,6 @@ contextBridge.exposeInMainWorld('api', {
   hideWidget: () => ipcRenderer.send('widget:hide'),
   closeCapture: () => ipcRenderer.send('capture:close'),
   saveCapture: (job) => ipcRenderer.send('capture:save', job),
+  copyImage: (dataURL) => ipcRenderer.send('clipboard:image', dataURL),
   quit: () => ipcRenderer.send('app:quit')
 });

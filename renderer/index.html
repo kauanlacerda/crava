@@ -27,6 +27,10 @@
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M8.5 13L7 22l5-3 5 3-1.5-9"/></svg>
       Insígnias
     </div>
+    <div class="nav-item" data-view="share">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
+      Card do mês
+    </div>
     <div class="nav-item" data-view="config">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.7l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.7-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.7.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.7 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.7.3h.1a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 1 1.5h.1a1.6 1.6 0 0 0 1.7-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.7v.1a1.6 1.6 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.5 1z"/></svg>
       Configurações
@@ -40,6 +44,14 @@
       </div>
       <div class="slots-bar" id="slotsBar"></div>
       <div class="slots-hint">Slot livre só quando um trabalho for pago.</div>
+    </div>
+    <div class="user-card" id="userCard">
+      <div class="user-avatar" id="userAvatar">V</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">você</div>
+        <div class="user-sub" id="userSub">@voce</div>
+      </div>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
     </div>
   </div>
 
@@ -59,24 +71,10 @@
               <div class="chip-value c-flame" id="chipStreak">0 dias</div>
             </div>
           </div>
-          <div class="chip">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>
-            <div>
-              <div class="chip-label">GANHO NO MÊS</div>
-              <div class="chip-value c-green" id="chipGanho">R$ 0</div>
-              <div class="chip-sub" id="chipGanhoSub"></div>
-            </div>
-          </div>
         </div>
       </div>
 
-      <div>
-        <div class="progress-row">
-          <span id="progTexto">0 de 5 concluídos hoje</span>
-          <span class="c-blue" id="progFaltam"></span>
-        </div>
-        <div class="progress-bar" id="progBar" style="margin-top:7px"></div>
-      </div>
+      <div class="stat-row" id="statRow"></div>
 
       <div id="activeArea"></div>
       <div id="filaArea"></div>
@@ -98,6 +96,46 @@
       <div class="insignias-grid" id="insigniasGrid"></div>
     </div>
 
+    <!-- ================= PERFIL ================= -->
+    <div class="view" id="view-perfil">
+      <div class="header"><div class="h-title">Meu perfil</div></div>
+      <div class="config-card" style="flex-direction:row;align-items:center;gap:16px">
+        <div class="perfil-avatar" id="perfilAvatar">V</div>
+        <div style="flex-grow:1">
+          <div style="font-size:16px;font-weight:800" id="perfilNomeShow">você</div>
+          <div class="config-sub" id="perfilSubShow">@voce · GFX designer</div>
+        </div>
+        <div class="mini-btn primary" id="btnFoto">Trocar foto</div>
+        <input type="file" id="fotoInput" accept="image/*" style="display:none">
+      </div>
+      <div class="config-card">
+        <div class="config-row"><div class="config-k">Nome de exibição</div><input id="pfNome" type="text" style="width:200px"></div>
+        <div class="config-row"><div class="config-k">Usuário</div><input id="pfUser" type="text" style="width:200px" placeholder="@voce"></div>
+      </div>
+      <div class="config-card">
+        <div class="config-row">
+          <div><div class="config-k">Conta e login</div><div class="config-sub">Sincronização entre PCs e login com senha chegam na próxima fase, junto com o servidor.</div></div>
+          <div class="badge-chip bc-muted">EM BREVE</div>
+        </div>
+      </div>
+      <div class="btn btn-primary" id="btnSalvarPerfil">Salvar perfil</div>
+    </div>
+
+    <!-- ================= CARD DO MÊS ================= -->
+    <div class="view" id="view-share">
+      <div class="header"><div class="h-title">Card do mês</div></div>
+      <canvas id="shareCanvas" width="1120" height="680" style="width:560px;height:340px;border-radius:18px"></canvas>
+      <div class="share-bar">
+        <div class="share-label">PERSONALIZAR</div>
+        <div class="fundo-picker" id="fundoPicker"></div>
+        <div class="share-sep"></div>
+        <div class="share-label" style="letter-spacing:0">Mascote</div>
+        <div class="toggle" id="mascoteToggle"><div class="knob"></div></div>
+        <div style="flex-grow:1"></div>
+        <div class="btn btn-primary" id="btnCopiarCard" style="padding:9px 16px;font-size:12px">Copiar imagem</div>
+      </div>
+    </div>
+
     <!-- ================= CONFIG ================= -->
     <div class="view" id="view-config">
       <div class="header"><div class="h-title">Configurações</div></div>
@@ -108,10 +146,6 @@
             <div class="tema-opt" data-tema="escuro">Escuro</div>
             <div class="tema-opt" data-tema="claro">Claro</div>
           </div>
-        </div>
-        <div class="config-row">
-          <div class="config-k">Seu nome</div>
-          <input id="cfgNome" type="text">
         </div>
       </div>
       <div class="config-card">
