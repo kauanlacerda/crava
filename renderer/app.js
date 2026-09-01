@@ -210,21 +210,23 @@ function renderStats() {
   if (gr) gSubs.push(MOEDA.RBX.fmt(gr));
 
   $('statRow').innerHTML = `
-    <div class="stat-card">
+    <div class="stat-card solid-blue">
+      <div class="arrow-badge">↗</div>
       <div class="stat-label">META DO DIA</div>
-      <div class="stat-value">${feitos}<span style="color:var(--faint);font-size:15px"> / ${meta}</span></div>
+      <div class="stat-value">${feitos}<span style="opacity:0.7;font-size:18px"> / ${meta}</span></div>
       <div class="stat-segs">${segs}</div>
-      <div class="stat-sub ${feitos >= meta ? 'c-green' : 'c-blue'}">${feitos >= meta ? 'meta batida — jogo liberado!' : `faltam ${meta - feitos} pro jogo liberar`}</div>
+      <div class="stat-sub">${feitos >= meta ? 'meta batida — jogo liberado!' : `faltam ${meta - feitos} pro jogo liberar`}</div>
+    </div>
+    <div class="stat-card solid-green">
+      <div class="arrow-badge">↗</div>
+      <div class="stat-label">PRA RECEBER</div>
+      <div class="stat-value">${recParts[0] || 'R$ 0'}</div>
+      <div class="stat-sub">${recParts.length > 1 ? '+ ' + recParts.slice(1).join(' · ') : `${recN} trabalho${recN === 1 ? '' : 's'} aguardando pgto`}</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">PRAZO MAIS PRÓXIMO</div>
       <div class="stat-value ${prox ? prazoClasse(prox.prazo) || 'c-amber' : ''}">${prox ? prazoTexto(prox.prazo) : '—'}</div>
       <div class="stat-sub">${prox ? esc(prox.titulo) : 'nenhum prazo aberto'}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">A RECEBER</div>
-      <div class="stat-value c-amber">${recParts[0] || 'R$ 0'}</div>
-      <div class="stat-sub">${recParts.length > 1 ? '+ ' + recParts.slice(1).join(' · ') : `${recN} trabalho${recN === 1 ? '' : 's'} aguardando`}</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">GANHO NO MÊS</div>
@@ -358,11 +360,13 @@ function renderCobrador() {
     </div>`;
 }
 
+let busca = '';
 function renderTodos() {
-  const todos = [...S.jobs].sort((a, b) => (a.prazo || '9999') < (b.prazo || '9999') ? -1 : 1);
+  let todos = [...S.jobs].sort((a, b) => (a.prazo || '9999') < (b.prazo || '9999') ? -1 : 1);
+  if (busca) todos = todos.filter(j => `${j.titulo} ${j.cliente || ''}`.toLowerCase().includes(busca));
   $('listaTodos').innerHTML = todos.length
     ? todos.map(j => jobRowHTML(j, null, j.status === 'aprovado' && j.pagamento === 'pago')).join('')
-    : `<div class="empty-state"><div class="big">Nenhum trabalho ainda</div><div>Aceita um pedido e ele aparece aqui.</div></div>`;
+    : `<div class="empty-state"><div class="big">${busca ? 'Nada encontrado' : 'Nenhum trabalho ainda'}</div><div>${busca ? `nenhum trabalho bate com "${esc(busca)}"` : 'Aceita um pedido e ele aparece aqui.'}</div></div>`;
 }
 
 // ---------- Insígnias ----------
@@ -438,6 +442,13 @@ function abrirView(nome) {
 document.querySelectorAll('.nav-item').forEach(el => { el.onclick = () => abrirView(el.dataset.view); });
 $('userCard').onclick = () => abrirView('perfil');
 $('btnWidget').onclick = () => window.api.toggleWidget();
+
+// busca da topbar — filtra a lista de trabalhos
+$('searchInput').oninput = () => {
+  busca = $('searchInput').value.trim().toLowerCase();
+  if (busca && !$('view-trabalhos').classList.contains('open')) abrirView('trabalhos');
+  renderTodos();
+};
 
 // ---------- Perfil ----------
 $('btnFoto').onclick = () => $('fotoInput').click();
@@ -638,6 +649,7 @@ $('npSalvar').onclick = async () => {
 };
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open'));
+  if (e.ctrlKey && e.key.toLowerCase() === 'k') { e.preventDefault(); $('searchInput').focus(); }
 });
 
 function esc(s) { return String(s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }

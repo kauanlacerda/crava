@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>Cravado</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Baloo+2:wght@700;800&display=swap">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -39,21 +39,29 @@
     <div class="btn btn-ghost" id="btnWidget" style="font-size:12px">Mostrar widget</div>
     <div class="slots-card">
       <div class="slots-head">
-        <div class="slots-title">Slots</div>
-        <div class="slots-count" id="slotsCount">0 de 3</div>
+        <div class="slots-title">Disponível</div>
+        <div class="slots-count" id="slotsCount">0 de 3 slots</div>
       </div>
       <div class="slots-bar" id="slotsBar"></div>
       <div class="slots-hint">Slot livre só quando um trabalho for pago.</div>
     </div>
-    <div class="user-card" id="userCard">
-      <div class="user-avatar" id="userAvatar">V</div>
-      <div class="user-info">
-        <div class="user-name" id="userName">você</div>
-        <div class="user-sub" id="userSub">@voce</div>
-      </div>
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-    </div>
   </div>
+
+  <div class="content">
+    <div class="topbar">
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="searchInput" type="text" placeholder="Buscar trabalho ou cliente…">
+        <div class="kbd-chip">Ctrl K</div>
+      </div>
+      <div class="user-chip" id="userCard">
+        <div class="user-avatar" id="userAvatar">V</div>
+        <div class="user-info">
+          <div class="user-name" id="userName">você</div>
+          <div class="user-sub" id="userSub">@voce</div>
+        </div>
+      </div>
+    </div>
 
   <div class="main">
     <!-- ================= HOJE ================= -->
@@ -159,6 +167,7 @@
       </div>
       <div class="btn btn-primary" id="btnSalvarConfig">Salvar configurações</div>
     </div>
+  </div>
   </div>
 </div>
 
