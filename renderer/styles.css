@@ -727,3 +727,17 @@ input:focus, select:focus { border-color: var(--blue); }
 
 /* fix: foto do avatar esticada — a regra de cor resetava o background-size */
 .user-avatar, .perfil-avatar { background-size: cover; background-position: center; }
+
+/* barra do card: sem amassar, quebra em duas linhas se precisar */
+.share-bar { flex-wrap: wrap; row-gap: 10px; }
+.share-bar .btn { white-space: nowrap; }
+.opacidade-wrap { display: flex; align-items: center; gap: 7px; }
+.opacidade-wrap input[type="range"] { width: 90px; accent-color: var(--blue); padding: 0; background: transparent; border: none; }
+.toggle { border: 1px solid var(--faint); }
+
+/* fix: celebracao centralizada de verdade */
+.celebra-texto {
+  position: absolute; left: 0; right: 0; margin-top: 0;
+  top: calc(50% - 150px); text-align: center;
+}
+.confete { left: 50%; top: 50%; }

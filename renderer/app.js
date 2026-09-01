@@ -672,18 +672,36 @@ function atualizarSprites() {
   if (S.config.shareMidia && MEDIA_IMG.src !== S.config.shareMidia.dataURL) MEDIA_IMG.src = S.config.shareMidia.dataURL;
 }
 
-function drawShareCard() {
-  const cv = $('shareCanvas'), ctx = cv.getContext('2d');
-  const W = cv.width, H = cv.height; // 1120x680 (2x)
-  ctx.clearRect(0, 0, W, H);
+const CW = 1120, CH = 680;
 
-  // fundo
+function drawFundo(ctx) {
   const [c1, c2, c3] = FUNDOS[fundoSel];
-  const g = ctx.createLinearGradient(0, 0, W, H);
+  const g = ctx.createLinearGradient(0, 0, CW, CH);
   g.addColorStop(0, c1); g.addColorStop(0.7, c2); g.addColorStop(1, c3);
-  rrect(ctx, 0, 0, W, H, 44);
+  rrect(ctx, 0, 0, CW, CH, 44);
   ctx.fillStyle = g; ctx.fill();
+}
 
+// mídia como FUNDO do card (cover), com opacidade controlável
+function drawMediaLayer(ctx, fonte, alpha) {
+  const fw = fonte.naturalWidth || fonte.displayWidth || fonte.codedWidth;
+  const fh = fonte.naturalHeight || fonte.displayHeight || fonte.codedHeight;
+  if (!fw || !fh) return;
+  const esc = Math.max(CW / fw, CH / fh);
+  const dw = fw * esc, dh = fh * esc;
+  ctx.save();
+  rrect(ctx, 0, 0, CW, CH, 44);
+  ctx.clip();
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(fonte, (CW - dw) / 2, (CH - dh) / 2, dw, dh);
+  ctx.globalAlpha = 1;
+  // véu escuro leve pra manter o texto legível
+  ctx.fillStyle = 'rgba(8, 12, 24, 0.35)';
+  ctx.fillRect(0, 0, CW, CH);
+  ctx.restore();
+}
+
+function drawConteudo(ctx) {
   const F = (w, s) => `${w} ${s}px Manrope, "Segoe UI", sans-serif`;
   const mes = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
 
@@ -695,49 +713,43 @@ function drawShareCard() {
     ctx.imageSmoothingEnabled = true;
   }
   ctx.fillStyle = '#eef2f9'; ctx.font = "28px 'Press Start 2P', Manrope, monospace"; ctx.fillText('CRAVA', 140, 92);
-  ctx.fillStyle = '#7d8cab'; ctx.font = F(700, 22); ctx.textAlign = 'right';
-  ctx.fillText(mes, W - 56, 88); ctx.textAlign = 'left';
+  ctx.fillStyle = '#9fb0d0'; ctx.font = F(700, 22); ctx.textAlign = 'right';
+  ctx.fillText(mes, CW - 56, 88); ctx.textAlign = 'left';
 
   // faturamento
   const gb = ganhoMes('BRL'), gu = ganhoMes('USD'), gr = ganhoMes('RBX');
-  ctx.fillStyle = '#7d8cab'; ctx.font = F(700, 24); ctx.fillText('FATUREI', 56, 190);
+  ctx.fillStyle = '#9fb0d0'; ctx.font = F(700, 24); ctx.fillText('FATUREI', 56, 190);
   ctx.fillStyle = '#34d399'; ctx.font = F(800, 84);
   ctx.fillText(MOEDA.BRL.fmt(gb), 52, 272);
   const subs = [];
   if (gu) subs.push(MOEDA.USD.fmt(gu));
   if (gr) subs.push(MOEDA.RBX.fmt(gr));
-  if (subs.length) { ctx.fillStyle = '#9fb0d0'; ctx.font = F(700, 26); ctx.fillText('+ ' + subs.join(' · '), 56, 314); }
+  if (subs.length) { ctx.fillStyle = '#c3d0e8'; ctx.font = F(700, 26); ctx.fillText('+ ' + subs.join(' · '), 56, 314); }
 
-  // mídia personalizada (foto/gif) ou mascote
-  const midia = S.config.shareMidia;
-  if (!SKIP_MEDIA && midia && MEDIA_IMG.complete && MEDIA_IMG.naturalWidth) {
-    desenhaMidia(ctx, MEDIA_IMG, midia.tipo === 'gif');
-  } else if (!midia && mascoteOn && MASCOTE_IMG.complete && MASCOTE_IMG.naturalWidth) {
+  // mascote (só quando não tem mídia de fundo disputando atenção o toggle decide)
+  if (mascoteOn && MASCOTE_IMG.complete && MASCOTE_IMG.naturalWidth) {
     ctx.imageSmoothingEnabled = false;
     const mh = 230, mw = mh * MASCOTE_IMG.naturalWidth / MASCOTE_IMG.naturalHeight;
-    ctx.drawImage(MASCOTE_IMG, W - mw - 64, 116, mw, mh);
+    ctx.drawImage(MASCOTE_IMG, CW - mw - 64, 116, mw, mh);
     ctx.imageSmoothingEnabled = true;
   }
-
-  // controles da barra acompanham o estado da mídia
-  $('btnMidiaRemover').style.display = midia ? '' : 'none';
-  $('btnCopiarCard').textContent = midia && midia.tipo === 'gif' ? 'Salvar GIF animado' : 'Copiar imagem';
 
   // stats
   const mesKey = hoje().slice(0, 7);
   const trab = S.jobs.filter(j => j.entregueEm && j.entregueEm.slice(0, 7) === mesKey).length;
-  const pagosMes = S.jobs.filter(j => j.pagamento === 'pago' && j.pagoEm && j.pagoEm.slice(0, 7) === mesKey);
-  const ticket = pagosMes.length ? Math.round(totalPagoBRLequiv() / Math.max(1, S.jobs.filter(j => j.pagamento === 'pago').length)) : 0;
-  const nIns = INSIGNIAS.filter(b => b.check()).length;
+  const pagosTot = S.jobs.filter(j => j.pagamento === 'pago').length;
+  const ticket = pagosTot ? Math.round(totalPagoBRLequiv() / pagosTot) : 0;
+  const nIns = Object.keys(S.stats.insigniasGanhas || {}).length;
+  const mx = S.stats.maxStreak;
   const stats = [
     ['TRABALHOS', String(trab), '#eef2f9'],
-    ['MAIOR STREAK', `${S.stats.maxStreak} dias`, '#fbbf24'],
+    ['MAIOR STREAK', `${mx} ${mx === 1 ? 'dia' : 'dias'}`, '#fbbf24'],
     ['TICKET MÉDIO', `R$ ${fmtNum(ticket)}`, '#eef2f9'],
     ['INSÍGNIAS', String(nIns), '#34d399']
   ];
   let sx = 56;
   for (const [lab, val, cor] of stats) {
-    ctx.fillStyle = '#7d8cab'; ctx.font = F(700, 19); ctx.fillText(lab, sx, 408);
+    ctx.fillStyle = '#9fb0d0'; ctx.font = F(700, 19); ctx.fillText(lab, sx, 408);
     ctx.fillStyle = cor; ctx.font = F(800, 33); ctx.fillText(val, sx, 448);
     sx += Math.max(ctx.measureText(val).width, ctx.measureText(lab).width) + 70;
   }
@@ -745,23 +757,22 @@ function drawShareCard() {
   // rodapé: avatar + nome + selo
   const nome = S.config.nome || 'você';
   const user = S.config.usuario || '@' + nome.toLowerCase().replace(/\s+/g, '');
-  const ay = H - 120;
+  const ay = CH - 120;
   const ag = ctx.createLinearGradient(56, ay, 120, ay + 64);
   ag.addColorStop(0, '#3b82f6'); ag.addColorStop(1, '#1d4ed8');
   ctx.beginPath(); ctx.arc(88, ay + 32, 32, 0, 7); ctx.fillStyle = ag; ctx.fill();
   ctx.fillStyle = '#fff'; ctx.font = F(800, 26); ctx.textAlign = 'center';
   ctx.fillText(nome[0].toUpperCase(), 88, ay + 42); ctx.textAlign = 'left';
   ctx.fillStyle = '#eef2f9'; ctx.font = F(800, 26); ctx.fillText(nome, 136, ay + 26);
-  ctx.fillStyle = '#7d8cab'; ctx.font = F(600, 21); ctx.fillText(`${user} · GFX pra Roblox`, 136, ay + 56);
+  ctx.fillStyle = '#9fb0d0'; ctx.font = F(600, 21); ctx.fillText(`${user} · GFX pra Roblox`, 136, ay + 56);
 
-  ctx.fillStyle = '#7d8cab'; ctx.font = F(700, 18); ctx.textAlign = 'right';
-  ctx.fillText('feito com', W - 152, ay + 22);
-  ctx.fillText('Crava', W - 152, ay + 46); ctx.textAlign = 'left';
-  // QR decorativo
-  rrect(ctx, W - 132, ay - 4, 76, 76, 14); ctx.fillStyle = '#eef2f9'; ctx.fill();
-  ctx.fillStyle = c1;
+  ctx.fillStyle = '#9fb0d0'; ctx.font = F(700, 18); ctx.textAlign = 'right';
+  ctx.fillText('feito com', CW - 152, ay + 22);
+  ctx.fillText('Crava', CW - 152, ay + 46); ctx.textAlign = 'left';
+  rrect(ctx, CW - 132, ay - 4, 76, 76, 14); ctx.fillStyle = '#eef2f9'; ctx.fill();
+  ctx.fillStyle = '#0c1322';
   const QR = [[0, 0], [1, 0], [3, 0], [1, 1], [2, 1], [0, 2], [2, 2], [3, 2], [0, 3], [1, 3], [3, 3]];
-  for (const [qx, qy] of QR) ctx.fillRect(W - 132 + 12 + qx * 14, ay - 4 + 12 + qy * 14, 11, 11);
+  for (const [qx, qy] of QR) ctx.fillRect(CW - 132 + 12 + qx * 14, ay - 4 + 12 + qy * 14, 11, 11);
 
   // avatar com foto (async por cima)
   if (S.config.foto) {
@@ -774,6 +785,28 @@ function drawShareCard() {
     };
     img.src = S.config.foto;
   }
+}
+
+function drawShareCard() {
+  const cv = $('shareCanvas'), ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, CW, CH);
+  drawFundo(ctx);
+  const midia = S.config.shareMidia;
+  const temMidia = !SKIP_MEDIA && midia && MEDIA_IMG.complete && MEDIA_IMG.naturalWidth;
+  if (temMidia) drawMediaLayer(ctx, MEDIA_IMG, (S.config.shareMidiaOp ?? 40) / 100);
+  drawConteudo(ctx);
+  if (temMidia && midia.tipo === 'gif') {
+    rrect(ctx, CW - 122, 118, 60, 30, 9);
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = '700 17px Manrope, sans-serif';
+    ctx.fillText('GIF', CW - 108, 139);
+  }
+
+  // controles da barra
+  $('btnMidiaRemover').style.display = midia ? '' : 'none';
+  $('opacidadeWrap').style.display = midia ? '' : 'none';
+  if (document.activeElement !== $('midiaOpacidade')) $('midiaOpacidade').value = S.config.shareMidiaOp ?? 40;
+  $('btnCopiarCard').textContent = midia && midia.tipo === 'gif' ? 'Salvar GIF' : 'Copiar imagem';
 }
 
 // picker de fundo
@@ -796,27 +829,6 @@ $('mascoteToggle').onclick = () => {
 const MEDIA_IMG = new Image();
 MEDIA_IMG.onload = () => { if ($('view-share').classList.contains('open')) drawShareCard(); };
 let SKIP_MEDIA = false;
-const MEDIA_RECT = { x: 1120 - 330, y: 96, w: 266, h: 266 };
-
-function desenhaMidia(ctx, fonte, ehGif) {
-  const r = MEDIA_RECT;
-  const fw = fonte.naturalWidth || fonte.displayWidth || fonte.codedWidth;
-  const fh = fonte.naturalHeight || fonte.displayHeight || fonte.codedHeight;
-  const esc = Math.min(r.w / fw, r.h / fh);
-  const dw = fw * esc, dh = fh * esc;
-  const dx = r.x + (r.w - dw) / 2, dy = r.y + (r.h - dh) / 2;
-  ctx.save();
-  rrect(ctx, dx, dy, dw, dh, 18);
-  ctx.clip();
-  ctx.drawImage(fonte, dx, dy, dw, dh);
-  ctx.restore();
-  if (ehGif) {
-    rrect(ctx, dx + 10, dy + dh - 36, 52, 26, 8);
-    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.font = "700 16px Manrope, sans-serif";
-    ctx.fillText('GIF', dx + 22, dy + dh - 17);
-  }
-}
 
 $('btnMidia').onclick = () => $('midiaInput').click();
 $('midiaInput').onchange = () => {
@@ -838,6 +850,11 @@ $('btnMidiaRemover').onclick = async () => {
   await salvar();
   drawShareCard();
 };
+$('midiaOpacidade').oninput = () => {
+  S.config.shareMidiaOp = +$('midiaOpacidade').value;
+  drawShareCard();
+};
+$('midiaOpacidade').onchange = async () => { await salvar(); drawShareCard(); };
 
 // GIF animado: decodifica com ImageDecoder (nativo) e re-encoda com gifenc
 async function gerarGifAnimado() {
@@ -854,26 +871,30 @@ async function gerarGifAnimado() {
     const total = dec.tracks.selectedTrack.frameCount || 1;
     const passo = Math.ceil(total / 50); // no máx ~50 quadros no resultado
 
-    // base do card (tudo, menos a mídia animada)
-    SKIP_MEDIA = true; drawShareCard(); SKIP_MEDIA = false;
-    const cv = $('shareCanvas');
-    const base = document.createElement('canvas');
-    base.width = cv.width; base.height = cv.height;
-    base.getContext('2d').drawImage(cv, 0, 0);
+    // camadas: fundo (gradiente) e conteúdo (textos etc, transparente)
+    const fundoCv = document.createElement('canvas');
+    fundoCv.width = CW; fundoCv.height = CH;
+    drawFundo(fundoCv.getContext('2d'));
+    const contCv = document.createElement('canvas');
+    contCv.width = CW; contCv.height = CH;
+    drawConteudo(contCv.getContext('2d'));
 
     const outW = 560, outH = 340;
     const quadro = document.createElement('canvas');
-    quadro.width = cv.width; quadro.height = cv.height;
+    quadro.width = CW; quadro.height = CH;
     const qctx = quadro.getContext('2d');
     const mini = document.createElement('canvas');
     mini.width = outW; mini.height = outH;
     const mctx = mini.getContext('2d');
+    const op = (S.config.shareMidiaOp ?? 40) / 100;
 
     const enc = GIFEncoder();
     for (let i = 0; i < total; i += passo) {
       const { image, duration } = await dec.decode({ frameIndex: i });
-      qctx.drawImage(base, 0, 0);
-      desenhaMidia(qctx, image, false);
+      qctx.clearRect(0, 0, CW, CH);
+      qctx.drawImage(fundoCv, 0, 0);
+      drawMediaLayer(qctx, image, op);
+      qctx.drawImage(contCv, 0, 0);
       image.close();
       mctx.drawImage(quadro, 0, 0, outW, outH);
       const dados = mctx.getImageData(0, 0, outW, outH).data;
