@@ -425,7 +425,12 @@ function jobRowHTML(j, num, dim) {
 }
 
 function renderFila() {
-  const fila = S.jobs.filter(j => j.status === 'aceito');
+  // fila ordenada por urgência: prazo mais próximo primeiro, sem prazo por último
+  const fila = S.jobs.filter(j => j.status === 'aceito')
+    .sort((a, b) => {
+      const pa = a.prazo || '9999-99', pb = b.prazo || '9999-99';
+      return pa < pb ? -1 : pa > pb ? 1 : 0;
+    });
   const feitosHoje = S.jobs.filter(j => j.entregueEm && j.entregueEm.slice(0, 10) === hoje());
   const esperandoPgto = feitosHoje.filter(j => j.pagamento !== 'pago');
   const pagos = feitosHoje.filter(j => j.pagamento === 'pago');
