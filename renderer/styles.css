@@ -990,3 +990,7 @@ input:focus, select:focus { border-color: var(--blue); }
 /* coluna do visualizer estica ate o fim */
 .share-wrap > .viz-col { flex: 1 1 auto; min-width: 420px; width: auto; }
 .share-wrap > .viz-col .share-bar { width: 100%; }
+
+/* painel do lucro ocupa todo o espaco restante */
+.share-wrap { width: 100%; }
+.share-wrap > .viz-col { flex: 1 1 0; min-width: 380px; }
