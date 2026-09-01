@@ -868,6 +868,8 @@ function atualizarSprites() {
     MEDIA_IMG.src = S.config.shareMidia.dataURL;
     prepararGifPreview();
   }
+  const fav = S.config.insigniaFavorita;
+  if (fav && !FAV_IMG.src.includes(`insignias/${fav}.png`)) FAV_IMG.src = `../assets/insignias/${fav}.png`;
 }
 
 const CW = 1120, CH = 680;
