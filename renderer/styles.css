@@ -994,3 +994,10 @@ input:focus, select:focus { border-color: var(--blue); }
 /* painel do lucro ocupa todo o espaco restante */
 .share-wrap { width: 100%; }
 .share-wrap > .viz-col { flex: 1 1 0; min-width: 380px; }
+
+/* especificidade maior que a regra :last-child do card */
+.share-wrap > .share-col.viz-col {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 380px;
+}
