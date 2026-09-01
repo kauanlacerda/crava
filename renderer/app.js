@@ -1205,17 +1205,14 @@ function renderCalendario() {
       somaSemana += g;
       const ehHoje = `${calMes}-${String(d).padStart(2, '0')}` === hj;
       const titulo = `title="${d}/${mes}: R$ ${fmtNum(Math.round(g))}"`;
-      if (calModo === 'calor') {
-        const int = maxDia > 0 ? g / maxDia : 0;
-        const bg = g > 0 ? `background:rgba(47,211,156,${(0.10 + 0.75 * int).toFixed(2)})` : '';
-        const txt = int > 0.55 ? 'color:#04150e;font-weight:800' : '';
-        grid += `<div class="cal-cell ${ehHoje ? 'hoje' : ''}" style="${bg};${txt}" ${titulo}><div class="cal-dia">${d}</div></div>`;
-      } else {
-        grid += `<div class="cal-cell ${ehHoje ? 'hoje' : ''}" ${titulo}>
-          <div class="cal-dia">${d}</div>
-          <div class="cal-val ${g > 0 ? 'c-green' : ''}">${g > 0 ? fmtCompacto(g) : '·'}</div>
-        </div>`;
-      }
+      // mesma célula nos dois modos (o CSS anima a troca); calor sempre pintado
+      const int = maxDia > 0 ? g / maxDia : 0;
+      const bg = g > 0 ? `background:rgba(47,211,156,${(0.12 + 0.78 * int).toFixed(2)})` : '';
+      const txt = int > 0.55 ? 'color:#04150e' : '';
+      grid += `<div class="cal-cell ${ehHoje ? 'hoje' : ''}" style="${bg}" ${titulo}>
+        <div class="cal-dia" style="${txt}">${d}</div>
+        <div class="cal-val ${g > 0 ? 'c-green' : ''}" style="${txt}">${g > 0 ? fmtCompacto(g) : '·'}</div>
+      </div>`;
     }
     grid += `<div class="cal-week">${somaSemana > 0 ? '+' + fmtCompacto(somaSemana) : '—'}</div>`;
   }
@@ -1235,7 +1232,7 @@ function renderCalendario() {
       <span>no mês: <b class="c-green">R$ ${fmtNum(Math.round(totalMes))}</b></span>
       <span>no ano: <b class="c-green">R$ ${fmtNum(Math.round(totalAno))}</b></span>
     </div>
-    <div class="cal-grid">${grid}</div>`;
+    <div class="cal-grid ${calModo === 'calor' ? 'modo-calor' : ''}">${grid}</div>`;
 }
 $('calPanel').onclick = (e) => {
   const acao = e.target.dataset.cal;
@@ -1246,10 +1243,14 @@ $('calPanel').onclick = (e) => {
     if (m === 0) { m = 12; a--; }
     if (m === 13) { m = 1; a++; }
     calMes = `${a}-${String(m).padStart(2, '0')}`;
+    renderCalendario();
   } else {
+    // troca de modo sem re-render: só a classe muda e o CSS anima
     calModo = acao;
+    $('calPanel').querySelector('.cal-grid').classList.toggle('modo-calor', calModo === 'calor');
+    $('calPanel').querySelectorAll('.tema-opt').forEach(el =>
+      el.classList.toggle('sel', el.dataset.cal === calModo));
   }
-  renderCalendario();
 };
 
 // GIF animado: decodifica com ImageDecoder (nativo) e re-encoda com gifenc
