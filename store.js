@@ -33,7 +33,8 @@ const DEFAULTS = {
     cofreRetiradas: [],
     notificados: {},
     insigniasGanhas: {},
-    versaoVista: ''
+    versaoVista: '',
+    donoId: ''        // de qual conta são estes dados, pra não vazarem entre logins
   }
 };
 

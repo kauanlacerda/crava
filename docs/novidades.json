@@ -1,4 +1,14 @@
 {
+  "1.0.7": {
+    "pt": [
+      "Correção importante: ao criar uma conta nova num PC que já tinha sido usado, o app copiava os trabalhos, o nome e a foto da conta anterior pra dentro dela. Agora os dados sabem de qual conta são e nunca passam de uma pra outra.",
+      "Sair da conta limpa o computador: trabalhos, nome, @ e foto vão junto. Tema e cores ficam, porque são do PC."
+    ],
+    "en": [
+      "Important fix: creating a new account on a computer that had been used before copied the previous account jobs, name and photo into it. Data now knows which account it belongs to and never crosses over.",
+      "Signing out clears the computer: jobs, name, @ and photo go with it. Theme and colors stay, since they belong to the machine."
+    ]
+  },
   "1.0.6": {
     "pt": [
       "Sinal em Pix já conta como dinheiro na conta. Antes, receber metade adiantado contava como zero até o pagamento fechar — o trabalho continua em COBRAR pela parte que falta.",

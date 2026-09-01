@@ -101,6 +101,24 @@ async function aoEntrar() {
   atualizarCardConta();
 }
 
+// Estado zerado pra uma conta nova neste PC. Preferências de aparência ficam
+// (são do computador); tudo que identifica alguém ou é trabalho dela, sai.
+function estadoParaContaNova() {
+  return {
+    config: {
+      ...S.config,
+      nome: 'você', usuario: '', foto: '', insigniaFavorita: '',
+      shareMidia: '', calMidia: ''
+    },
+    jobs: [],
+    stats: {
+      streak: 0, maxStreak: 0, ultimoDiaMeta: '', recompensaMostrada: '',
+      historico: {}, cofres: [], cofreRetiradas: [], notificados: {},
+      insigniasGanhas: {}, versaoVista: S.stats.versaoVista || ''
+    }
+  };
+}
+
 // Traz o estado da nuvem pra cá.
 async function aplicarNuvem(naNuvem) {
   const p = naNuvem.payload;
@@ -109,6 +127,7 @@ async function aplicarNuvem(naNuvem) {
     jobs: p.jobs || [],
     stats: { ...S.stats, ...(p.stats || {}) }
   };
+  S.stats.donoId = usuario.id;
   await window.api.saveState(S);
   render();
 }
@@ -133,6 +152,26 @@ async function sincronizar(primeiraVez) {
     const naNuvem = await baixarDados();
     let puxou = false;
 
+    // Os dados guardados neste PC são de outra conta? Então não são desta
+    // pessoa e não podem subir pra nuvem dela. Sem isso, criar uma conta nova
+    // num PC emprestado copiava os trabalhos do dono anterior pra dentro dela.
+    const dono = S?.stats?.donoId;
+    if (primeiraVez && dono && dono !== usuario.id) {
+      if (naNuvem && naNuvem.payload && Object.keys(naNuvem.payload).length) {
+        await aplicarNuvem(naNuvem);
+      } else {
+        S = estadoParaContaNova();
+        S.stats.donoId = usuario.id;
+        await window.api.saveState(S);
+        render();
+      }
+      jaSincronizou = true;
+      statusSync(t('syncOk'));
+      sincronizando = false;
+      if (pendente) { pendente = false; setTimeout(() => sincronizar(false), 1200); }
+      return;
+    }
+
     if (primeiraVez && !window.ZERANDO) {
       if (maisRecente(S, naNuvem) === 'nuvem') { await aplicarNuvem(naNuvem); puxou = true; }
     } else if (naNuvem && !window.ZERANDO && nuvemMaisNova(naNuvem)) {
@@ -145,6 +184,7 @@ async function sincronizar(primeiraVez) {
       statusSync(t('syncPuxou'));
     } else {
       if (!S.stats.atualizadoEm) S.stats.atualizadoEm = new Date().toISOString();
+      if (!S.stats.donoId) S.stats.donoId = usuario.id;
       await enviarDados(S, navigator.platform || 'PC');
       await salvarPerfilNuvem(S.config.nome, S.config.usuario, null);
       statusSync(t('syncOk'));
@@ -178,7 +218,13 @@ $$('btnSincronizar').onclick = () => sincronizar(false);
 $$('btnEntrarConfig').onclick = () => { mostrarLogin(true); trocarAba('entrar'); };
 $$('btnSair').onclick = async () => {
   if (!confirm(t('confirmaSair'))) return;
+  // sobe o que ainda não subiu antes de largar a conta
+  try { await sincronizar(false); } catch { }
   await sair();
+  // e não deixa os dados de quem saiu para quem entrar depois
+  S = estadoParaContaNova();
+  await window.api.saveState(S);
+  render();
   jaSincronizou = false;
   atualizarCardConta();
   mostrarLogin(true);
