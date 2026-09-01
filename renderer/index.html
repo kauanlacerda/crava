@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Cravado</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M2 12h4"/><path d="M18 12h4"/><circle cx="12" cy="12" r="4"/></svg>
+      </div>
+      <div class="logo-name">Cravado</div>
+    </div>
+    <div class="nav-item active" data-view="hoje">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      Hoje
+    </div>
+    <div class="nav-item" data-view="trabalhos">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+      Trabalhos
+    </div>
+    <div class="nav-item" data-view="insignias">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M8.5 13L7 22l5-3 5 3-1.5-9"/></svg>
+      Insígnias
+    </div>
+    <div class="nav-item" data-view="config">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.7l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.7-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.7.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.7 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.7.3h.1a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 1 1.5h.1a1.6 1.6 0 0 0 1.7-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.7v.1a1.6 1.6 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.5 1z"/></svg>
+      Configurações
+    </div>
+    <div class="sidebar-spacer"></div>
+    <div class="btn btn-ghost" id="btnWidget" style="font-size:12px">Mostrar widget</div>
+    <div class="slots-card">
+      <div class="slots-head">
+        <div class="slots-title">Slots</div>
+        <div class="slots-count" id="slotsCount">0 de 3</div>
+      </div>
+      <div class="slots-bar" id="slotsBar"></div>
+      <div class="slots-hint">Slot livre só quando um trabalho for pago.</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- ================= HOJE ================= -->
+    <div class="view open" id="view-hoje">
+      <div class="header">
+        <div>
+          <div class="h-title" id="saudacao">Hoje</div>
+          <div class="h-date" id="dataHoje"></div>
+        </div>
+        <div class="chips">
+          <div class="chip">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--flame)" stroke-width="2" stroke-linecap="round"><path d="M12 22c4.4 0 7-2.8 7-6.5 0-2.5-1.4-4.6-3-6.5-.5 1.2-1.3 2-2.5 2.5C13.8 9 14 5.5 11 2c-.3 3-1.5 4.7-3 6.2C6.4 9.8 5 11.9 5 15.5 5 19.2 7.6 22 12 22z"/></svg>
+            <div>
+              <div class="chip-label">STREAK DE META</div>
+              <div class="chip-value c-flame" id="chipStreak">0 dias</div>
+            </div>
+          </div>
+          <div class="chip">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>
+            <div>
+              <div class="chip-label">GANHO NO MÊS</div>
+              <div class="chip-value c-green" id="chipGanho">R$ 0</div>
+              <div class="chip-sub" id="chipGanhoSub"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="progress-row">
+          <span id="progTexto">0 de 5 concluídos hoje</span>
+          <span class="c-blue" id="progFaltam"></span>
+        </div>
+        <div class="progress-bar" id="progBar" style="margin-top:7px"></div>
+      </div>
+
+      <div id="activeArea"></div>
+      <div id="filaArea"></div>
+      <div id="cobradorArea"></div>
+    </div>
+
+    <!-- ================= TRABALHOS ================= -->
+    <div class="view" id="view-trabalhos">
+      <div class="header">
+        <div class="h-title">Trabalhos</div>
+        <div class="btn btn-primary" id="btnNovo" style="padding:10px 18px">+ Novo pedido</div>
+      </div>
+      <div id="listaTodos"></div>
+    </div>
+
+    <!-- ================= INSÍGNIAS ================= -->
+    <div class="view" id="view-insignias">
+      <div class="header"><div class="h-title">Insígnias <span id="insigniasCount" style="font-size:13px;color:var(--muted)"></span></div></div>
+      <div class="insignias-grid" id="insigniasGrid"></div>
+    </div>
+
+    <!-- ================= CONFIG ================= -->
+    <div class="view" id="view-config">
+      <div class="header"><div class="h-title">Configurações</div></div>
+      <div class="config-card">
+        <div class="config-row">
+          <div><div class="config-k">Tema</div><div class="config-sub">Como o app aparece pra você</div></div>
+          <div class="tema-picker" id="temaPicker">
+            <div class="tema-opt" data-tema="escuro">Escuro</div>
+            <div class="tema-opt" data-tema="claro">Claro</div>
+          </div>
+        </div>
+        <div class="config-row">
+          <div class="config-k">Seu nome</div>
+          <input id="cfgNome" type="text">
+        </div>
+      </div>
+      <div class="config-card">
+        <div class="config-row"><div class="config-k">Meta diária (trabalhos)</div><input id="cfgMeta" type="number" min="1" max="20"></div>
+        <div class="config-row"><div class="config-k">Slots simultâneos</div><input id="cfgSlots" type="number" min="1" max="10"></div>
+      </div>
+      <div class="config-card">
+        <div class="config-row"><div class="config-k">Cofre (% de cada pagamento)</div><input id="cfgCofre" type="number" min="0" max="90"></div>
+        <div class="config-row"><div class="config-k">Cotação US$ → R$</div><input id="cfgUSD" type="number" step="0.01"></div>
+        <div class="config-row"><div class="config-k">1.000 Robux → R$</div><input id="cfgRBX" type="number" step="0.01"></div>
+      </div>
+      <div class="btn btn-primary" id="btnSalvarConfig">Salvar configurações</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: novo pedido ================= -->
+<div class="overlay" id="ovNovo">
+  <div class="modal">
+    <div class="modal-title">Novo pedido</div>
+    <div class="field"><label>O que é?</label><input id="npTitulo" type="text" placeholder="Thumbnail — nome do jogo"></div>
+    <div class="field-row">
+      <div class="field"><label>Cliente</label><input id="npCliente" type="text" placeholder="@ do cliente"></div>
+      <div class="field" style="max-width:110px"><label>Valor</label><input id="npValor" type="number" min="0" placeholder="0"></div>
+      <div class="field" style="max-width:150px"><label>Moeda</label>
+        <div class="moeda-picker" id="npMoeda">
+          <div class="moeda-opt sel" data-m="BRL">R$</div>
+          <div class="moeda-opt" data-m="USD">US$</div>
+          <div class="moeda-opt" data-m="RBX">RBX</div>
+        </div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Prazo</label><input id="npPrazo" type="date"></div>
+      <div class="field"><label>Pagamento</label>
+        <select id="npPgto">
+          <option value="nao_pago">Não pago</option>
+          <option value="aguardando">Aguardando</option>
+          <option value="pago">Pago adiantado</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <div class="btn btn-primary" id="npSalvar">Salvar na fila</div>
+      <div class="btn btn-ghost" id="npCancelar" style="max-width:110px">Cancelar</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: cofre ================= -->
+<div class="overlay" id="ovCofre">
+  <div class="modal" style="align-items:center;text-align:center">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>
+    <div class="modal-title">Pagamento recebido!</div>
+    <div style="font-size:13px;font-weight:600;color:var(--muted)" id="cofreDetalhe"></div>
+    <div style="font-size:22px;font-weight:800;color:var(--green)" id="cofreValor"></div>
+    <div class="btn-row" style="align-self:stretch">
+      <div class="btn btn-green" id="cofreSim">Separei ✓</div>
+      <div class="btn btn-ghost" id="cofreDepois" style="max-width:110px">Depois</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: meta batida ================= -->
+<div class="overlay" id="ovMeta">
+  <div class="modal" style="align-items:center;text-align:center;border-color:var(--blue-border)">
+    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9h2m-1-1v2"/><path d="M15.5 9.5h.01"/><path d="M17.5 11.5h.01"/><path d="M17.6 5H6.4a4.4 4.4 0 0 0-4.3 3.6L1 15.1a2.8 2.8 0 0 0 4.9 2.3L8 15h8l2.1 2.4a2.8 2.8 0 0 0 4.9-2.3l-1.1-6.5A4.4 4.4 0 0 0 17.6 5z"/></svg>
+    <div class="modal-title" style="font-size:20px">Meta batida!</div>
+    <div style="font-size:13px;font-weight:600;color:var(--muted)" id="metaDetalhe"></div>
+    <div class="badge-chip bc-amber" id="metaStreak"></div>
+    <div class="btn btn-primary" id="metaFechar" style="align-self:stretch">Jogo liberado, sem culpa</div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

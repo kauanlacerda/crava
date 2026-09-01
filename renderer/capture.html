@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Manrope', 'Segoe UI', system-ui, sans-serif; background: transparent; overflow: hidden; }
+    .card {
+      width: 444px; height: 314px; margin: 8px;
+      background: #12161d; border: 1px solid #232a35; border-radius: 18px;
+      padding: 18px 20px; display: flex; flex-direction: column; gap: 11px;
+      color: #e8edf4; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+    }
+    .top { display: flex; align-items: center; gap: 10px; -webkit-app-region: drag; }
+    .title { font-size: 15px; font-weight: 800; flex-grow: 1; }
+    .kbd { font-size: 10px; font-weight: 700; color: #5a6676; background: #171c24; border: 1px solid #232a35; border-radius: 7px; padding: 4px 8px; }
+    input, select {
+      width: 100%; background: #171c24; border: 1px solid #232a35; border-radius: 11px;
+      padding: 10px 13px; color: #e8edf4; font-family: inherit; font-size: 13px; font-weight: 700; outline: none;
+    }
+    input:focus { border-color: #339dff; }
+    .row { display: flex; gap: 9px; }
+    .moedas { display: flex; border: 1px solid #232a35; border-radius: 11px; overflow: hidden; flex-shrink: 0; }
+    .m { padding: 10px 11px; font-size: 12px; font-weight: 700; color: #8b98a9; cursor: pointer; }
+    .m.sel { background: #1a2634; color: #339dff; font-weight: 800; }
+    .foot { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+    .hint { font-size: 10px; font-weight: 600; color: #5a6676; }
+    .btn { background: #339dff; border-radius: 11px; padding: 10px 18px; font-size: 13px; font-weight: 800; color: #fff; cursor: pointer; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="top">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#339dff" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+    <div class="title">Novo pedido</div>
+    <div class="kbd">Enter salva · Esc cancela</div>
+  </div>
+  <input id="cTitulo" type="text" placeholder="O que é? (Thumbnail — nome do jogo)">
+  <div class="row">
+    <input id="cCliente" type="text" placeholder="cliente">
+    <input id="cValor" type="number" min="0" placeholder="valor" style="max-width:95px">
+    <div class="moedas" id="cMoedas">
+      <div class="m sel" data-m="BRL">R$</div>
+      <div class="m" data-m="USD">US$</div>
+      <div class="m" data-m="RBX">RBX</div>
+    </div>
+  </div>
+  <div class="row">
+    <input id="cPrazo" type="date">
+    <select id="cPgto">
+      <option value="nao_pago">Não pago</option>
+      <option value="aguardando">Aguardando pgto</option>
+      <option value="pago">Pago adiantado</option>
+    </select>
+  </div>
+  <div class="foot">
+    <div class="hint">salva como "Aceito" na fila</div>
+    <div class="btn" id="cSalvar">Salvar na fila</div>
+  </div>
+</div>
+<script src="capture.js"></script>
+</body>
+</html>
