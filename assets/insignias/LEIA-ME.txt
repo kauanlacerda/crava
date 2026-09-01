@@ -1,8 +1,10 @@
 Arte customizada das insignias (estilo NFT de macaco):
 solte um PNG quadrado aqui com o nome <id>.png e ele substitui o icone.
+Insignia bloqueada mostra a arte em preto-e-branco.
 
-IDs: maquina, semana, ferro, monstro, mes-ouro, pontual,
-brl-1k, brl-5k, brl-10k, brl-50k, brl-100k,
-usd-100, usd-500, gringo, usd-5k, usd-10k,
-rbx-10k, rbx-50k, robuxeiro, rbx-500k, rei-robux,
-triplo, dez-k, geral-50k, cem-k, geral-500k, geral-1m
+ROTINA: primeiro-crava, maquina, fabrica, esquenta, semana, quinzena, ferro, streak-60, streak-100
+MES: mes-10, monstro, mes-40, mes-ouro, mes-diamante, pontual, pontual-3
+R$: brl-250, brl-1k, brl-5k, brl-10k, brl-50k, brl-100k, brl-500k, brl-1m
+US$: usd-100, usd-500, gringo, usd-2500, usd-5k, usd-10k, usd-25k, usd-50k
+ROBUX: rbx-1k, rbx-10k, rbx-50k, robuxeiro, rbx-250k, rbx-500k, rei-robux, rbx-2m, rbx-5m
+GERAL: triplo, geral-5k, dez-k, geral-50k, cem-k, geral-250k, geral-500k, geral-1m, geral-2m, geral-5m
