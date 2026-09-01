@@ -1,4 +1,18 @@
 {
+  "1.0.5": {
+    "pt": [
+      "Aba do Cofre: um card grande com o total guardado, o histórico de tudo que entrou e saiu, e botões pra guardar à mão ou retirar. O total desce quando você tira.",
+      "Seis cores pro degradê do cofre — azul, verde, roxo, laranja, vermelho e noite — em Configurações.",
+      "Chega de pulo: trocar tema, cor ou o fundo do gráfico não reinicia mais as animações nem joga as listas de volta pro topo.",
+      "A cotação do dólar agora é buscada a cada 5 minutos, e as Configurações mostram lado a lado a taxa ao vivo e a reserva usada sem internet."
+    ],
+    "en": [
+      "Savings tab: a big card with the total saved, the full history of what went in and out, and buttons to add by hand or take money out. The total drops when you withdraw.",
+      "Six colors for the savings gradient — blue, green, purple, orange, red and night — in Settings.",
+      "No more jumping: switching theme, color or the graph background no longer restarts the animations or scrolls lists back to the top.",
+      "The dollar rate is now fetched every 5 minutes, and Settings shows the live rate next to the offline fallback."
+    ]
+  },
   "1.0.4": {
     "pt": [
       "Cotação do dólar ao vivo: o app busca a taxa real na internet e usa ela em tudo — carteira, cofre, rosquinha de moedas e conversor. Atualiza sozinha a cada 15 minutos e quando você volta pro app.",

@@ -19,6 +19,7 @@ const DEFAULTS = {
     cotacaoUSDautoEm: '',
     cotacaoRBX1k: 28,
     vizFundo: 'auto',       // fundo do gráfico de lucro: auto | preto | branco
+    cofreGrad: 'azul',      // degradê do card do cofre
     nome: 'você'
   },
   jobs: [],
@@ -29,6 +30,7 @@ const DEFAULTS = {
     recompensaMostrada: '',
     historico: {},
     cofres: [],
+    cofreRetiradas: [],
     notificados: {},
     insigniasGanhas: {},
     versaoVista: ''

@@ -69,10 +69,31 @@ function totalPagoBRLequiv() {
 }
 
 // ---------- Persistência ----------
+// Trocar uma opção redesenha a tela inteira, e isso reiniciava as animações de
+// entrada de todos os cards (a barra do GIF e a lista de COBRAR "pulavam").
+// Silenciar as animações durante o clique resolve sem mexer no resto.
+function silenciarAnimacoes(ms = 500) {
+  const main = document.querySelector('.main');
+  if (!main) return;
+  main.classList.add('sem-anim');
+  clearTimeout(silenciarAnimacoes._t);
+  silenciarAnimacoes._t = setTimeout(() => main.classList.remove('sem-anim'), ms);
+}
+
 async function salvar() {
   try { verificarInsignias(); } catch { }
   await window.api.saveState(S);
   render();
+}
+
+// As listas com rolagem são refeitas por innerHTML a cada render, o que jogava
+// a rolagem de volta pro topo a cada clique. Guardamos e devolvemos o scroll.
+const ROLAVEIS = '.din-lista, .kb-lista, .cofre-historico, .main';
+function lerRolagem() {
+  return [...document.querySelectorAll(ROLAVEIS)].map(el => el.scrollTop);
+}
+function devolverRolagem(antes) {
+  document.querySelectorAll(ROLAVEIS).forEach((el, i) => { if (antes[i]) el.scrollTop = antes[i]; });
 }
 
 // ---------- Ações ----------
@@ -237,6 +258,7 @@ $('metaFechar').onclick = () => $('ovMeta').classList.remove('open');
 
 // ---------- Render ----------
 function render() {
+  const rolagem = lerRolagem();
   IDIOMA = S.config.idioma === 'en' ? 'en' : 'pt';
   aplicarIdiomaHTML();
   document.documentElement.dataset.theme = S.config.tema || 'escuro';
@@ -266,6 +288,7 @@ function render() {
   renderAtivo();
   renderFila();
   renderCofrePendente();
+  try { renderCofreView(); } catch { }
   renderCobrador();
   renderTodos();
   renderInsignias();
@@ -273,6 +296,7 @@ function render() {
   renderCalendario();
   try { desenharViz(); } catch { }
   try { renderCarteira(); renderMoedas(); calcularConversao(); renderDinheiro(); } catch { }
+  devolverRolagem(rolagem);
 }
 
 // ---------- Stat cards (fileira do topo, como no design) ----------
@@ -977,20 +1001,31 @@ function renderConfig() {
     el.classList.toggle('sel', el.dataset.idioma === (S.config.idioma || 'pt')));
   document.querySelectorAll('#corPicker .cor-opt').forEach(el =>
     el.classList.toggle('sel', el.dataset.cor === (S.config.cor || 'azul')));
+  document.querySelectorAll('#gradPicker .cor-opt').forEach(el =>
+    el.classList.toggle('sel', el.dataset.grad === (S.config.cofreGrad || 'azul')));
 }
 $('idiomaPicker').onclick = async (e) => {
+  silenciarAnimacoes();
   const i = e.target.dataset.idioma;
   if (i) { S.config.idioma = i; await salvar(); }
 };
 $('glowPicker').onclick = async (e) => {
+  silenciarAnimacoes();
   const g = e.target.dataset.glow;
   if (g) { S.config.glowCards = g === 'on'; await salvar(); }
 };
+$('gradPicker').onclick = async (e) => {
+  silenciarAnimacoes();
+  const g = e.target.dataset.grad;
+  if (g) { S.config.cofreGrad = g; await salvar(); }
+};
 $('corPicker').onclick = async (e) => {
+  silenciarAnimacoes();
   const c = e.target.dataset.cor;
   if (c) { S.config.cor = c; await salvar(); }
 };
 $('temaPicker').onclick = async (e) => {
+  silenciarAnimacoes();
   const t = e.target.dataset.tema;
   if (t) { S.config.tema = t; await salvar(); }
 };
@@ -1571,8 +1606,118 @@ function cofreEquiv(c) {
   const num = parseFloat(String(c.valor || '').replace(/[^\d,.-]/g, '').replace(/\.(?=\d{3})/g, '').replace(',', '.'));
   return isNaN(num) ? 0 : num;
 }
-function totalGuardado() {
+// tudo que já entrou no cofre (só o que foi confirmado)
+function totalGuardadoBruto() {
   return S.stats.cofres.filter(c => c.confirmado).reduce((a, c) => a + cofreEquiv(c), 0);
+}
+function totalRetirado() {
+  return (S.stats.cofreRetiradas || []).reduce((a, r) => a + Number(r.q || 0), 0);
+}
+// o que ainda está lá dentro
+function totalGuardado() {
+  return Math.max(0, totalGuardadoBruto() - totalRetirado());
+}
+
+// ---------- Aba do Cofre ----------
+
+// Uma linha do histórico pode ser uma entrada (depósito) ou uma saída (retirada).
+function movimentosCofre() {
+  const entradas = S.stats.cofres.map((c, idx) => ({
+    tipo: c.confirmado ? 'entrada' : 'pendente',
+    idx, data: c.confirmadoEm || c.data, q: cofreEquiv(c),
+    titulo: c.titulo || (c.manual ? t('cofreManual') : t('cofreDeUmPgto')),
+    manual: !!c.manual
+  }));
+  const saidas = (S.stats.cofreRetiradas || []).map((r, idx) => ({
+    tipo: 'saida', idx, data: r.data, q: Number(r.q || 0),
+    titulo: r.motivo || t('cofreRetiradaSem')
+  }));
+  return [...entradas, ...saidas].sort((x, y) => String(y.data).localeCompare(String(x.data)));
+}
+
+function renderCofreView() {
+  const alvo = $('cofreTotal');
+  if (!alvo) return;
+  $('cofreVisor').dataset.grad = S.config.cofreGrad || 'azul';
+
+  const saldo = totalGuardado();
+  const inteiro = Math.floor(saldo);
+  const centavos = Math.round((saldo - inteiro) * 100);
+  alvo.innerHTML = `R$ ${fmtNum(inteiro).split(',')[0]}<span class="cofre-cents">.${String(centavos).padStart(2, '0')}</span>`;
+
+  const mesAtual = hoje().slice(0, 7);
+  const doMes = movimentosCofre()
+    .filter(m => m.tipo === 'entrada' && String(m.data).slice(0, 7) === mesAtual)
+    .reduce((s, m) => s + m.q, 0);
+  const pendentes = S.stats.cofres.filter(c => !c.confirmado).length;
+
+  $('cofreSubtitulo').textContent = `${t('cofreGuardando')} ${S.config.cofrePct}% ${t('cofreDeCadaPgto')}`;
+  $('cofreMes').textContent = MOEDA.BRL.fmt(Math.round(doMes));
+  $('cofreEntradasTotal').textContent = MOEDA.BRL.fmt(Math.round(totalGuardadoBruto()));
+  $('cofreSaidasTotal').textContent = MOEDA.BRL.fmt(Math.round(totalRetirado()));
+  $('cofrePendentesN').textContent = pendentes;
+
+  const movs = movimentosCofre();
+  $('cofreHistorico').innerHTML = movs.length ? movs.map(m => {
+    const sinal = m.tipo === 'saida' ? '−' : '+';
+    const cls = m.tipo === 'saida' ? 'saida' : m.tipo === 'pendente' ? 'pendente' : 'entrada';
+    const acao = m.tipo === 'pendente'
+      ? `<div class="mini-btn liquidar" onclick="separeiCofre(${m.idx})">${t('btnSeparei')}</div>`
+      : `<div class="cofre-x" onclick="apagarMovCofre('${m.tipo}', ${m.idx})" title="${t('cofreApagar')}">✕</div>`;
+    return `<div class="cofre-mov ${cls}">
+      <div class="cofre-mov-icone">${m.tipo === 'saida' ? '↑' : '↓'}</div>
+      <div class="cofre-mov-txt">
+        <div class="cofre-mov-titulo">${esc(m.titulo)}</div>
+        <div class="cofre-mov-data">${String(m.data || '').split('-').reverse().join('/')}${m.tipo === 'pendente' ? ' · ' + t('cofrePendente') : ''}</div>
+      </div>
+      <div class="cofre-mov-valor">${sinal} ${MOEDA.BRL.fmt(Math.round(m.q))}</div>
+      ${acao}
+    </div>`;
+  }).join('') : `<div class="din-vazio">${t('cofreVazio')}</div>`;
+}
+
+// guardar um valor à mão
+$('btnCofreGuardar').onclick = () => {
+  $('guardarValor').value = '';
+  $('guardarMotivo').value = '';
+  $('ovGuardar').classList.add('open');
+  setTimeout(() => $('guardarValor').focus(), 60);
+};
+$('guardarCancela').onclick = () => $('ovGuardar').classList.remove('open');
+$('guardarOk').onclick = async () => {
+  const q = Math.max(0, parseFloat(String($('guardarValor').value).replace(',', '.')) || 0);
+  if (!q) return;
+  S.stats.cofres.push({
+    data: hoje(), q, m: 'BRL', valor: MOEDA.BRL.fmt(q),
+    titulo: $('guardarMotivo').value.trim(), confirmado: true, confirmadoEm: hoje(), manual: true
+  });
+  $('ovGuardar').classList.remove('open');
+  await salvar();
+};
+
+// tirar do cofre
+$('btnCofreRetirar').onclick = () => {
+  $('retirarValor').value = '';
+  $('retirarMotivo').value = '';
+  $('retirarDisponivel').textContent = `${t('cofreDisponivel')} ${MOEDA.BRL.fmt(Math.round(totalGuardado()))}`;
+  $('ovRetirar').classList.add('open');
+  setTimeout(() => $('retirarValor').focus(), 60);
+};
+$('retirarCancela').onclick = () => $('ovRetirar').classList.remove('open');
+$('retirarOk').onclick = async () => {
+  const q = Math.max(0, parseFloat(String($('retirarValor').value).replace(',', '.')) || 0);
+  if (!q) return;
+  if (!Array.isArray(S.stats.cofreRetiradas)) S.stats.cofreRetiradas = [];
+  S.stats.cofreRetiradas.push({ data: hoje(), q, motivo: $('retirarMotivo').value.trim() });
+  $('ovRetirar').classList.remove('open');
+  await salvar();
+};
+
+// apagar uma linha lançada errado
+async function apagarMovCofre(tipo, idx) {
+  if (tipo === 'saida') (S.stats.cofreRetiradas || []).splice(idx, 1);
+  else S.stats.cofres.splice(idx, 1);
+  await salvar();
 }
 
 // ---------- Carteira ----------
@@ -1726,9 +1871,10 @@ function pintarCotacao() {
   const selo = $('cfgUSDaoVivo');
   if (selo) {
     selo.classList.toggle('vivo', cotacaoAoVivo);
+    const reserva = `${t('cotacaoReserva')} R$ ${Number(S.config.cotacaoUSD).toFixed(2)}`;
     selo.innerHTML = cotacaoAoVivo
-      ? `<span class="ponto-vivo"></span>${t('aoVivo')} · US$ 1 = R$ ${val.toFixed(2)}`
-      : cotacaoUSDonline ? `${t('cotacaoUltima')} ${quandoTexto()} · R$ ${val.toFixed(2)}`
+      ? `<span class="ponto-vivo"></span>${t('aoVivo')} · US$ 1 = R$ ${val.toFixed(2)} · ${reserva}`
+      : cotacaoUSDonline ? `${t('cotacaoUltima')} ${quandoTexto()} · R$ ${val.toFixed(2)} · ${reserva}`
       : t('cotacaoManualUso');
   }
   try { calcularConversao(); } catch { }
@@ -1969,6 +2115,7 @@ function desenharViz() {
 }
 
 $('vizFundo').onclick = async (e) => {
+  silenciarAnimacoes();
   const f = e.target.dataset.fundo;
   if (!f) return;
   S.config.vizFundo = f;
@@ -2518,7 +2665,7 @@ function migrarLiquidacao() {
   render();
   window.api.onState((s) => { S = s; window.S = s; render(); });
   buscarCotacao();
-  setInterval(buscarCotacao, 15 * 60 * 1000);
+  setInterval(buscarCotacao, 5 * 60 * 1000);
   window.addEventListener('online', () => buscarCotacao());
   window.addEventListener('focus', () => {
     if (Date.now() - ultimaBusca > 5 * 60 * 1000) buscarCotacao();

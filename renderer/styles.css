@@ -1388,3 +1388,123 @@ input:focus, select:focus { border-color: var(--blue); }
 .viz-fundo .mini-btn.sel {
   background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue);
 }
+
+
+/* ================= Aba do Cofre ================= */
+.cofre-topo { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(210px, 0.85fr); gap: 16px; }
+@media (max-width: 900px) { .cofre-topo { grid-template-columns: 1fr; } }
+
+.cofre-hero {
+  display: flex; flex-direction: column;
+  background: #0b0e13; border: 1px solid var(--border);
+  border-radius: 26px; padding: 12px; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+}
+.cofre-hero-cab { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 16px; }
+.cofre-hero-titulo { font-family: 'Baloo 2', Manrope, sans-serif; font-size: 25px; font-weight: 800; color: #e8edf4; line-height: 1.1; }
+.cofre-hero-sub { font-size: 12.5px; color: #8b98a9; margin-top: 2px; }
+.cofre-hero-btn { padding: 10px 18px; font-size: 13px; border-radius: 999px; }
+
+.cofre-visor {
+  position: relative; overflow: hidden;
+  border-radius: 20px; padding: 24px 28px 28px; min-height: 216px;
+  flex: 1; display: flex; flex-direction: column; justify-content: flex-end;
+  transition: background 0.45s var(--ease);
+  background:
+    radial-gradient(48% 42% at 76% 40%, var(--g1) 0%, var(--g2) 38%, transparent 72%),
+    radial-gradient(70% 95% at 97% 72%, var(--g3) 0%, transparent 62%),
+    radial-gradient(60% 70% at 55% 90%, var(--g4) 0%, transparent 70%),
+    radial-gradient(140% 140% at 12% 2%, var(--g5) 0%, var(--g6) 30%, var(--g7) 58%, var(--g8) 100%);
+}
+
+/* Cada tema define as mesmas 8 paradas; o desenho das camadas não muda. */
+.cofre-visor, .cofre-visor[data-grad="azul"] {
+  --g1: rgba(96, 255, 226, 0.85); --g2: rgba(40, 200, 220, 0.35);
+  --g3: rgba(60, 240, 210, 0.55); --g4: rgba(24, 90, 255, 0.9);
+  --g5: #2358ff; --g6: #123bdd; --g7: #0a1f9e; --g8: #050d4d;
+}
+.cofre-visor[data-grad="verde"] {
+  --g1: rgba(190, 255, 120, 0.85); --g2: rgba(70, 230, 170, 0.38);
+  --g3: rgba(120, 255, 190, 0.55); --g4: rgba(16, 170, 120, 0.9);
+  --g5: #17c27a; --g6: #0c9a63; --g7: #076647; --g8: #032b23;
+}
+.cofre-visor[data-grad="roxo"] {
+  --g1: rgba(255, 150, 245, 0.85); --g2: rgba(190, 110, 255, 0.38);
+  --g3: rgba(230, 130, 255, 0.55); --g4: rgba(120, 50, 230, 0.9);
+  --g5: #8b3dff; --g6: #6a20e0; --g7: #45129b; --g8: #1d0650;
+}
+.cofre-visor[data-grad="laranja"] {
+  --g1: rgba(255, 226, 120, 0.9); --g2: rgba(255, 160, 80, 0.4);
+  --g3: rgba(255, 190, 90, 0.55); --g4: rgba(240, 110, 40, 0.9);
+  --g5: #ff8a2b; --g6: #ee6410; --g7: #b23f08; --g8: #571a04;
+}
+.cofre-visor[data-grad="vermelho"] {
+  --g1: rgba(255, 170, 190, 0.85); --g2: rgba(255, 110, 130, 0.38);
+  --g3: rgba(255, 130, 160, 0.55); --g4: rgba(220, 40, 80, 0.9);
+  --g5: #f2404f; --g6: #d21f42; --g7: #91112f; --g8: #430515;
+}
+.cofre-visor[data-grad="noite"] {
+  --g1: rgba(150, 210, 255, 0.55); --g2: rgba(90, 150, 210, 0.25);
+  --g3: rgba(110, 190, 235, 0.32); --g4: rgba(40, 70, 110, 0.9);
+  --g5: #37475e; --g6: #263346; --g7: #16202e; --g8: #070b12;
+}
+
+/* bolinhas do seletor nas configurações, cada uma com o próprio degradê */
+.grad-mini[data-grad="azul"] { background: linear-gradient(135deg, #2358ff 0%, #0a1f9e 55%, #4de8d0 100%); }
+.grad-mini[data-grad="verde"] { background: linear-gradient(135deg, #17c27a 0%, #076647 55%, #d6ff7a 100%); }
+.grad-mini[data-grad="roxo"] { background: linear-gradient(135deg, #8b3dff 0%, #45129b 55%, #ff96f5 100%); }
+.grad-mini[data-grad="laranja"] { background: linear-gradient(135deg, #ff8a2b 0%, #b23f08 55%, #ffe278 100%); }
+.grad-mini[data-grad="vermelho"] { background: linear-gradient(135deg, #f2404f 0%, #91112f 55%, #ffaabe 100%); }
+.grad-mini[data-grad="noite"] { background: linear-gradient(135deg, #37475e 0%, #070b12 55%, #96d2ff 100%); }
+.cofre-visor::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(60% 70% at 88% 30%, rgba(255, 255, 255, 0.18), transparent 60%);
+  pointer-events: none;
+}
+.cofre-marca { position: absolute; top: 22px; left: 26px; display: flex; }
+.cofre-marca span { width: 26px; height: 26px; border-radius: 50%; background: rgba(255, 255, 255, 0.9); }
+.cofre-marca span + span { margin-left: -12px; background: rgba(255, 255, 255, 0.22); backdrop-filter: blur(2px); }
+
+.cofre-total {
+  position: relative; z-index: 1;
+  font-family: 'Baloo 2', Manrope, sans-serif; font-weight: 700;
+  font-size: 50px; line-height: 1; color: #fff; letter-spacing: -0.5px;
+}
+.cofre-cents { font-size: 29px; opacity: 0.7; }
+.cofre-total-rot { position: relative; z-index: 1; margin-top: 8px; font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, 0.78); }
+
+.cofre-lado { display: flex; flex-direction: column; gap: 10px; }
+.cofre-stat { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 12px 14px; }
+.cofre-stat-rot { font-size: 11.5px; font-weight: 700; color: var(--muted); }
+.cofre-stat-val { font-family: 'Baloo 2', Manrope, sans-serif; font-size: 21px; font-weight: 700; color: var(--text); margin-top: 2px; }
+.cofre-stat-val.verde { color: var(--green); }
+.cofre-stat-val.vermelho { color: var(--red); }
+.cofre-stat-val.ambar { color: var(--amber); }
+.cofre-lado .btn { margin-top: auto; }
+
+.cofre-historico { display: grid; gap: 8px; margin-top: 8px; }
+.cofre-mov {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 14px; padding: 11px 14px;
+  animation: fadeUp 0.28s var(--ease) backwards;
+}
+.cofre-mov-icone {
+  width: 30px; height: 30px; flex-shrink: 0; border-radius: 10px;
+  display: grid; place-items: center; font-size: 15px; font-weight: 800;
+  background: var(--green-bg); color: var(--green);
+}
+.cofre-mov.saida .cofre-mov-icone { background: rgba(240, 86, 78, 0.12); color: var(--red); }
+.cofre-mov.pendente .cofre-mov-icone { background: var(--amber-bg); color: var(--amber); }
+.cofre-mov-txt { flex-grow: 1; min-width: 0; }
+.cofre-mov-titulo { font-size: 13.5px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cofre-mov-data { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+.cofre-mov-valor { font-family: 'Baloo 2', Manrope, sans-serif; font-size: 16px; font-weight: 700; color: var(--green); white-space: nowrap; }
+.cofre-mov.saida .cofre-mov-valor { color: var(--red); }
+.cofre-mov.pendente .cofre-mov-valor { color: var(--amber); }
+.cofre-x {
+  width: 24px; height: 24px; flex-shrink: 0; border-radius: 8px;
+  display: grid; place-items: center; font-size: 11px; color: var(--faint);
+  cursor: pointer; opacity: 0; transition: opacity 0.15s, color 0.15s;
+}
+.cofre-mov:hover .cofre-x { opacity: 1; }
+.cofre-x:hover { color: var(--red); background: rgba(240, 86, 78, 0.1); }
