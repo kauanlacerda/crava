@@ -2,6 +2,7 @@
 const I18N = {
   pt: {
     // nav / sidebar
+    colFila: 'Na fila', colFazendo: 'Fazendo', colEntregue: 'Entregue', colAprovado: 'Aprovado · a receber', colPago: 'Pago', colVazia: 'vazio', verTodos: 'ver todos', verRecentes: 'ver só recentes',
     navHoje: 'Hoje', navTrabalhos: 'Trabalhos', navInsignias: 'Insígnias',
     navCard: 'Card do mês', navConfig: 'Configurações',
     slotsTitulo: 'Disponível', slots: 'slots', slotsDe: 'de',
@@ -122,6 +123,7 @@ const I18N = {
   },
 
   en: {
+    colFila: 'Queue', colFazendo: 'Doing', colEntregue: 'Delivered', colAprovado: 'Approved · unpaid', colPago: 'Paid', colVazia: 'empty', verTodos: 'see all', verRecentes: 'recent only',
     navHoje: 'Today', navTrabalhos: 'Jobs', navInsignias: 'Badges',
     navCard: 'Monthly card', navConfig: 'Settings',
     slotsTitulo: 'Available', slots: 'slots', slotsDe: 'of',

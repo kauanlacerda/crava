@@ -1119,3 +1119,71 @@ input:focus, select:focus { border-color: var(--blue); }
 .seg, .pipe, .slot, .mm-fill, .cal-cell { transition: background 0.5s ease, transform 0.4s var(--ease); }
 .stat-card:hover, .job-row:hover { transform: translateY(-3px); }
 .btn:active, .mini-btn:active { transform: scale(0.95); transition-duration: 0.1s; }
+
+/* ================================================================
+   KANBAN DA ABA TRABALHOS
+   ================================================================ */
+.kanban {
+  display: grid; grid-template-columns: repeat(5, minmax(230px, 1fr));
+  gap: 12px; align-items: start; overflow-x: auto; padding-bottom: 6px;
+}
+.kb-col {
+  background: var(--panel-dim); border: 1px solid var(--border-dim);
+  border-radius: 18px; padding: 12px 10px 10px;
+  display: flex; flex-direction: column; gap: 10px;
+  min-height: 220px; max-height: calc(100vh - 240px);
+  transition: background 0.28s var(--ease), border-color 0.28s var(--ease);
+}
+.kb-col.alvo { background: var(--blue-bg); border-color: var(--blue); }
+.kb-col-head {
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  padding: 2px 6px 8px; border-bottom: 2px solid var(--col);
+}
+.kb-col-nome { font-size: 12px; font-weight: 800; color: var(--col); letter-spacing: 0.3px; }
+.kb-col-num {
+  font-size: 11px; font-weight: 800; color: var(--muted);
+  background: var(--panel2); border-radius: 20px; padding: 2px 8px;
+}
+.kb-col-soma { font-size: 10.5px; font-weight: 700; color: var(--faint); width: 100%; }
+.kb-lista { display: flex; flex-direction: column; gap: 9px; overflow-y: auto; padding: 2px; }
+.kb-vazio { font-size: 11px; font-weight: 600; color: var(--faint); text-align: center; padding: 16px 0; }
+.kb-vertodos {
+  font-size: 11px; font-weight: 800; color: var(--blue); text-align: center;
+  padding: 8px; cursor: pointer; border-radius: 10px; border: 1px dashed var(--border2);
+}
+.kb-vertodos:hover { background: var(--panel2); }
+
+.kb-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-left: 3px solid transparent;
+  border-radius: 14px; padding: 11px 12px;
+  display: flex; flex-direction: column; gap: 7px;
+  cursor: grab; box-shadow: var(--shadow-soft);
+  animation: fadeUp 0.4s var(--ease) backwards;
+  transition: transform 0.28s var(--ease), box-shadow 0.28s var(--ease), border-color 0.28s ease;
+}
+.kb-card:hover { transform: translateY(-2px); border-color: var(--blue-border); }
+.kb-card:active { cursor: grabbing; }
+.kb-card.arrastando { opacity: 0.45; transform: scale(0.97) rotate(1.5deg); }
+.kb-card.urg-atrasado { border-left-color: var(--red); }
+.kb-card.urg-hoje { border-left-color: var(--amber); }
+.kb-card.urg-perto { border-left-color: var(--flame); }
+.kb-titulo {
+  font-size: 13.5px; font-weight: 800; line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.kb-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; }
+.kb-cliente { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kb-prazo { margin-left: auto; font-weight: 800; white-space: nowrap; }
+.kb-rodape { display: flex; align-items: center; gap: 8px; }
+.kb-valor { font-size: 14px; font-weight: 800; }
+.kb-rodape .badge-chip { margin-left: auto; font-size: 10px; padding: 4px 8px; min-width: 0; }
+.kb-acoes {
+  display: flex; gap: 5px; flex-wrap: wrap;
+  max-height: 0; opacity: 0; overflow: hidden;
+  transition: max-height 0.32s var(--ease), opacity 0.28s ease, margin-top 0.28s var(--ease);
+}
+.kb-card:hover .kb-acoes { max-height: 60px; opacity: 1; margin-top: 2px; }
+.kb-acoes .mini-btn { font-size: 10.5px; padding: 5px 9px; }
+
+@media (max-width: 1280px) { .kanban { grid-template-columns: repeat(5, 220px); } }

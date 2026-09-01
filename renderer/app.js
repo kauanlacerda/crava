@@ -507,29 +507,158 @@ function renderCobrador() {
 }
 
 let busca = '';
+let verTodosPagos = false;
+
+// colunas do quadro
+const COLUNAS = [
+  { id: 'fila', i18n: 'colFila', cor: 'var(--muted)', filtro: j => j.status === 'aceito' },
+  { id: 'fazendo', i18n: 'colFazendo', cor: 'var(--blue)', filtro: j => j.status === 'fazendo' },
+  { id: 'entregue', i18n: 'colEntregue', cor: 'var(--amber)', filtro: j => j.status === 'entregue' && j.pagamento !== 'pago' },
+  { id: 'aprovado', i18n: 'colAprovado', cor: 'var(--flame)', filtro: j => j.status === 'aprovado' && j.pagamento !== 'pago' },
+  { id: 'pago', i18n: 'colPago', cor: 'var(--green)', filtro: j => j.pagamento === 'pago' }
+];
+
+function urgencia(j) {
+  const d = diasAte(j.prazo);
+  if (d === null) return 3;
+  if (d < 0) return 0;      // atrasado
+  if (d <= 1) return 1;     // hoje/amanhã
+  if (d <= 3) return 2;
+  return 3;
+}
+function classeUrgencia(j) {
+  if (j.pagamento === 'pago' && j.status === 'aprovado') return '';
+  const u = urgencia(j);
+  return u === 0 ? 'urg-atrasado' : u === 1 ? 'urg-hoje' : u === 2 ? 'urg-perto' : '';
+}
+
+function cardKanbanHTML(j) {
+  const [ptxt, pcls] = pgtoChip()[j.pagamento];
+  const acts = [];
+  if (j.status === 'aceito') acts.push(`<div class="mini-btn primary" onclick="event.stopPropagation();tornarAtivo('${j.id}')">${t('btnCravar')}</div>`);
+  if (j.status === 'fazendo') acts.push(`<div class="mini-btn primary" onclick="event.stopPropagation();avancar('${j.id}')">${t('btnMarcarEntregue')}</div>`);
+  if (j.status === 'entregue') acts.push(`<div class="mini-btn" onclick="event.stopPropagation();avancar('${j.id}')">${t('btnAprovado')}</div>`);
+  if (precisaLiquidar(j)) acts.push(`<div class="mini-btn liquidar" onclick="event.stopPropagation();abrirLiquidacao('${j.id}')">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</div>`);
+  acts.push(`<div class="mini-btn" onclick="event.stopPropagation();excluir('${j.id}')">✕</div>`);
+  const prazo = prazoTexto(j.prazo);
+  return `
+    <div class="kb-card ${classeUrgencia(j)}" draggable="true" data-id="${j.id}">
+      <div class="kb-titulo">${esc(j.titulo)}</div>
+      <div class="kb-meta">
+        <span class="kb-cliente">${esc(j.cliente || t('semCliente'))}</span>
+        ${prazo ? `<span class="kb-prazo ${prazoClasse(j.prazo)}">${prazo}</span>` : ''}
+      </div>
+      <div class="kb-rodape">
+        <div class="kb-valor">${fmtValor(j.valor)}</div>
+        <div class="badge-chip ${pcls} click" onclick="event.stopPropagation();ciclarPagamento('${j.id}')">${ptxt}</div>
+      </div>
+      <div class="kb-acoes">${acts.join('')}</div>
+    </div>`;
+}
+
 function renderTodos() {
-  let todos = [...S.jobs].sort((a, b) => (a.prazo || '9999') < (b.prazo || '9999') ? -1 : 1);
+  let todos = [...S.jobs];
   if (busca) todos = todos.filter(j => `${j.titulo} ${j.cliente || ''}`.toLowerCase().includes(busca));
-  if (!todos.length) {
-    $('listaTodos').innerHTML = `<div class="empty-state"><div class="big">${busca ? 'Nada encontrado' : 'Nenhum trabalho ainda'}</div><div>${busca ? `nenhum trabalho bate com "${esc(busca)}"` : 'Aceita um pedido e ele aparece aqui.'}</div></div>`;
-    return;
-  }
-  // seções: ativo → fila → esperando aprovação/pagamento → finalizados
-  const grupos = [
-    ['EM ANDAMENTO', todos.filter(j => j.status === 'fazendo'), false],
-    ['NA FILA', todos.filter(j => j.status === 'aceito'), false],
-    ['ESPERANDO APROVAÇÃO OU PAGAMENTO', todos.filter(j =>
-      (j.status === 'entregue' || j.status === 'aprovado') && j.pagamento !== 'pago'), false],
-    ['FINALIZADOS E PAGOS', todos.filter(j => j.status === 'aprovado' && j.pagamento === 'pago')
-      .sort((a, b) => (b.pagoEm || '') < (a.pagoEm || '') ? -1 : 1), true],
-    ['ENTREGUES E PAGOS (FALTA APROVAR)', todos.filter(j => j.status === 'entregue' && j.pagamento === 'pago'), false]
-  ];
-  $('listaTodos').innerHTML = grupos.map(([nome, lista, dim]) => {
-    if (!lista.length) return '';
+
+  const html = COLUNAS.map(col => {
+    let lista = todos.filter(col.filtro);
+    if (col.id === 'pago') {
+      lista.sort((a, b) => (dataRealizado(b) || '').localeCompare(dataRealizado(a) || ''));
+      if (!verTodosPagos) {
+        const limite = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+        lista = lista.filter(j => (dataRealizado(j) || '').slice(0, 10) >= limite);
+      }
+    } else {
+      lista.sort((a, b) => {
+        const u = urgencia(a) - urgencia(b);
+        if (u !== 0) return u;
+        return (a.prazo || '9999').localeCompare(b.prazo || '9999');
+      });
+    }
+    // soma por moeda
+    const soma = { BRL: 0, USD: 0, RBX: 0 };
+    for (const j of lista) soma[j.valor.m] += Number(j.valor.q);
+    const partes = [];
+    if (soma.BRL) partes.push(MOEDA.BRL.fmt(soma.BRL));
+    if (soma.USD) partes.push(MOEDA.USD.fmt(soma.USD));
+    if (soma.RBX) partes.push(MOEDA.RBX.fmt(soma.RBX));
+    const totalPagos = todos.filter(col.filtro).length;
+
     return `
-      <div class="section-label" style="margin-top:12px">${nome} · ${lista.length}</div>
-      <div class="job-grid" style="margin-top:9px">${lista.map(j => jobRowHTML(j, null, dim)).join('')}</div>`;
+      <div class="kb-col" data-col="${col.id}">
+        <div class="kb-col-head" style="--col:${col.cor}">
+          <span class="kb-col-nome">${t(col.i18n)}</span>
+          <span class="kb-col-num">${lista.length}</span>
+          <span class="kb-col-soma">${partes.join(' · ')}</span>
+        </div>
+        <div class="kb-lista">
+          ${lista.length ? lista.map(cardKanbanHTML).join('') : `<div class="kb-vazio">${t('colVazia')}</div>`}
+          ${col.id === 'pago' && totalPagos > lista.length && !verTodosPagos
+            ? `<div class="kb-vertodos" onclick="alternarVerTodos()">${t('verTodos')} (${totalPagos})</div>` : ''}
+          ${col.id === 'pago' && verTodosPagos
+            ? `<div class="kb-vertodos" onclick="alternarVerTodos()">${t('verRecentes')}</div>` : ''}
+        </div>
+      </div>`;
   }).join('');
+
+  $('listaTodos').innerHTML = `<div class="kanban">${html}</div>`;
+  ligarDragDrop();
+}
+function alternarVerTodos() { verTodosPagos = !verTodosPagos; renderTodos(); }
+
+// ---------- arrastar e soltar ----------
+let arrastando = null;
+function ligarDragDrop() {
+  $('listaTodos').querySelectorAll('.kb-card').forEach(el => {
+    el.addEventListener('dragstart', (e) => {
+      arrastando = el.dataset.id;
+      el.classList.add('arrastando');
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', el.dataset.id); } catch { }
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('arrastando');
+      arrastando = null;
+      $('listaTodos').querySelectorAll('.kb-col').forEach(c => c.classList.remove('alvo'));
+    });
+  });
+  $('listaTodos').querySelectorAll('.kb-col').forEach(col => {
+    col.addEventListener('dragover', (e) => { e.preventDefault(); col.classList.add('alvo'); });
+    col.addEventListener('dragleave', () => col.classList.remove('alvo'));
+    col.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      col.classList.remove('alvo');
+      const id = arrastando || e.dataTransfer.getData('text/plain');
+      if (id) await moverPara(id, col.dataset.col);
+    });
+  });
+}
+
+async function moverPara(id, coluna) {
+  const j = S.jobs.find(x => x.id === id);
+  if (!j) return;
+  if (coluna === 'fila') { acumularTempo(j); j.status = 'aceito'; j.pausado = false; }
+  else if (coluna === 'fazendo') { return tornarAtivo(id); }
+  else if (coluna === 'entregue') {
+    if (j.status === 'fazendo') return avancar(id);   // conta a entrega e celebra
+    j.status = 'entregue';
+    if (!j.entregueEm) j.entregueEm = new Date().toISOString();
+  }
+  else if (coluna === 'aprovado') {
+    if (!j.entregueEm) j.entregueEm = new Date().toISOString();
+    j.status = 'aprovado';
+  }
+  else if (coluna === 'pago') {
+    if (!j.entregueEm) j.entregueEm = new Date().toISOString();
+    if (j.status !== 'aprovado') j.status = 'aprovado';
+    if (j.pagamento !== 'pago') {
+      j.pagamento = 'pago';
+      j.pagoEm = new Date().toISOString();
+      if (j.valor.m === 'BRL') { j.liquidado = true; j.liquidadoEm = j.pagoEm; j.liquidadoBRL = Number(j.valor.q); abrirCofre(j); }
+      else { j.liquidado = false; abrirLiquidacao(id); }
+    }
+  }
+  await salvar();
 }
 
 // ---------- Insígnias ----------
@@ -2072,7 +2201,7 @@ document.addEventListener('keydown', (e) => {
 function esc(s) { return String(s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
 
 // expõe ações pros onclick inline
-Object.assign(window, { tornarAtivo, pausarRetomar, voltarFila, avancar, ciclarPagamento, excluir, cobrei, separeiCofre, escolherFavorita, abrirLiquidacao });
+Object.assign(window, { tornarAtivo, pausarRetomar, voltarFila, avancar, ciclarPagamento, excluir, cobrei, separeiCofre, escolherFavorita, abrirLiquidacao, alternarVerTodos });
 
 // ---------- Boot ----------
 function migrarLiquidacao() {
