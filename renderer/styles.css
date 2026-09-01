@@ -598,3 +598,7 @@ input:focus, select:focus { border-color: var(--blue); }
   font-size: 14px; text-transform: uppercase; letter-spacing: 0;
   font-weight: 400; margin-top: 2px;
 }
+
+/* chip do usuario (canto direito): quadrado arredondado, como a busca */
+.user-chip { border-radius: 14px; }
+.user-avatar { border-radius: 11px; }
