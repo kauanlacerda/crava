@@ -7,7 +7,8 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder --win --publish never",
-    "build:portatil": "electron-builder --win portable --publish never"
+    "build:portatil": "electron-builder --win portable --publish never",
+    "release": "electron-builder --win --publish always"
   },
   "author": "sak",
   "license": "MIT",
@@ -20,6 +21,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
+    "electron-updater": "^6.8.9",
     "gifenc": "^1.0.3"
   },
   "build": {
@@ -67,6 +69,18 @@
     },
     "portable": {
       "artifactName": "Crava-${version}-portatil.${ext}"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "kauanlacerda",
+        "repo": "crava",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kauanlacerda/crava.git"
   }
 }

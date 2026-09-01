@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Tray, Menu, ipcMain, globalShortcut, Notification, nativeImage, clipboard } = require('electron');
 const path = require('path');
 const Store = require('./store');
+const { autoUpdater } = require('electron-updater');
 
 let mainWin = null, widgetWin = null, captureWin = null, tray = null;
 let store = null;
@@ -162,11 +163,53 @@ if (!lock) {
 
     checarPrazos();
     setInterval(checarPrazos, 30 * 60 * 1000);
+
+    // atualizações: avisa a janela, quem decide é o usuário
+    configurarAtualizacoes();
   });
 
   app.on('window-all-closed', () => { /* vive na bandeja */ });
   app.on('before-quit', () => { isQuitting = true; globalShortcut.unregisterAll(); });
 }
+
+// ---------- Atualizações ----------
+
+function avisarJanela(canal, dados) {
+  if (mainWin && !mainWin.isDestroyed()) mainWin.webContents.send(canal, dados);
+}
+
+function configurarAtualizacoes() {
+  if (!app.isPackaged) return; // em desenvolvimento não faz sentido
+  autoUpdater.autoDownload = false;          // só baixa se o usuário mandar
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('update-available', (info) => {
+    avisarJanela('update:disponivel', { versao: info.version, notas: info.releaseNotes || '' });
+  });
+  autoUpdater.on('download-progress', (p) => {
+    avisarJanela('update:progresso', { pct: Math.round(p.percent) });
+  });
+  autoUpdater.on('update-downloaded', (info) => {
+    avisarJanela('update:pronto', { versao: info.version });
+  });
+  autoUpdater.on('error', (e) => {
+    console.warn('updater:', e && e.message);
+    avisarJanela('update:erro', { msg: String(e && e.message || e) });
+  });
+
+  const checar = () => autoUpdater.checkForUpdates().catch(() => { });
+  setTimeout(checar, 8000);                    // pouco depois de abrir
+  setInterval(checar, 4 * 60 * 60 * 1000);     // e a cada 4 horas
+}
+
+ipcMain.handle('update:baixar', async () => {
+  try { await autoUpdater.downloadUpdate(); return true; } catch { return false; }
+});
+ipcMain.on('update:instalar', () => {
+  isQuitting = true;
+  autoUpdater.quitAndInstall(false, true);
+});
+ipcMain.handle('update:versao', () => app.getVersion());
 
 // ---------- IPC ----------
 

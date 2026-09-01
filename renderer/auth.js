@@ -196,3 +196,66 @@ function agendarEnvio() {
   window.addEventListener('online', () => sincronizar(false));
   setInterval(() => { if (usuario && !modoOffline) sincronizar(false); }, 5 * 60 * 1000);
 })();
+
+// ---------- aviso de atualização ----------
+(() => {
+  const faixa = document.getElementById('faixaUpdate');
+  if (!faixa || !window.api.onUpdate) return;
+  const titulo = document.getElementById('updateTitulo');
+  const sub = document.getElementById('updateSub');
+  const btn = document.getElementById('btnUpdateAgir');
+  const barra = document.getElementById('updateBarra');
+  const fill = document.getElementById('updateBarraFill');
+  let estado = 'disponivel';
+
+  const mostrar = () => faixa.classList.add('aberta');
+  document.getElementById('btnUpdateFechar').onclick = () => faixa.classList.remove('aberta');
+
+  window.api.onUpdate((tipo, d) => {
+    if (tipo === 'disponivel') {
+      estado = 'disponivel';
+      titulo.textContent = t('updateTitulo');
+      sub.textContent = `${t('updateVersao')} ${d.versao}`;
+      btn.textContent = t('updateBaixar');
+      barra.style.display = 'none';
+      mostrar();
+    } else if (tipo === 'progresso') {
+      barra.style.display = '';
+      fill.style.width = d.pct + '%';
+      sub.textContent = `${t('updateBaixando')} ${d.pct}%`;
+    } else if (tipo === 'pronto') {
+      estado = 'pronto';
+      titulo.textContent = t('updatePronto');
+      sub.textContent = t('updateReinicia');
+      btn.textContent = t('updateInstalar');
+      barra.style.display = 'none';
+      mostrar();
+    } else if (tipo === 'erro') {
+      sub.textContent = t('updateErro');
+    }
+  });
+
+  btn.onclick = async () => {
+    if (estado === 'pronto') { window.api.instalarUpdate(); return; }
+    btn.textContent = t('aguarde');
+    barra.style.display = '';
+    fill.style.width = '0%';
+    const ok = await window.api.baixarUpdate();
+    if (!ok) { sub.textContent = t('updateErro'); btn.textContent = t('updateBaixar'); }
+  };
+
+  // mascote da faixa acompanha a cor escolhida
+  const tentarMascote = () => {
+    try {
+      const img = document.getElementById('updateMascote');
+      if (window.S && img) img.src = spr('metaModal');
+    } catch { }
+  };
+  setTimeout(tentarMascote, 1500);
+
+  // mostra a versão nas configurações
+  window.api.versaoApp().then(v => {
+    const el = document.getElementById('versaoApp');
+    if (el) el.textContent = 'v' + v;
+  }).catch(() => { });
+})();

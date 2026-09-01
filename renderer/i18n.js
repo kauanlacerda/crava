@@ -2,6 +2,10 @@
 const I18N = {
   pt: {
     // nav / sidebar
+    updateTitulo: 'Nova versão disponível', updateVersao: 'versão', updateBaixar: 'Atualizar',
+    updateBaixando: 'baixando…', updatePronto: 'Atualização pronta!',
+    updateReinicia: 'o app reinicia e já volta atualizado', updateInstalar: 'Reiniciar agora',
+    updateErro: 'não consegui baixar agora — tenta mais tarde', versaoDoApp: 'Versão',
     loginSub: 'Entra pra sincronizar seus trabalhos em qualquer PC',
     abaEntrar: 'Entrar', abaCriar: 'Criar conta', seuNome: 'Seu nome', seuUsuario: 'Nome de usuário',
     email: 'Email', senha: 'Senha', esqueciSenha: 'Esqueci minha senha',
@@ -152,6 +156,10 @@ const I18N = {
   },
 
   en: {
+    updateTitulo: 'New version available', updateVersao: 'version', updateBaixar: 'Update',
+    updateBaixando: 'downloading…', updatePronto: 'Update ready!',
+    updateReinicia: 'the app restarts and comes back updated', updateInstalar: 'Restart now',
+    updateErro: 'could not download now — try later', versaoDoApp: 'Version',
     loginSub: 'Sign in to sync your jobs across any PC',
     abaEntrar: 'Sign in', abaCriar: 'Create account', seuNome: 'Your name', seuUsuario: 'Username',
     email: 'Email', senha: 'Password', esqueciSenha: 'Forgot my password',

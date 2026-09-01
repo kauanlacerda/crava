@@ -17,5 +17,14 @@ contextBridge.exposeInMainWorld('api', {
   readMidia: (p) => ipcRenderer.invoke('midia:read', p),
   midiaExiste: (p) => ipcRenderer.invoke('midia:existe', p),
   clearMidia: (slot) => ipcRenderer.send('midia:clear', slot),
+  baixarUpdate: () => ipcRenderer.invoke('update:baixar'),
+  instalarUpdate: () => ipcRenderer.send('update:instalar'),
+  versaoApp: () => ipcRenderer.invoke('update:versao'),
+  onUpdate: (cb) => {
+    ipcRenderer.on('update:disponivel', (_e, d) => cb('disponivel', d));
+    ipcRenderer.on('update:progresso', (_e, d) => cb('progresso', d));
+    ipcRenderer.on('update:pronto', (_e, d) => cb('pronto', d));
+    ipcRenderer.on('update:erro', (_e, d) => cb('erro', d));
+  },
   quit: () => ipcRenderer.send('app:quit')
 });
