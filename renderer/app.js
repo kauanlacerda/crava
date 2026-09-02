@@ -30,6 +30,25 @@ function diasAte(prazo) {
   const zero = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
   return Math.round((alvo - zero) / 864e5); // round, e não ceil: horário de verão desloca uma hora
 }
+// Depois de entregue o prazo para de correr. Passe o trabalho inteiro quando
+// tiver, e o texto vira histórico em vez de alarme.
+function entregueJa(j) {
+  return !!j && (j.status === 'entregue' || j.status === 'aprovado' || !!j.entregueEm);
+}
+function prazoDeJob(j) {
+  if (!j) return '';
+  if (entregueJa(j)) {
+    // a linha e a coluna já dizem 'entregue'; repetir a palavra aqui era ruído.
+    // Fica só a data em que saiu.
+    if (!j.entregueEm) return '';
+    return j.entregueEm.slice(0, 10).split('-').reverse().slice(0, 2).join('/');
+  }
+  return prazoTexto(j.prazo);
+}
+function classeDeJob(j) {
+  return entregueJa(j) ? '' : prazoClasse(j && j.prazo);
+}
+
 function prazoTexto(prazo) {
   const d = diasAte(prazo);
   if (d === null) return '';
@@ -207,7 +226,12 @@ async function ciclarPagamento(id) {
     else j.liquidado = false; // robux/dólar: só vira dinheiro depois da venda/conversão
   } else {
     delete j.liquidado; delete j.liquidadoEm; delete j.liquidadoBRL;
+    // desfazer de verdade: o lembrete criado por engano vai junto
+    const i = cofreAbertoDe(j.id);
+    if (i >= 0) S.stats.cofres.splice(i, 1);
   }
+  // o chip e o resto do app precisam contar a mesma história
+  j.recebido = j.pagamento === 'pago' ? Number(j.valor.q) : 0;
   await salvar();
 }
 async function excluir(id) {
@@ -266,6 +290,9 @@ function streakVigente() {
 // ---------- Cofre ----------
 let cofreJob = null;
 function abrirCofre(j) {
+  // um trabalho só pode ter um lembrete de cofre em aberto. Sem isso, girar o
+  // chip de pagamento empilhava um lembrete por clique.
+  if (j && j.id && cofreAbertoDe(j.id) >= 0) return;
   cofreJob = j;
   const pct = S.config.cofrePct;
   const guardar = Number(j.valor.q) * pct / 100;
@@ -278,8 +305,14 @@ function abrirCofreDe(j, quanto) {
   abrirCofre({ titulo: j.titulo, valor: { q: quanto, m: j.valor.m } });
 }
 
+// há lembrete aberto pra este trabalho?
+function cofreAbertoDe(jobId) {
+  return (S.stats.cofres || []).findIndex(c => c.jobId && c.jobId === jobId && !c.confirmado);
+}
+
 function novoCofre(confirmado) {
   return {
+    jobId: cofreJob ? cofreJob.id : undefined,
     data: hoje(),
     valor: cofreJob ? fmtValor({ q: cofreJob.valor.q * S.config.cofrePct / 100, m: cofreJob.valor.m }) : '',
     q: cofreJob ? cofreJob.valor.q * S.config.cofrePct / 100 : 0,
@@ -298,6 +331,10 @@ $('cofreDepois').onclick = async () => {
   $('ovCofre').classList.remove('open');
   await salvar();
 };
+// dispensa um lembrete criado por engano
+async function dispensarCofre(idx) {
+  if (S.stats.cofres[idx]) { S.stats.cofres.splice(idx, 1); await salvar(); }
+}
 async function separeiCofre(idx) {
   const c = S.stats.cofres[idx];
   if (c) { c.confirmado = true; c.confirmadoEm = hoje(); await salvar(); }
@@ -405,7 +442,8 @@ function renderStats() {
     `<div class="seg ${i < feitos ? 'done' : i === feitos ? 'active' : ''}" style="flex-grow:1"></div>`).join('');
 
   // prazo mais próximo entre trabalhos abertos
-  const comPrazo = S.jobs.filter(j => j.prazo && (j.status !== 'aprovado' || j.pagamento !== 'pago'))
+  // entregue não tem mais prazo pra vencer: some do card de prazo mais próximo
+  const comPrazo = S.jobs.filter(j => j.prazo && !entregueJa(j))
     .sort((a, b) => a.prazo < b.prazo ? -1 : 1);
   const prox = comPrazo[0];
 
@@ -441,7 +479,7 @@ function renderStats() {
     </div>
     <div class="stat-card">
       <div class="stat-label">${t('statPrazo')}</div>
-      <div class="stat-value ${prox ? prazoClasse(prox.prazo) || 'c-amber' : ''}">${prox ? prazoTexto(prox.prazo) : '—'}</div>
+      <div class="stat-value ${prox ? prazoClasse(prox.prazo) || 'c-amber' : ''}">${prox ? prazoTexto(prox.prazo) : t('semPrazos')}</div>
       <div class="stat-sub">${prox ? esc(prox.titulo) : t('nenhumPrazo')}</div>
     </div>
     <div class="stat-card ${glow ? 'solid-green' : ''}">
@@ -563,7 +601,7 @@ function renderAtivo() {
       </div>
       <div class="ac-right">
         <div class="kv"><div class="kv-k">${t('valor')}</div><div class="kv-v">${fmtValor(j.valor)}</div></div>
-        <div class="kv"><div class="kv-k">${t('prazo')}</div><div class="kv-v ${prazoClasse(j.prazo)}" style="font-size:12px">${prazoTexto(j.prazo) || '—'}</div></div>
+        <div class="kv"><div class="kv-k">${t('prazo')}</div><div class="kv-v ${classeDeJob(j)}" style="font-size:12px">${prazoDeJob(j) || '—'}</div></div>
         <div class="kv"><div class="kv-k">${t('pagamento')}</div><div class="badge-chip ${pcls} click" onclick="ciclarPagamento('${j.id}')">${ptxt}</div></div>
         <div class="ac-spacer"></div>
         ${precisaLiquidar(j) ? `<div class="btn btn-green" onclick="abrirLiquidacao('${j.id}')" style="margin-bottom:6px">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</div>` : ''}
@@ -594,7 +632,7 @@ function jobRowHTML(j, opts = {}) {
     acts.push(`<div class="mini-btn" onclick="excluir('${j.id}')">✕</div>`);
   }
   // o motivo de estar nessa posição fica escrito, em vez de ser regra invisível
-  const motivo = `<span class="${prazoClasse(j.prazo)}">${prazoTexto(j.prazo) || t('semPrazo')}</span>`;
+  const motivo = `<span class="${classeDeJob(j)}">${prazoDeJob(j) || t('semPrazo')}</span>`;
   const marca = proximo
     ? `<div class="job-selo">${t('proximo')}</div>`
     : fila
@@ -661,6 +699,7 @@ function renderCofrePendente() {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="3"/><path d="M12 8V5"/><circle cx="12" cy="3.5" r="1.5"/><circle cx="16" cy="13" r="1"/></svg>
       <div class="cobrador-text" style="color:var(--green)">${t('cofrePendente')}${c.valor ? `: ${t('cofreSepara2')} ${esc(c.valor)}` : ''}${c.titulo ? ` — ${esc(c.titulo)}` : ''} · ${t('desde')} ${c.data.split('-').reverse().join('/')}</div>
       <div class="cobrador-btn" style="background:var(--green)" onclick="separeiCofre(${c.idx})">${t('btnSeparei')}</div>
+      <div class="cobrador-btn dispensar" onclick="dispensarCofre(${c.idx})" title="${t('dispensar')}">✕</div>
     </div>`).join('') +
     (pendentes.length > 3 ? `<div class="section-label">+ ${pendentes.length - 3} ${t('maisCofres')}</div>` : '');
 }
@@ -730,6 +769,7 @@ const COLUNAS_TRAB = [
 const colunasAtuais = () => (lente === 'pagamento' ? COLUNAS_PGTO : COLUNAS_TRAB);
 
 function urgencia(j) {
+  if (entregueJa(j)) return 3;   // entregue não tem urgência
   const d = diasAte(j.prazo);
   if (d === null) return 3;
   if (d < 0) return 0;      // atrasado
@@ -762,7 +802,7 @@ function cardKanbanHTML(j) {
     `<div class="mini-btn" onclick="event.stopPropagation();editarJob('${j.id}')" title="${t('editar')}">✎</div>`,
     `<div class="mini-btn perigo-sutil" onclick="event.stopPropagation();excluir('${j.id}')" title="${t('excluir')}">✕</div>`
   ];
-  const prazo = prazoTexto(j.prazo);
+  const prazo = prazoDeJob(j);
   const pend = est === 'a_converter' ? (j.valor.m === 'RBX' ? t('aVender') : t('aCair')) : '';
   const selo = j.status === 'aprovado' ? `<span class="kb-selo-aprovado">${t('aprovadoSelo')}</span>` : '';
   const linhaDinheiro = `
@@ -779,7 +819,7 @@ function cardKanbanHTML(j) {
       <div class="kb-titulo">${esc(j.titulo)}${selo}</div>
       <div class="kb-meta">
         <span class="kb-cliente">${esc(j.cliente || t('semCliente'))}</span>
-        ${prazo ? `<span class="kb-prazo ${prazoClasse(j.prazo)}">${prazo}</span>` : ''}
+        ${prazo ? `<span class="kb-prazo ${classeDeJob(j)}">${prazo}</span>` : ''}
       </div>
       ${linhaDinheiro}
       ${acts.length ? `<div class="kb-acoes">${acts.join('')}</div>` : ''}
@@ -1615,12 +1655,6 @@ function drawShareCard() {
   const temMidia = !SKIP_MEDIA && midia && fonte;
   if (temMidia) drawMediaLayer(ctx, fonte, (S.config.shareMidiaOp ?? 40) / 100);
   drawConteudo(ctx);
-  if (temMidia && midia.tipo === 'gif') {
-    rrect(ctx, CW - 122, 118, 60, 30, 9);
-    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.font = '700 17px Manrope, sans-serif';
-    ctx.fillText('GIF', CW - 108, 139);
-  }
 
   // controles da barra
   $('btnMidiaRemover').style.display = midia ? '' : 'none';
@@ -1803,7 +1837,8 @@ function renderDinheiro() {
       itens: guardar.map(c => ({
         id: 'c' + c.idx, titulo: c.titulo || t('cofrePendente'), cliente: '',
         info: `${t('cofreSepara2')} ${esc(c.valor || '')} · ${t('desde')} ${c.data.split('-').reverse().join('/')}`,
-        botao: t('btnSeparei'), acao: `separeiCofre(${c.idx})`
+        botao: t('btnSeparei'), acao: `separeiCofre(${c.idx})`,
+        dispensar: `dispensarCofre(${c.idx})`
       }))
     }
   ];
@@ -1823,6 +1858,7 @@ function renderDinheiro() {
               <div class="din-item-info">${it.cliente ? esc(it.cliente) + ' · ' : ''}${it.info}</div>
             </div>
             <div class="mini-btn primary" onclick="${it.acao}">${it.botao}</div>
+            ${it.dispensar ? `<div class="mini-btn din-x" onclick="${it.dispensar}" title="${t('dispensar')}">✕</div>` : ''}
           </div>`).join('')
         : `<div class="din-vazio">${g.vazio}</div>`}
       </div>
@@ -3112,7 +3148,7 @@ document.addEventListener('keydown', async (e) => {
 function esc(s) { return String(s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
 
 // expõe ações pros onclick inline
-Object.assign(window, { tornarAtivo, pausarRetomar, voltarFila, avancar, ciclarPagamento, excluir, cobrei, separeiCofre, escolherFavorita, abrirLiquidacao, alternarVerTodos, abrirRecebimento, praFila, fazerProximo, escolherMeta });
+Object.assign(window, { tornarAtivo, pausarRetomar, voltarFila, avancar, ciclarPagamento, excluir, cobrei, separeiCofre, escolherFavorita, abrirLiquidacao, alternarVerTodos, abrirRecebimento, praFila, fazerProximo, escolherMeta, dispensarCofre });
 
 // ---------- Boot ----------
 function migrarLiquidacao() {

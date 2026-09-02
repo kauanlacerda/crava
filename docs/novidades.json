@@ -1,4 +1,20 @@
 {
+  "1.3.2": {
+    "pt": [
+      "Trabalho entregue parou de contar atraso. Ele mostrava \"1d atrasado\" em vermelho mesmo já concluído, e ainda ocupava o card de prazo mais próximo. Agora mostra a data em que saiu, e o card aponta o que de fato está atrasado.",
+      "O chip de pagamento não empilha mais lembretes de cofre. Cada volta do chip criava outro lembrete do mesmo trabalho, e não havia como desfazer. Agora é um por trabalho, voltar pra \"não pago\" desfaz, e há um ✕ pra dispensar — na aba Hoje e na lista GUARDAR das Finanças.",
+      "O chip de pagamento também passou a atualizar o valor recebido. Ele dizia \"Pago\" enquanto o resto do app tratava o trabalho como não pago, e ele continuava aparecendo em COBRAR.",
+      "O selo \"GIF\" saiu do card do mês — ficava no canto mesmo com o mascote desligado.",
+      "O atalho da busca virou \"Ctrl + K\" numa linha só, em vez de empilhado."
+    ],
+    "en": [
+      "Delivered work stopped counting as late. It showed \"1d late\" in red even when already done, and still took over the nearest-deadline card. Now it shows the date it went out, and the card points at what is actually late.",
+      "The payment chip no longer stacks savings reminders. Each turn of the chip created another reminder for the same job, with no way to undo. Now it is one per job, going back to \"unpaid\" undoes it, and there is an ✕ to dismiss — on the Today tab and in the Finance SET ASIDE list.",
+      "The payment chip now updates the amount received too. It said \"Paid\" while the rest of the app treated the job as unpaid, so it kept showing up in COBRAR.",
+      "The \"GIF\" badge is gone from the monthly card — it stayed in the corner even with the mascot turned off.",
+      "The search shortcut is now \"Ctrl + K\" on a single line instead of stacked."
+    ]
+  },
   "1.3.1": {
     "pt": [
       "A tela parou de recarregar sozinha. Parado em qualquer aba, sem tocar em nada, agora o app não redesenha nada: eram três relógios mexendo na tela sem motivo — o tique de cada minuto, a busca da cotação a cada 5 minutos, e a gravação da própria cotação, que acordava todas as janelas.",

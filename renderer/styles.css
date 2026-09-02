@@ -391,6 +391,7 @@ input:focus, select:focus { border-color: var(--blue); }
   font-size: 10px; font-weight: 800; color: var(--faint);
   background: var(--panel2); border: 1px solid var(--border2);
   border-radius: 8px; padding: 4px 9px; letter-spacing: 0.5px;
+  white-space: nowrap; flex-shrink: 0;   /* "Ctrl + K" numa linha só */
 }
 .user-chip {
   display: flex; align-items: center; gap: 10px;
@@ -1617,3 +1618,14 @@ input:focus, select:focus { border-color: var(--blue); }
 .insignia-meta:hover { color: var(--blue); border-color: var(--blue-border); }
 .insignia-meta.sel { opacity: 1; color: var(--blue); border-color: var(--blue); background: var(--blue-bg); }
 .insignia.alvo { opacity: 1; border-color: var(--blue-border); }
+
+/* dispensar um lembrete de cofre criado por engano */
+.cobrador-btn.dispensar {
+  background: transparent; border: 1px solid var(--border2); color: var(--faint);
+  padding: 6px 9px; margin-left: 6px;
+}
+.cobrador-btn.dispensar:hover { border-color: var(--red); color: var(--red); }
+
+/* dispensar um lembrete na lista GUARDAR das Finanças */
+.din-item .din-x { padding: 6px 9px; color: var(--faint); }
+.din-item .din-x:hover { border-color: var(--red); color: var(--red); }
