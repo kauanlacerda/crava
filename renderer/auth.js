@@ -318,12 +318,17 @@ window.agendarEnvio = agendarEnvio;
 const URL_NOVIDADES = 'https://raw.githubusercontent.com/kauanlacerda/crava/main/docs/novidades.json';
 let novidadesCache = null;
 
+// A cópia que viaja dentro do app sempre descreve a versão instalada. A de
+// fora existe só pra pegar correções de texto feitas depois do lançamento —
+// e ela chega atrasada, porque o raw.githubusercontent guarda em cache por
+// alguns minutos. Confiar só nela fazia o app dizer "não consegui carregar"
+// justamente para quem tinha acabado de atualizar.
 async function carregarNovidades() {
   if (novidadesCache) return novidadesCache;
-  try {
-    const r = await fetch(URL_NOVIDADES, { cache: 'no-store' });
-    novidadesCache = await r.json();
-  } catch { novidadesCache = {}; }
+  let local = {}, remoto = {};
+  try { local = await (await fetch('../docs/novidades.json')).json(); } catch { }
+  try { remoto = await (await fetch(URL_NOVIDADES, { cache: 'no-store' })).json(); } catch { }
+  novidadesCache = { ...local, ...remoto };
   return novidadesCache;
 }
 

@@ -1,9 +1,17 @@
 {
-  "1.3.3": {
+  "1.3.4": {
     "nota": {
       "pt": "💚 Obrigado, Zakyen.\n\nAs correções da versão passada saíram inteiras de três gravações de tela que ele fez, apontando cada problema e dizendo o que esperava que acontecesse.\n\nBug que ninguém relata é bug que ninguém conserta.",
       "en": "💚 Thank you, Zakyen.\n\nEvery fix in the previous version came from three screen recordings he made, pointing at each problem and saying what he expected to happen.\n\nA bug nobody reports is a bug nobody fixes."
     },
+    "pt": [
+      "A lista de mudanças agora viaja dentro do app. Ela era buscada só da internet, e o GitHub guarda o arquivo em cache por alguns minutos — então quem atualizava rápido demais via \"não consegui carregar a lista de mudanças\". Agora o app já sabe o que ele mesmo mudou, e a internet só serve pra corrigir texto depois."
+    ],
+    "en": [
+      "The changelog now travels inside the app. It was fetched from the internet only, and GitHub caches the file for a few minutes — so anyone updating too quickly saw \"couldn't load the changelog\". Now the app already knows what it changed, and the internet is only used for text fixes after release."
+    ]
+  },
+  "1.3.3": {
     "pt": [
       "A tela de novidades passou a poder trazer um recado em destaque, além da lista de mudanças — é o que você está lendo aí em cima.",
       "O botão \"Ver patch\" das Configurações mostra esses recados no histórico também."
