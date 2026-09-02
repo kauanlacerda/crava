@@ -78,7 +78,7 @@ const I18N = {
     cobradorTexto: 'está entregue há', diasSemPgto: 'dias sem pagamento. Cobra',
     oCliente: 'o cliente', btnCobrei: 'Cobrei',
     cofrePendente: 'Cofre pendente', cofreSepara2: 'separa', desde: 'desde',
-    btnSeparei: 'Separei ✓', maisCofres: 'cofres pendentes',
+    btnSeparei: 'Separei ✓', maisCofres: 'lembretes ao todo', cofresEscondidos: 'escondido',
 
     // modais
     novoPedido: 'Novo pedido', oQueE: 'O que é?', cliente: 'Cliente', moeda: 'Moeda',
@@ -276,7 +276,7 @@ const I18N = {
     cobradorTexto: 'was delivered', diasSemPgto: 'days ago and is unpaid. Ping',
     oCliente: 'the client', btnCobrei: 'Pinged',
     cofrePendente: 'Savings pending', cofreSepara2: 'set aside', desde: 'since',
-    btnSeparei: 'Set aside ✓', maisCofres: 'pending savings',
+    btnSeparei: 'Set aside ✓', maisCofres: 'reminders in total', cofresEscondidos: 'hidden',
 
     novoPedido: 'New order', oQueE: 'What is it?', cliente: 'Client', moeda: 'Currency',
     salvarNaFila: 'Save to queue', pgtoAdiantado: 'Paid upfront',

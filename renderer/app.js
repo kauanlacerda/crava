@@ -701,7 +701,9 @@ function renderCofrePendente() {
       <div class="cobrador-btn" style="background:var(--green)" onclick="separeiCofre(${c.idx})">${t('btnSeparei')}</div>
       <div class="cobrador-btn dispensar" onclick="dispensarCofre(${c.idx})" title="${t('dispensar')}">✕</div>
     </div>`).join('') +
-    (pendentes.length > 3 ? `<div class="section-label">+ ${pendentes.length - 3} ${t('maisCofres')}</div>` : '');
+    (pendentes.length > 3
+      ? `<div class="section-label">+${pendentes.length - 3} ${t('cofresEscondidos')} · ${pendentes.length} ${t('maisCofres')}</div>`
+      : '');
 }
 
 function renderCobrador() {
