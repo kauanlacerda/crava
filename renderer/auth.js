@@ -353,14 +353,19 @@ async function mostrarNovidades(versao, historico) {
   document.getElementById('novidadesTitulo').textContent = historico ? t('patchTitulo') : t('novidadesTitulo');
   document.getElementById('novidadesVersao').textContent = `v${versao} · ${t('novidadesNesta')}`;
 
-  let html = linhas.length ? listaHTML(linhas) : `<ul class="novidades-lista"><li>${t('novidadesVazio')}</li></ul>`;
+  const nota = chave && todas[chave].nota ? (todas[chave].nota[idioma] || todas[chave].nota.pt) : null;
+  let html = nota ? `<div class="novidades-nota">${String(nota).replace(/</g, '&lt;').replace(/\n/g, '<br>')}</div>` : '';
+  html += linhas.length ? listaHTML(linhas) : `<ul class="novidades-lista"><li>${t('novidadesVazio')}</li></ul>`;
 
   if (historico) {
     const anteriores = Object.keys(todas).filter(k => k !== chave).sort(ordemVersao);
     if (anteriores.length) {
       html += anteriores.map(v => {
         const ls = todas[v][idioma] || todas[v].pt || [];
-        return `<div class="patch-versao">v${String(v).replace(/^v/, '')}</div>` + listaHTML(ls);
+        const nt = todas[v].nota ? (todas[v].nota[idioma] || todas[v].nota.pt) : null;
+        return `<div class="patch-versao">v${String(v).replace(/^v/, '')}</div>` +
+          (nt ? `<div class="novidades-nota pequena">${String(nt).replace(/</g, '&lt;').replace(/\n/g, '<br>')}</div>` : '') +
+          listaHTML(ls);
       }).join('');
     }
   }

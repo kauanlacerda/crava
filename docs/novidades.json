@@ -1,4 +1,18 @@
 {
+  "1.3.3": {
+    "nota": {
+      "pt": "💚 Obrigado, Zakyen.\n\nAs correções da versão passada saíram inteiras de três gravações de tela que ele fez, apontando cada problema e dizendo o que esperava que acontecesse.\n\nBug que ninguém relata é bug que ninguém conserta.",
+      "en": "💚 Thank you, Zakyen.\n\nEvery fix in the previous version came from three screen recordings he made, pointing at each problem and saying what he expected to happen.\n\nA bug nobody reports is a bug nobody fixes."
+    },
+    "pt": [
+      "A tela de novidades passou a poder trazer um recado em destaque, além da lista de mudanças — é o que você está lendo aí em cima.",
+      "O botão \"Ver patch\" das Configurações mostra esses recados no histórico também."
+    ],
+    "en": [
+      "The changelog screen can now carry a highlighted note on top of the change list — that is what you are reading above.",
+      "The \"Patch notes\" button in Settings shows those notes in the history too."
+    ]
+  },
   "1.3.2": {
     "pt": [
       "Trabalho entregue parou de contar atraso. Ele mostrava \"1d atrasado\" em vermelho mesmo já concluído, e ainda ocupava o card de prazo mais próximo. Agora mostra a data em que saiu, e o card aponta o que de fato está atrasado.",
