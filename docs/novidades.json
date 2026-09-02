@@ -6,7 +6,8 @@
       "O chip de pagamento também passou a atualizar o valor recebido. Ele dizia \"Pago\" enquanto o resto do app tratava o trabalho como não pago, e ele continuava aparecendo em COBRAR.",
       "O selo \"GIF\" saiu do card do mês — ficava no canto mesmo com o mascote desligado.",
       "O atalho da busca virou \"Ctrl + K\" numa linha só, em vez de empilhado.",
-      "O contador embaixo dos lembretes de cofre dizia \"+ 1 cofres pendentes\" quando havia 4 — a conta estava certa (1 escondido), a frase é que enganava. Agora diz quantos estão escondidos e quantos são ao todo."
+      "O contador embaixo dos lembretes de cofre dizia \"+ 1 cofres pendentes\" quando havia 4 — a conta estava certa (1 escondido), a frase é que enganava. Agora diz quantos estão escondidos e quantos são ao todo.",
+      "Botão \"Ver patch\" nas Configurações: abre o histórico de tudo que mudou, versão por versão, sem sair do app."
     ],
     "en": [
       "Delivered work stopped counting as late. It showed \"1d late\" in red even when already done, and still took over the nearest-deadline card. Now it shows the date it went out, and the card points at what is actually late.",
@@ -14,7 +15,8 @@
       "The payment chip now updates the amount received too. It said \"Paid\" while the rest of the app treated the job as unpaid, so it kept showing up in COBRAR.",
       "The \"GIF\" badge is gone from the monthly card — it stayed in the corner even with the mascot turned off.",
       "The search shortcut is now \"Ctrl + K\" on a single line instead of stacked.",
-      "The counter under the savings reminders said \"+ 1 pending savings\" when there were 4 — the math was right (1 hidden), the wording was not. It now says how many are hidden and how many there are in total."
+      "The counter under the savings reminders said \"+ 1 pending savings\" when there were 4 — the math was right (1 hidden), the wording was not. It now says how many are hidden and how many there are in total.",
+      "\"Patch notes\" button in Settings: opens the history of everything that changed, version by version, without leaving the app."
     ]
   },
   "1.3.1": {

@@ -327,19 +327,46 @@ async function carregarNovidades() {
   return novidadesCache;
 }
 
-async function mostrarNovidades(versao) {
+// compara "1.3.10" com "1.3.2" pelo número, não pelo texto
+function ordemVersao(a, b) {
+  const n = (v) => String(v).replace(/^v/, '').split('.').map(Number);
+  const x = n(a), y = n(b);
+  for (let i = 0; i < 3; i++) if ((y[i] || 0) !== (x[i] || 0)) return (y[i] || 0) - (x[i] || 0);
+  return 0;
+}
+
+function listaHTML(linhas) {
+  return `<ul class="novidades-lista">` +
+    linhas.map(l => `<li>${String(l).replace(/</g, '&lt;')}</li>`).join('') +
+    `</ul>`;
+}
+
+// versao: a que se quer ver. historico: mostra também as anteriores.
+async function mostrarNovidades(versao, historico) {
   const ov = document.getElementById('ovNovidades');
   if (!ov) return;
   const idioma = (window.S && window.S.config && window.S.config.idioma) === 'en' ? 'en' : 'pt';
   const todas = await carregarNovidades();
-  const item = todas[versao] || todas['v' + versao] || null;
-  const linhas = item ? (item[idioma] || item.pt || []) : [];
+  const chave = todas[versao] ? versao : (todas['v' + versao] ? 'v' + versao : null);
+  const linhas = chave ? (todas[chave][idioma] || todas[chave].pt || []) : [];
 
-  document.getElementById('novidadesTitulo').textContent = t('novidadesTitulo');
+  document.getElementById('novidadesTitulo').textContent = historico ? t('patchTitulo') : t('novidadesTitulo');
   document.getElementById('novidadesVersao').textContent = `v${versao} · ${t('novidadesNesta')}`;
-  document.getElementById('novidadesLista').innerHTML = linhas.length
-    ? linhas.map(l => `<li>${String(l).replace(/</g, '&lt;')}</li>`).join('')
-    : `<li>${t('novidadesVazio')}</li>`;
+
+  let html = linhas.length ? listaHTML(linhas) : `<ul class="novidades-lista"><li>${t('novidadesVazio')}</li></ul>`;
+
+  if (historico) {
+    const anteriores = Object.keys(todas).filter(k => k !== chave).sort(ordemVersao);
+    if (anteriores.length) {
+      html += anteriores.map(v => {
+        const ls = todas[v][idioma] || todas[v].pt || [];
+        return `<div class="patch-versao">v${String(v).replace(/^v/, '')}</div>` + listaHTML(ls);
+      }).join('');
+    }
+  }
+  document.getElementById('novidadesLista').outerHTML =
+    `<div class="novidades-corpo" id="novidadesLista">${html}</div>`;
+
   try { document.getElementById('novidadesMascote').src = spr('metaModal'); } catch { }
   ov.classList.add('open');
 }
@@ -415,7 +442,9 @@ async function mostrarNovidades(versao) {
   window.api.versaoApp().then(async (v) => {
     const el = document.getElementById('versaoApp');
     if (el) el.textContent = 'v' + v;
-    if (el) el.onclick = () => mostrarNovidades(v);
+    if (el) el.onclick = () => mostrarNovidades(v, true);
+    const btn = document.getElementById('btnVerPatch');
+    if (btn) btn.onclick = () => mostrarNovidades(v, true);
     await new Promise(r => setTimeout(r, 2500)); // deixa o app carregar o estado
     if (!window.S || !window.S.stats) return;
     if (window.S.stats.versaoVista === v) return;
