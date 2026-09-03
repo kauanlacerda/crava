@@ -122,6 +122,14 @@ async function salvar() {
   await window.api.saveState(S);
   render();
 }
+// Preferência visual (tema, cor, fundo do gráfico, opacidade…) não é mudança
+// de dados: grava sem acordar as outras janelas e sem refazer a aba. Quem
+// chama redesenha só a região que mudou. A nuvem recebe no próximo envio.
+async function salvarPreferencia() {
+  try { sincronizarAria(); } catch { }
+  try { await window.api.saveStateQuieto(S); } catch { }
+  try { if (window.agendarEnvio) window.agendarEnvio(); } catch { }
+}
 // a gravação silenciosa não passa pelo broadcast, então não gera render nenhum
 
 // As listas com rolagem são refeitas por innerHTML a cada render, o que jogava
@@ -347,6 +355,17 @@ const viewAberta = (nome) => {
   return !!v && v.classList.contains('open');
 };
 
+// Tema e cor do mascote vivem no CSS: trocar os atributos da raiz repinta o
+// app inteiro sem reconstruir nada. Só o que é canvas precisa ser redesenhado.
+function aplicarAparencia() {
+  document.documentElement.dataset.theme = S.config.tema || 'escuro';
+  document.documentElement.dataset.cor = S.config.cor || 'azul';
+  atualizarSprites();
+  renderConfig();
+  try { desenharViz(); } catch { }
+  if (viewAberta('share')) { try { drawShareCard(); renderMoedas(); } catch { } }
+}
+
 function render() {
   const rolagem = lerRolagem();
   // redesenho comum não repete a animação; trocar de aba, sim — é a única
@@ -393,7 +412,33 @@ function render() {
   }
 
   devolverRolagem(rolagem);
+  sincronizarAria();
   primeiraPintura = false;
+}
+
+// O que o mouse vê pela cor, o teclado e o leitor de tela recebem por atributo:
+// qual aba está aberta, qual opção está escolhida, o que cada quadrado de cor é.
+const NOMES_COR = {
+  azul: { pt: 'Azul', en: 'Blue' }, vermelho: { pt: 'Vermelho', en: 'Red' }, verde: { pt: 'Verde', en: 'Green' },
+  roxo: { pt: 'Roxo', en: 'Purple' }, laranja: { pt: 'Laranja', en: 'Orange' }, branco: { pt: 'Branco', en: 'White' },
+  rosa: { pt: 'Rosa', en: 'Pink' }, dourado: { pt: 'Dourado', en: 'Gold' }, preto: { pt: 'Preto', en: 'Black' },
+  noite: { pt: 'Noite', en: 'Night' }
+};
+function sincronizarAria() {
+  document.querySelectorAll('.nav-item').forEach(el => {
+    if (el.classList.contains('active')) el.setAttribute('aria-current', 'page'); else el.removeAttribute('aria-current');
+  });
+  document.querySelectorAll('button.sel').forEach(el => {
+    el.setAttribute('aria-pressed', 'true');
+    el.parentElement && [...el.parentElement.children].forEach(ir => { if (ir !== el && ir.tagName === 'BUTTON') ir.setAttribute('aria-pressed', 'false'); });
+  });
+  document.querySelectorAll('.toggle').forEach(el => { el.setAttribute('role', 'switch'); el.setAttribute('aria-checked', el.classList.contains('on') ? 'true' : 'false'); });
+  document.querySelectorAll('.cor-opt').forEach(el => {
+    const k = el.dataset.cor || el.dataset.grad; const nome = NOMES_COR[k];
+    if (nome && !el.getAttribute('aria-label')) el.setAttribute('aria-label', nome[IDIOMA] || nome.pt);
+  });
+  document.querySelectorAll('.fundo-opt').forEach(el => { if (!el.getAttribute('aria-label') && el.title) el.setAttribute('aria-label', el.title); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => el.setAttribute('aria-label', t(el.dataset.i18nAria)));
 }
 
 // A barra lateral passa a mostrar a meta escolhida em vez dos slots: uma coisa
@@ -518,11 +563,11 @@ function renderUser() {
   const ganhas = S.stats.insigniasGanhas || {};
   if (fav && ganhas[fav]) {
     $('userBadge').src = `../assets/insignias/${fav}.png`;
-    $('userBadge').style.display = '';
+    $('userBadge').hidden = false;
     const b = INSIGNIAS.find(x => x.id === fav);
     $('userBadge').title = b ? b.nome : '';
   } else {
-    $('userBadge').style.display = 'none';
+    $('userBadge').hidden = true;
   }
   renderFavPicker(ganhas, fav);
 }
@@ -540,7 +585,9 @@ function renderFavPicker(ganhas, fav) {
 // não foi conquistada — clicar de novo desmarca.
 async function escolherMeta(id) {
   S.config.metaInsignia = S.config.metaInsignia === id ? '' : id;
-  await salvar();
+  renderMetaInsignia();
+  if (viewAberta('insignias')) renderInsignias();
+  await salvarPreferencia();
 }
 
 function metaAtual() {
@@ -585,7 +632,7 @@ function renderAtivo() {
         <div class="empty-state" style="padding:18px 0">
           <div class="big">${t('nenhumAtivo')}</div>
           <div>${prox ? t('escolheFila') : t('filaVazia')}</div>
-          ${prox ? `<div class="btn btn-primary" style="margin-top:6px;padding:10px 22px" onclick="tornarAtivo('${prox.id}')">${t('comecar')}: ${esc(prox.titulo)}</div>` : ''}
+          ${prox ? `<button type="button" class="btn btn-primary" style="margin-top:6px;padding:10px 22px" onclick="tornarAtivo('${prox.id}')">${t('comecar')}: ${esc(prox.titulo)}</button>` : ''}
         </div>
       </div>`;
     return;
@@ -602,14 +649,14 @@ function renderAtivo() {
       <div class="ac-right">
         <div class="kv"><div class="kv-k">${t('valor')}</div><div class="kv-v">${fmtValor(j.valor)}</div></div>
         <div class="kv"><div class="kv-k">${t('prazo')}</div><div class="kv-v ${classeDeJob(j)}" style="font-size:12px">${prazoDeJob(j) || '—'}</div></div>
-        <div class="kv"><div class="kv-k">${t('pagamento')}</div><div class="badge-chip ${pcls} click" onclick="ciclarPagamento('${j.id}')">${ptxt}</div></div>
+        <div class="kv"><div class="kv-k">${t('pagamento')}</div><button type="button" class="badge-chip ${pcls} click" onclick="ciclarPagamento('${j.id}')">${ptxt}</button></div>
         <div class="ac-spacer"></div>
-        ${precisaLiquidar(j) ? `<div class="btn btn-green" onclick="abrirLiquidacao('${j.id}')" style="margin-bottom:6px">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</div>` : ''}
-        <div class="btn btn-primary" onclick="avancar('${j.id}')">✓ ${btnLabel}</div>
+        ${precisaLiquidar(j) ? `<button type="button" class="btn btn-green" onclick="abrirLiquidacao('${j.id}')" style="margin-bottom:6px">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</button>` : ''}
+        <button type="button" class="btn btn-primary" onclick="avancar('${j.id}')">✓ ${btnLabel}</button>
         <div class="btn-row">
-          ${j.pagamento !== 'pago' ? `<div class="btn btn-green" onclick="ciclarPagamento('${j.id}')" style="font-size:12px">${t('btnRecebiPgto')}</div>` : ''}
-          <div class="btn btn-ghost" onclick="pausarRetomar('${j.id}')" style="font-size:12px">${j.pausado ? t('btnRetomar') : t('btnPausar')}</div>
-          <div class="btn btn-ghost" onclick="voltarFila('${j.id}')" style="font-size:12px;max-width:70px" title="${t('btnDevolverFila')}">${t('btnFila')}</div>
+          ${j.pagamento !== 'pago' ? `<button type="button" class="btn btn-green" onclick="ciclarPagamento('${j.id}')" style="font-size:12px">${t('btnRecebiPgto')}</button>` : ''}
+          <button type="button" class="btn btn-ghost" onclick="pausarRetomar('${j.id}')" style="font-size:12px">${j.pausado ? t('btnRetomar') : t('btnPausar')}</button>
+          <button type="button" class="btn btn-ghost" onclick="voltarFila('${j.id}')" style="font-size:12px;max-width:70px" title="${t('btnDevolverFila')}">${t('btnFila')}</button>
         </div>
       </div>
     </div>`;
@@ -623,13 +670,13 @@ function jobRowHTML(j, opts = {}) {
   const { dim = false, fila = false, proximo = false } = opts;
   const [ptxt, pcls] = pgtoChip()[j.pagamento];
   const acts = [];
-  if (j.status === 'aceito') acts.push(`<div class="mini-btn primary" onclick="tornarAtivo('${j.id}')">${t('btnCravar')}</div>`);
-  if (j.status === 'entregue') acts.push(`<div class="mini-btn" onclick="avancar('${j.id}')">${t('btnAprovado')}</div>`);
-  if (precisaLiquidar(j)) acts.push(`<div class="mini-btn liquidar" onclick="abrirLiquidacao('${j.id}')">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</div>`);
-  if (fila && !proximo) acts.push(`<div class="mini-btn" onclick="fazerProximo('${j.id}')" title="${t('fazerProximo')}">⇡</div>`);
+  if (j.status === 'aceito') acts.push(`<button type="button" class="mini-btn primary" onclick="tornarAtivo('${j.id}')">${t('btnCravar')}</button>`);
+  if (j.status === 'entregue') acts.push(`<button type="button" class="mini-btn" onclick="avancar('${j.id}')">${t('btnAprovado')}</button>`);
+  if (precisaLiquidar(j)) acts.push(`<button type="button" class="mini-btn liquidar" onclick="abrirLiquidacao('${j.id}')">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</button>`);
+  if (fila && !proximo) acts.push(`<button type="button" class="mini-btn" onclick="fazerProximo('${j.id}')" title="${t('fazerProximo')}">⇡</button>`);
   if (!fila) {
-    acts.push(`<div class="mini-btn" onclick="editarJob('${j.id}')" title="${t('editar')}">✎</div>`);
-    acts.push(`<div class="mini-btn" onclick="excluir('${j.id}')">✕</div>`);
+    acts.push(`<button type="button" class="mini-btn" onclick="editarJob('${j.id}')" title="${t('editar')}">✎</button>`);
+    acts.push(`<button type="button" class="mini-btn" onclick="excluir('${j.id}')">✕</button>`);
   }
   // o motivo de estar nessa posição fica escrito, em vez de ser regra invisível
   const motivo = `<span class="${classeDeJob(j)}">${prazoDeJob(j) || t('semPrazo')}</span>`;
@@ -648,7 +695,7 @@ function jobRowHTML(j, opts = {}) {
         </div>
       </div>
       <div class="job-foot">
-        <div class="badge-chip ${pcls} click" onclick="ciclarPagamento('${j.id}')">${ptxt}</div>
+        <button type="button" class="badge-chip ${pcls} click" onclick="ciclarPagamento('${j.id}')">${ptxt}</button>
         <div class="foot-spacer"></div>
         <div class="job-value">${fmtValor(j.valor)}</div>
         <div class="job-actions">${acts.join('')}</div>
@@ -698,8 +745,8 @@ function renderCofrePendente() {
     <div class="cobrador" style="border-color:rgba(47,211,156,0.35);background:linear-gradient(rgba(47,211,156,0.08),rgba(47,211,156,0.08)),var(--panel)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="3"/><path d="M12 8V5"/><circle cx="12" cy="3.5" r="1.5"/><circle cx="16" cy="13" r="1"/></svg>
       <div class="cobrador-text" style="color:var(--green)">${t('cofrePendente')}${c.valor ? `: ${t('cofreSepara2')} ${esc(c.valor)}` : ''}${c.titulo ? ` — ${esc(c.titulo)}` : ''} · ${t('desde')} ${c.data.split('-').reverse().join('/')}</div>
-      <div class="cobrador-btn" style="background:var(--green)" onclick="separeiCofre(${c.idx})">${t('btnSeparei')}</div>
-      <div class="cobrador-btn dispensar" onclick="dispensarCofre(${c.idx})" title="${t('dispensar')}">✕</div>
+      <button type="button" class="cobrador-btn" style="background:var(--green)" onclick="separeiCofre(${c.idx})">${t('btnSeparei')}</button>
+      <button type="button" class="cobrador-btn dispensar" onclick="dispensarCofre(${c.idx})" title="${t('dispensar')}">✕</button>
     </div>`).join('') +
     (pendentes.length > 3
       ? `<div class="section-label">+${pendentes.length - 3} ${t('cofresEscondidos')} · ${pendentes.length} ${t('maisCofres')}</div>`
@@ -718,7 +765,7 @@ function renderCobrador() {
     <div class="cobrador">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
       <div class="cobrador-text">${esc(alvo.titulo)} está entregue há ${dias} dias sem pagamento. Cobra ${esc(alvo.cliente || 'o cliente')}.</div>
-      <div class="cobrador-btn" onclick="cobrei('${alvo.id}')">${t('btnCobrei')}</div>
+      <button type="button" class="cobrador-btn" onclick="cobrei('${alvo.id}')">${t('btnCobrei')}</button>
     </div>`;
 }
 
@@ -794,15 +841,15 @@ function cardKanbanHTML(j) {
   // obrigava a explorar com o mouse pra descobrir a ação principal de cada card.
   // O que mexe no registro (editar, excluir) continua no hover, longe do dedo.
   const acts = [];
-  if (j.status === 'esperando') acts.push(`<div class="mini-btn primary" onclick="event.stopPropagation();praFila('${j.id}')">${t('btnPraFila')}</div>`);
-  if (j.status === 'aceito') acts.push(`<div class="mini-btn primary" onclick="event.stopPropagation();tornarAtivo('${j.id}')">${t('btnCravar')}</div>`);
-  if (j.status === 'fazendo') acts.push(`<div class="mini-btn primary" onclick="event.stopPropagation();avancar('${j.id}')">${t('btnMarcarEntregue')}</div>`);
-  if (j.status === 'entregue') acts.push(`<div class="mini-btn" onclick="event.stopPropagation();avancar('${j.id}')">${t('btnAprovado')}</div>`);
-  if (precisaLiquidar(j)) acts.push(`<div class="mini-btn liquidar" onclick="event.stopPropagation();abrirLiquidacao('${j.id}')">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</div>`);
+  if (j.status === 'esperando') acts.push(`<button type="button" class="mini-btn primary" onclick="event.stopPropagation();praFila('${j.id}')">${t('btnPraFila')}</button>`);
+  if (j.status === 'aceito') acts.push(`<button type="button" class="mini-btn primary" onclick="event.stopPropagation();tornarAtivo('${j.id}')">${t('btnCravar')}</button>`);
+  if (j.status === 'fazendo') acts.push(`<button type="button" class="mini-btn primary" onclick="event.stopPropagation();avancar('${j.id}')">${t('btnMarcarEntregue')}</button>`);
+  if (j.status === 'entregue') acts.push(`<button type="button" class="mini-btn" onclick="event.stopPropagation();avancar('${j.id}')">${t('btnAprovado')}</button>`);
+  if (precisaLiquidar(j)) acts.push(`<button type="button" class="mini-btn liquidar" onclick="event.stopPropagation();abrirLiquidacao('${j.id}')">${j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu')}</button>`);
 
   const extras = [
-    `<div class="mini-btn" onclick="event.stopPropagation();editarJob('${j.id}')" title="${t('editar')}">✎</div>`,
-    `<div class="mini-btn perigo-sutil" onclick="event.stopPropagation();excluir('${j.id}')" title="${t('excluir')}">✕</div>`
+    `<button type="button" class="mini-btn" onclick="event.stopPropagation();editarJob('${j.id}')" title="${t('editar')}">✎</button>`,
+    `<button type="button" class="mini-btn perigo-sutil" onclick="event.stopPropagation();excluir('${j.id}')" title="${t('excluir')}">✕</button>`
   ];
   const prazo = prazoDeJob(j);
   const pend = est === 'a_converter' ? (j.valor.m === 'RBX' ? t('aVender') : t('aCair')) : '';
@@ -1301,27 +1348,27 @@ $('idiomaPicker').onclick = async (e) => {
 $('palpitePicker').onclick = async (e) => {
   silenciarAnimacoes();
   const p = e.target.dataset.palpite;
-  if (p) { S.config.palpiteCaptura = p === 'on'; await salvar(); }
+  if (p) { S.config.palpiteCaptura = p === 'on'; renderConfig(); await salvarPreferencia(); }
 };
 $('glowPicker').onclick = async (e) => {
   silenciarAnimacoes();
   const g = e.target.dataset.glow;
-  if (g) { S.config.glowCards = g === 'on'; await salvar(); }
+  if (g) { S.config.glowCards = g === 'on'; renderConfig(); renderStats(); await salvarPreferencia(); }
 };
 $('gradPicker').onclick = async (e) => {
   silenciarAnimacoes();
   const g = e.target.dataset.grad;
-  if (g) { S.config.cofreGrad = g; await salvar(); }
+  if (g) { S.config.cofreGrad = g; renderConfig(); if (viewAberta('cofre')) renderCofreView(); await salvarPreferencia(); }
 };
 $('corPicker').onclick = async (e) => {
   silenciarAnimacoes();
   const c = e.target.dataset.cor;
-  if (c) { S.config.cor = c; await salvar(); }
+  if (c) { S.config.cor = c; aplicarAparencia(); await salvarPreferencia(); }
 };
 $('temaPicker').onclick = async (e) => {
   silenciarAnimacoes();
   const t = e.target.dataset.tema;
-  if (t) { S.config.tema = t; await salvar(); }
+  if (t) { S.config.tema = t; aplicarAparencia(); await salvarPreferencia(); }
 };
 $('btnSalvarConfig').onclick = async () => {
   S.config.metaDiaria = Math.max(1, +$('cfgMeta').value || 5);
@@ -1367,7 +1414,7 @@ function abrirTutorial() {
 async function fecharTutorial() {
   $('ovTutorial').classList.remove('open');
   abrirView('hoje');
-  if (!S.config.tutorialVisto) { S.config.tutorialVisto = true; await salvar(); }
+  if (!S.config.tutorialVisto) { S.config.tutorialVisto = true; await salvarPreferencia(); }
 }
 
 $('tutProximo').onclick = async () => {
@@ -1666,6 +1713,8 @@ function drawShareCard() {
 }
 
 $('mascoteToggle').classList.add('on');
+$('mascoteToggle').tabIndex = 0;
+$('mascoteToggle').onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('mascoteToggle').click(); } };
 $('mascoteToggle').onclick = () => {
   mascoteOn = !mascoteOn;
   $('mascoteToggle').classList.toggle('on', mascoteOn);
@@ -1795,7 +1844,7 @@ $('midiaOpacidade').oninput = () => {
   S.config.shareMidiaOp = +$('midiaOpacidade').value;
   drawShareCard();
 };
-$('midiaOpacidade').onchange = async () => { await salvar(); drawShareCard(); };
+$('midiaOpacidade').onchange = async () => { await salvarPreferencia(); drawShareCard(); };
 
 
 
@@ -1859,8 +1908,8 @@ function renderDinheiro() {
               <div class="din-item-titulo">${esc(it.titulo)}</div>
               <div class="din-item-info">${it.cliente ? esc(it.cliente) + ' · ' : ''}${it.info}</div>
             </div>
-            <div class="mini-btn primary" onclick="${it.acao}">${it.botao}</div>
-            ${it.dispensar ? `<div class="mini-btn din-x" onclick="${it.dispensar}" title="${t('dispensar')}">✕</div>` : ''}
+            <button type="button" class="mini-btn primary" onclick="${it.acao}">${it.botao}</button>
+            ${it.dispensar ? `<button type="button" class="mini-btn din-x" onclick="${it.dispensar}" title="${t('dispensar')}">✕</button>` : ''}
           </div>`).join('')
         : `<div class="din-vazio">${g.vazio}</div>`}
       </div>
@@ -2045,7 +2094,7 @@ function renderCofreView() {
     const sinal = m.tipo === 'saida' ? '−' : '+';
     const cls = m.tipo === 'saida' ? 'saida' : m.tipo === 'pendente' ? 'pendente' : 'entrada';
     const acao = m.tipo === 'pendente'
-      ? `<div class="mini-btn liquidar" onclick="separeiCofre(${m.idx})">${t('btnSeparei')}</div>`
+      ? `<button type="button" class="mini-btn liquidar" onclick="separeiCofre(${m.idx})">${t('btnSeparei')}</button>`
       : `<div class="cofre-x" onclick="apagarMovCofre('${m.tipo}', ${m.idx})" title="${t('cofreApagar')}">✕</div>`;
     return `<div class="cofre-mov ${cls}">
       <div class="cofre-mov-icone">${m.tipo === 'saida' ? '↑' : '↓'}</div>
@@ -2504,12 +2553,12 @@ function desenharViz() {
 }
 
 $('vizFundo').onclick = async (e) => {
-  silenciarAnimacoes();
   const f = e.target.dataset.fundo;
-  if (!f) return;
+  if (!f || f === S.config.vizFundo) return;
   S.config.vizFundo = f;
-  await salvar();
+  pintarVizFundo();
   desenharViz();
+  await salvarPreferencia();
 };
 function pintarVizFundo() {
   const alvo = S.config.vizFundo || 'auto';
@@ -2587,9 +2636,9 @@ function renderCalendario() {
     <div class="cal-head">
       <div class="cal-titulo-app">${t('calendarioLucro')}</div>
       <div style="flex-grow:1"></div>
-      <div class="mini-btn" data-cal="prev">‹</div>
+      <button type="button" class="mini-btn" data-cal="prev">‹</button>
       <div class="cal-titulo">${nomeMes.replace('.', '')}</div>
-      <div class="mini-btn" data-cal="next">›</div>
+      <button type="button" class="mini-btn" data-cal="next">›</button>
       
       </div>
     </div>
@@ -2627,10 +2676,15 @@ const CAL_MEDIA_IMG = new Image();
 CAL_MEDIA_IMG.onload = () => renderCalendario();
 let calGifFrames = null, calGifDelays = null, calGifIdx = 0, calGifTimer = null, calGifPreparando = false;
 
-function pararCalGif() { if (calGifTimer) { clearTimeout(calGifTimer); calGifTimer = null; } }
+function pararCalGif() {
+  if (calGifTimer) { clearTimeout(calGifTimer); calGifTimer = null; }
+  const p = $('calPanel'); if (p) p.classList.remove('animado');
+}
 function iniciarCalGif() {
   pararCalGif();
   if (!calGifFrames || !calGifFrames.length) return;
+  // com GIF rodando, as células deixam o vidro (um blur por célula por quadro)
+  const p = $('calPanel'); if (p) p.classList.add('animado');
   const tick = () => {
     if ($('ovCal').classList.contains('open')) {
       calGifIdx = (calGifIdx + 1) % calGifFrames.length;
@@ -2757,9 +2811,9 @@ $('btnCalFundoRemover').onclick = async () => {
   pintarFundoCal();
 };
 $('calOpacidade').oninput = () => { S.config.calMidiaOp = +$('calOpacidade').value; pintarFundoCal(); };
-$('calOpacidade').onchange = async () => { await salvar(); };
+$('calOpacidade').onchange = async () => { await salvarPreferencia(); };
 $('calCelOp').oninput = () => { S.config.calCelOp = +$('calCelOp').value; renderCalendario(); };
-$('calCelOp').onchange = async () => { await salvar(); };
+$('calCelOp').onchange = async () => { await salvarPreferencia(); };
 
 // compartilhar: imagem do calendário (PNG no clipboard; GIF animado salvo em arquivo)
 // dados do mês corrente do calendário (mesma conta do render)

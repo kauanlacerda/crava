@@ -1,0 +1,25 @@
+/* Fontes da marca, servidas de dentro do app.
+   Antes vinham do Google Fonts em tempo de execução: sem internet o app inteiro
+   caía pra Segoe UI, e com internet havia troca visível de fonte na abertura.
+   São os subconjuntos latinos, variáveis (um arquivo cobre todos os pesos). */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500 800;
+  font-display: swap;
+  src: url('../assets/fonts/manrope-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Baloo 2';
+  font-style: normal;
+  font-weight: 700 800;
+  font-display: swap;
+  src: url('../assets/fonts/baloo2-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Press Start 2P';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('../assets/fonts/press-start-2p-latin.woff2') format('woff2');
+}

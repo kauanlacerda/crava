@@ -10,7 +10,7 @@
   --text: #e8edf4;
   --text2: #b9c2ce;
   --muted: #8b98a9;
-  --faint: #5a6676;
+  --faint: #7a8699;
   --blue: #339dff;
   --blue-bg: #1a2634;
   --blue-border: #2a5f9e;
@@ -23,7 +23,7 @@
   --amber-banner-border: rgba(245, 183, 78, 0.25);
   --red: #f0564e;
   --flame: #f5913e;
-  --btn-on-accent: #ffffff;
+  --btn-on-accent: #0b0e13;
   --shadow: none;
 }
 :root[data-theme="claro"] {
@@ -36,13 +36,13 @@
   --border-dim: #edf0f4;
   --text: #0f172a;
   --text2: #334155;
-  --muted: #64748b;
-  --faint: #94a3b8;
+  --muted: #5b6b80;
+  --faint: #637189;
   --blue: #2563eb;
   --blue-bg: #eff4ff;
   --blue-border: #bfd3f8;
   --blue-glow: rgba(37, 99, 235, 0.08);
-  --green: #059669;
+  --green: #047857;
   --green-bg: #ecfdf3;
   --amber: #b45309;
   --amber-bg: #fef3c7;
@@ -55,6 +55,22 @@
 }
 
 * { box-sizing: border-box; }
+
+/* Os controles são <button> de verdade (Tab, Enter, Espaço, leitor de tela),
+   mas vestem as mesmas classes de antes. Este reset apaga o visual nativo
+   pra que a classe mande em tudo. */
+button {
+  font: inherit; color: inherit; letter-spacing: inherit; line-height: inherit; text-align: inherit;
+  background: none; border: 0; padding: 0; margin: 0; cursor: pointer;
+  appearance: none; -webkit-appearance: none;
+}
+button:disabled { cursor: default; }
+h1, h2, h3 { margin: 0; font-size: inherit; font-weight: inherit; }
+
+/* Foco só quando vem do teclado. Campos de texto já mostram a borda azul. */
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; }
+.nav-item:focus-visible { outline-offset: -2px; }
 body {
   margin: 0;
   font-family: 'Manrope', 'Segoe UI', system-ui, sans-serif;
@@ -79,7 +95,7 @@ body {
 .logo { display: flex; align-items: center; gap: 10px; padding: 4px 10px 16px 10px; }
 .logo-mark {
   width: 32px; height: 32px; border-radius: 10px;
-  background: linear-gradient(135deg, #339dff, #1f6fd9);
+  background: linear-gradient(135deg, var(--vivid-blue-a), var(--vivid-blue-b));
   display: flex; align-items: center; justify-content: center;
 }
 .logo-name { font-size: 16px; font-weight: 800; letter-spacing: -0.2px; }
@@ -180,7 +196,7 @@ body {
 .btn-green { background: var(--green-bg); border-color: var(--green); color: var(--green); font-weight: 700; }
 .btn-row { display: flex; gap: 8px; }
 .btn-row .btn { flex-grow: 1; }
-.badge-chip { font-size: 11px; font-weight: 800; border-radius: 8px; padding: 5px 10px; white-space: nowrap; }
+.badge-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; border-radius: 8px; padding: 5px 10px; white-space: nowrap; }
 .bc-green { color: var(--green); background: var(--green-bg); }
 .bc-amber { color: var(--amber); background: var(--amber-bg); }
 .bc-muted { color: var(--muted); background: var(--panel2); }
@@ -208,6 +224,7 @@ body {
 .job-due { font-size: 11px; font-weight: 700; color: var(--muted); width: 72px; text-align: right; }
 .job-actions { display: flex; gap: 6px; }
 .mini-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   font-size: 11px; font-weight: 800; border-radius: 8px; padding: 6px 10px;
   cursor: pointer; background: var(--panel2); border: 1px solid var(--border2); color: var(--muted);
   white-space: nowrap;
@@ -264,8 +281,10 @@ input:focus, select:focus { border-color: var(--blue); }
 .config-k { font-size: 13px; font-weight: 700; }
 .config-sub { font-size: 11px; font-weight: 600; color: var(--muted); }
 .config-row input, .config-row select { width: 130px; text-align: center; }
-.tema-picker { display: flex; border: 1px solid var(--border2); border-radius: 10px; overflow: hidden; }
-.tema-opt { padding: 8px 14px; font-size: 12px; font-weight: 700; color: var(--muted); cursor: pointer; }
+.tema-picker { display: flex; flex-shrink: 0; border: 1px solid var(--border2); border-radius: 10px; overflow: hidden; }
+/* o texto da linha encolhe e quebra; o seletor à direita nunca é cortado */
+.config-row > div:first-child { min-width: 0; }
+.tema-opt { display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; font-size: 12px; font-weight: 700; color: var(--muted); cursor: pointer; }
 .tema-opt.sel { background: var(--blue-bg); color: var(--blue); font-weight: 800; }
 
 .insignias-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
@@ -316,7 +335,7 @@ input:focus, select:focus { border-color: var(--blue); }
 .user-card:hover { border-color: var(--blue-border); }
 .user-avatar {
   width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
-  background: linear-gradient(135deg, #339dff, #1f6fd9);
+  background: linear-gradient(135deg, var(--vivid-blue-a), var(--vivid-blue-b));
   display: flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 800; color: #fff;
   background-size: cover; background-position: center;
@@ -328,7 +347,7 @@ input:focus, select:focus { border-color: var(--blue); }
 /* ---------- Perfil ---------- */
 .perfil-avatar {
   width: 62px; height: 62px; border-radius: 50%; flex-shrink: 0;
-  background: linear-gradient(135deg, #339dff, #1f6fd9);
+  background: linear-gradient(135deg, var(--vivid-blue-a), var(--vivid-blue-b));
   display: flex; align-items: center; justify-content: center;
   font-size: 24px; font-weight: 800; color: #fff;
   background-size: cover; background-position: center;
@@ -351,7 +370,7 @@ input:focus, select:focus { border-color: var(--blue); }
   padding: 2px; cursor: pointer; display: flex; align-items: center;
 }
 .toggle.on { background: var(--blue); justify-content: flex-end; }
-.toggle .knob { width: 16px; height: 16px; border-radius: 50%; background: #fff; }
+.toggle .knob { display: block; width: 16px; height: 16px; border-radius: 50%; background: #fff; }
 
 /* ================================================================
    PASSE CARTOON — cores vivas, sombras, raios maiores, topbar
@@ -380,6 +399,7 @@ input:focus, select:focus { border-color: var(--blue); }
 .search {
   flex-grow: 1; display: flex; align-items: center; gap: 11px;
   background: var(--panel); border: 1px solid var(--border);
+  transition: border-color 0.16s ease;
   border-radius: 999px; padding: 12px 20px; box-shadow: var(--shadow-soft);
 }
 .search input {
@@ -549,7 +569,7 @@ input:focus, select:focus { border-color: var(--blue); }
 .stat-card:nth-child(4) { animation-delay: 0.15s; }
 
 .seg, .pipe, .slot { transition: background 0.35s ease; }
-.nav-item, .badge-chip, .mini-btn, .cobrador-btn, .toggle, .fundo-opt { transition: all 0.16s ease; }
+.nav-item, .badge-chip, .mini-btn, .cobrador-btn, .toggle, .fundo-opt { transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.16s ease, opacity 0.16s ease, box-shadow 0.16s ease; }
 .nav-item:hover { transform: translateX(2px); }
 .btn:active, .mini-btn:active, .cobrador-btn:active { transform: scale(0.96); }
 .user-avatar, .perfil-avatar { transition: transform 0.2s ease; }
@@ -651,13 +671,13 @@ input:focus, select:focus { border-color: var(--blue); }
 :root[data-theme="claro"][data-cor="vermelho"] { --blue: #dc2626; --blue-bg: #feecec; --blue-border: #f5b0ab; --blue-glow: rgba(220, 38, 38, 0.10); }
 
 :root[data-cor="verde"] { --blue: #2fd39c; --blue-bg: #10281e; --blue-border: #1f7a5c; --blue-glow: rgba(47, 211, 156, 0.14); --vivid-blue-a: #34e0a1; --vivid-blue-b: #0f9d68; }
-:root[data-theme="claro"][data-cor="verde"] { --blue: #059669; --blue-bg: #e7f8f1; --blue-border: #a7dcc7; --blue-glow: rgba(5, 150, 105, 0.10); }
+:root[data-theme="claro"][data-cor="verde"] { --blue: #047857; --blue-bg: #e7f8f1; --blue-border: #a7dcc7; --blue-glow: rgba(5, 150, 105, 0.10); }
 
 :root[data-cor="roxo"] { --blue: #a06bff; --blue-bg: #241a38; --blue-border: #5b3d99; --blue-glow: rgba(160, 107, 255, 0.14); --vivid-blue-a: #b28aff; --vivid-blue-b: #7c3aed; }
 :root[data-theme="claro"][data-cor="roxo"] { --blue: #7c3aed; --blue-bg: #f3edff; --blue-border: #d0bcf5; --blue-glow: rgba(124, 58, 237, 0.10); }
 
 :root[data-cor="laranja"] { --blue: #ff9a3d; --blue-bg: #2f2410; --blue-border: #9a6426; --blue-glow: rgba(255, 154, 61, 0.14); --vivid-blue-a: #ffab4d; --vivid-blue-b: #e86f0e; }
-:root[data-theme="claro"][data-cor="laranja"] { --blue: #e2700c; --blue-bg: #fdf0df; --blue-border: #f5c894; --blue-glow: rgba(226, 112, 12, 0.10); }
+:root[data-theme="claro"][data-cor="laranja"] { --blue: #c2410c; --blue-bg: #fdf0df; --blue-border: #f5c894; --blue-glow: rgba(226, 112, 12, 0.10); }
 
 :root[data-cor="branco"] { --blue: #eef2f7; --blue-bg: #2a303a; --blue-border: #6b7686; --blue-glow: rgba(255, 255, 255, 0.12); --vivid-blue-a: #ffffff; --vivid-blue-b: #c6cede; --btn-on-accent: #0b0e13; }
 :root[data-theme="claro"][data-cor="branco"] { --blue: #475569; --blue-bg: #eef1f5; --blue-border: #c3ccd8; --blue-glow: rgba(71, 85, 105, 0.10); --btn-on-accent: #ffffff; }
@@ -674,7 +694,7 @@ input:focus, select:focus { border-color: var(--blue); }
 .stat-card.solid-blue { box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35); }
 
 /* seletor de cor nas configs */
-.cor-picker { display: flex; gap: 9px; }
+.cor-picker { display: flex; flex-shrink: 0; gap: 9px; }
 .cor-opt {
   width: 27px; height: 27px; border-radius: 50%; cursor: pointer;
   border: 2px solid transparent; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
@@ -856,7 +876,6 @@ input:focus, select:focus { border-color: var(--blue); }
 .cal-panel { position: relative; overflow: hidden; background-size: cover; background-position: center; }
 .cal-panel > .cal-bg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
 .cal-panel.com-fundo > *:not(.cal-bg) { position: relative; z-index: 1; }
-.cal-panel.com-fundo .cal-cell { backdrop-filter: blur(2px); }
 
 /* coluna do calendario volta a esticar ate o fim; so a grade e centralizada */
 .share-wrap > .share-col:last-child { flex: 1; min-width: 420px; }
@@ -1117,7 +1136,7 @@ input:focus, select:focus { border-color: var(--blue); }
   transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease), border-color 0.35s ease;
 }
 .btn, .mini-btn, .nav-item, .badge-chip, .cor-opt, .fav-opt, .toggle, .tema-opt, .user-chip, .cal-abrir {
-  transition: all 0.28s var(--ease);
+  transition: background-color 0.28s var(--ease), color 0.28s var(--ease), border-color 0.28s var(--ease), transform 0.28s var(--ease), opacity 0.28s var(--ease), box-shadow 0.28s var(--ease), filter 0.28s var(--ease);
 }
 .overlay.open .modal { animation: popIn 0.4s var(--ease); }
 .overlay { transition: opacity 0.28s ease; }
@@ -1324,7 +1343,7 @@ input:focus, select:focus { border-color: var(--blue); }
 .login-aba {
   flex: 1; text-align: center; padding: 9px; border-radius: 9px; cursor: pointer;
   font-size: 13px; font-weight: 700; color: var(--muted);
-  transition: all 0.25s var(--ease);
+  transition: background-color 0.25s var(--ease), color 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.25s var(--ease);
 }
 .login-aba.sel { background: var(--blue); color: var(--btn-on-accent); font-weight: 800; }
 .login-campos { display: flex; flex-direction: column; gap: 10px; }
@@ -1554,7 +1573,7 @@ input:focus, select:focus { border-color: var(--blue); }
 .tut-pontos { display: flex; gap: 6px; justify-content: center; margin: 18px 0 16px; }
 .tut-ponto {
   width: 7px; height: 7px; border-radius: 50%; background: var(--border2);
-  transition: all 0.25s var(--ease);
+  transition: background-color 0.25s var(--ease), color 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.25s var(--ease);
 }
 .tut-ponto.on { background: var(--blue); width: 20px; border-radius: 4px; }
 .tut-modal .btn-row { width: 100%; }
@@ -1646,3 +1665,34 @@ input:focus, select:focus { border-color: var(--blue); }
   text-align: center;
 }
 .novidades-nota.pequena { font-size: 12px; padding: 11px 13px; margin: 0 0 10px; text-align: left; }
+
+/* ---------- calendário com GIF: o vidro por célula custa um blur por quadro ----------
+   Com imagem parada o blur é calculado uma vez e fica. Com GIF, cada quadro
+   novo obriga o navegador a refazer o desfoque de todas as células. Então,
+   enquanto o GIF roda, as células trocam o vidro por um véu escuro simples. */
+.cal-panel.com-fundo.animado .cal-cell:not(.vazia),
+.cal-panel.com-fundo.animado .cal-week { backdrop-filter: none; background: rgba(8, 10, 14, 0.42); }
+
+/* ---------- controles ----------
+   O slider tem 16px de altura por padrão; aqui ele ganha área de clique. */
+input[type="range"] { height: 24px; cursor: pointer; }
+
+/* ---------- movimento reduzido ----------
+   Quem pede menos movimento no sistema recebe o estado final na hora: as
+   entradas, os pulsos e o pulo da celebração viram troca direta de estado.
+   O que carrega significado continua: a celebração aparece, o card colado
+   ganha um contorno em vez de piscar, e os confetes (só enfeite) somem. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .confete { display: none !important; }
+  .card-colado { animation: none !important; box-shadow: 0 0 0 2px var(--blue) !important; }
+}
+
+/* foco no campo de busca: o input não tem borda própria, o invólucro mostra */
+.search:focus-within { border-color: var(--blue); }

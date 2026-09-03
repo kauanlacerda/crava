@@ -1,4 +1,26 @@
 {
+  "1.3.5": {
+    "pt": [
+      "Trocar a cor de fundo do gráfico de lucro (Auto, Preto, Branco) não recarrega mais a aba Finanças nem espreme o gráfico. A cor muda no lugar, e só ela.",
+      "Toda preferência visual agora muda no lugar: tema, cor do mascote, glow, cor do cofre, opacidade do card e do calendário, meta de insígnia. Antes cada uma refazia a tela inteira, e era isso que fazia o app parecer que recarregava sozinho.",
+      "Teclado funciona em tudo: Tab percorre os botões com um anel azul, Enter e Espaço acionam. Leitor de tela passa a saber o que cada botão, aba e opção é.",
+      "Textos discretos (prazos, estados, rótulos pequenos) ficaram mais legíveis nos dois temas. No tema escuro o botão azul passou a ter texto escuro, que lê melhor sobre o azul vivo.",
+      "As fontes agora viajam dentro do app. Sem internet a tipografia não cai pra fonte do Windows, e a abertura não troca de fonte no meio.",
+      "Se o Windows estiver com \"reduzir movimento\" ligado, o app obedece: sem entradas animadas, sem confete, sem pulo.",
+      "Calendário de lucro com GIF de fundo ficou mais leve: enquanto o GIF roda, as células deixam o efeito de vidro (que era recalculado a cada quadro) e usam um véu simples.",
+      "Quem não tem foto de perfil vê o círculo do avatar na cor do mascote, e não mais sempre azul."
+    ],
+    "en": [
+      "Changing the profit graph background (Auto, Black, White) no longer reloads the Finances tab or squeezes the graph. Only the color changes, in place.",
+      "Every visual preference now changes in place: theme, mascot color, glow, vault color, card and calendar opacity, badge goal. Each one used to rebuild the whole screen, which is what made the app look like it was reloading on its own.",
+      "Keyboard works everywhere: Tab walks through buttons with a blue focus ring, Enter and Space activate. Screen readers now know what every button, tab and option is.",
+      "Subtle text (deadlines, states, small labels) is more legible in both themes. In the dark theme the blue button now has dark text, which reads better on the vivid blue.",
+      "Fonts now ship inside the app. Without internet the typography no longer falls back to the Windows font, and startup no longer swaps fonts midway.",
+      "If Windows has \"reduce motion\" on, the app obeys: no animated entrances, no confetti, no jump.",
+      "The profit calendar with a GIF background got lighter: while the GIF plays, cells drop the glass effect (recomputed every frame) and use a simple veil.",
+      "If you have no profile photo, the avatar circle now follows the mascot color instead of always being blue."
+    ]
+  },
   "1.3.4": {
     "nota": {
       "pt": "💚 Obrigado, Zakyen.\n\nAs correções da versão passada saíram inteiras de três gravações de tela que ele fez, apontando cada problema e dizendo o que esperava que acontecesse.\n\nBug que ninguém relata é bug que ninguém conserta.",

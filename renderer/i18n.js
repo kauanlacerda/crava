@@ -1,6 +1,8 @@
 // Crava — textos em português e inglês
 const I18N = {
   pt: {
+    ariaOpacidadeFundo: 'Opacidade do fundo',
+    ariaTransparenciaCelulas: 'Transparência das células',
     // nav / sidebar
     verificarUpdate: 'Verificar atualizações', semUpdate: 'você já está na última versão ✓',
     updateTitulo: 'Nova versão disponível', updateVersao: 'versão', updateBaixar: 'Atualizar',
@@ -205,6 +207,8 @@ const I18N = {
   },
 
   en: {
+    ariaOpacidadeFundo: 'Background opacity',
+    ariaTransparenciaCelulas: 'Cell transparency',
     verificarUpdate: 'Check for updates', semUpdate: 'you are on the latest version ✓',
     updateTitulo: 'New version available', updateVersao: 'version', updateBaixar: 'Update',
     updateBaixando: 'downloading…', updatePronto: 'Update ready!',

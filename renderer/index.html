@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>Crava</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Baloo+2:wght@700;800&family=Press+Start+2P&display=swap">
+  <link rel="stylesheet" href="fonts.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -23,19 +23,19 @@
 
     <div class="login-campos">
       <div class="field so-criar" style="display:none">
-        <label data-i18n="seuNome">Seu nome</label>
+        <label for="loginNome" data-i18n="seuNome">Seu nome</label>
         <input id="loginNome" type="text" placeholder="sak" autocomplete="name">
       </div>
       <div class="field so-criar" style="display:none">
-        <label data-i18n="seuUsuario">Nome de usuário</label>
+        <label for="loginUsuario" data-i18n="seuUsuario">Nome de usuário</label>
         <input id="loginUsuario" type="text" placeholder="sak" autocomplete="username">
       </div>
       <div class="field">
-        <label data-i18n="email">Email</label>
+        <label for="loginEmail" data-i18n="email">Email</label>
         <input id="loginEmail" type="email" placeholder="voce@email.com" autocomplete="email">
       </div>
       <div class="field">
-        <label data-i18n="senha">Senha</label>
+        <label for="loginSenha" data-i18n="senha">Senha</label>
         <input id="loginSenha" type="password" placeholder="••••••••" autocomplete="current-password">
       </div>
       <div class="login-esqueci so-entrar" id="btnEsqueci" data-i18n="esqueciSenha">Esqueci minha senha</div>
@@ -43,7 +43,7 @@
 
     <div class="login-aviso" id="loginAviso"></div>
 
-    <div class="btn btn-primary login-botao" id="btnEntrar" data-i18n="abaEntrar">Entrar</div>
+    <button type="button" class="btn btn-primary login-botao" id="btnEntrar" data-i18n="abaEntrar">Entrar</button>
     <div class="login-offline" id="btnOffline" data-i18n="usarOffline">Usar sem conta (só neste PC)</div>
   </div>
 </div>
@@ -56,69 +56,69 @@
     <div class="update-sub" id="updateSub">—</div>
   </div>
   <div class="update-barra" id="updateBarra" style="display:none"><div id="updateBarraFill"></div></div>
-  <div class="mini-btn" id="btnUpdateNotas" data-i18n="verNovidades">Novidades</div>
-  <div class="btn btn-primary" id="btnUpdateAgir" style="padding:9px 18px;font-size:12.5px">Atualizar</div>
+  <button type="button" class="mini-btn" id="btnUpdateNotas" data-i18n="verNovidades">Novidades</button>
+  <button type="button" class="btn btn-primary" id="btnUpdateAgir" style="padding:9px 18px;font-size:12.5px">Atualizar</button>
   <div class="update-fechar" id="btnUpdateFechar">✕</div>
 </div>
 
 <div class="app">
-  <div class="sidebar">
+  <nav class="sidebar" aria-label="Crava">
     <div class="logo">
       <img class="logo-croc" id="logoImg" src="../assets/macaco/macaco-02.png" alt="">
       <div class="logo-name">Crava</div>
     </div>
-    <div class="nav-item active" data-view="hoje">
+    <button type="button" class="nav-item active" data-view="hoje">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       <span data-i18n="navHoje">Hoje</span>
-    </div>
-    <div class="nav-item" data-view="trabalhos">
+    </button>
+    <button type="button" class="nav-item" data-view="trabalhos">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
       <span data-i18n="navTrabalhos">Trabalhos</span>
-    </div>
-    <div class="nav-item" data-view="insignias">
+    </button>
+    <button type="button" class="nav-item" data-view="insignias">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M8.5 13L7 22l5-3 5 3-1.5-9"/></svg>
       <span data-i18n="navInsignias">Insígnias</span>
-    </div>
-    <div class="nav-item" data-view="share">
+    </button>
+    <button type="button" class="nav-item" data-view="share">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
       <span data-i18n="navCard">Finanças</span>
-    </div>
-    <div class="nav-item" data-view="cofre">
+    </button>
+    <button type="button" class="nav-item" data-view="cofre">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="12" cy="12" r="3.4"/><path d="M12 8.6V7"/><path d="M17.5 20v1.5"/><path d="M6.5 20v1.5"/></svg>
       <span data-i18n="navCofre">Cofre</span>
-    </div>
-    <div class="nav-item" data-view="config">
+    </button>
+    <button type="button" class="nav-item" data-view="config">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.7l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.7-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.7.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.7 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.7.3h.1a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 1 1.5h.1a1.6 1.6 0 0 0 1.7-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.7v.1a1.6 1.6 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.5 1z"/></svg>
       <span data-i18n="navConfig">Configurações</span>
-    </div>
+    </button>
     <div class="sidebar-spacer"></div>
-    <div class="btn btn-ghost" id="btnWidget" style="font-size:12px" data-i18n="btnWidget">Mostrar widget</div>
+    <button type="button" class="btn btn-ghost" id="btnWidget" style="font-size:12px" data-i18n="btnWidget">Mostrar widget</button>
     <div class="meta-card vazia" id="metaCard"></div>
-  </div>
+  </nav>
 
   <div class="content">
     <div class="topbar">
       <div class="search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input id="searchInput" type="text" placeholder="Buscar trabalho ou cliente…" data-i18n-ph="buscar" data-i18n-ph="buscar">
+        <input id="searchInput" type="text" data-i18n-aria="buscar" placeholder="Buscar trabalho ou cliente…" data-i18n-ph="buscar" data-i18n-ph="buscar">
         <div class="kbd-chip">Ctrl&nbsp;+&nbsp;K</div>
       </div>
-      <div class="user-chip" id="userCard">
+      <button type="button" class="user-chip" id="userCard">
         <div class="user-avatar" id="userAvatar">V</div>
         <div class="user-info">
           <div class="user-name" id="userName">você</div>
           <div class="user-sub" id="userSub">@voce</div>
         </div>
-        <img id="userBadge" class="user-badge" style="display:none" alt="">
-      </div>
+        <img id="userBadge" class="user-badge" hidden alt="">
+      </button>
     </div>
 
-  <div class="main">
+  <main class="main">
     <!-- ================= HOJE ================= -->
     <div class="view open" id="view-hoje">
       <div class="header">
         <div>
-          <div class="h-title" id="saudacao">Hoje</div>
+          <h1 class="h-title" id="saudacao">Hoje</h1>
           <div class="h-date" id="dataHoje"></div>
         </div>
         <div class="chips">
@@ -145,13 +145,13 @@
     <!-- ================= TRABALHOS ================= -->
     <div class="view" id="view-trabalhos">
       <div class="header">
-        <div class="h-title" data-i18n="navTrabalhos">Trabalhos</div>
+        <h1 class="h-title" data-i18n="navTrabalhos">Trabalhos</h1>
         <div style="display:flex;align-items:center;gap:10px">
           <div class="tema-picker" id="lentePicker">
-            <div class="tema-opt sel" data-lente="trabalho" data-i18n="lenteTrabalho">Etapa</div>
-            <div class="tema-opt" data-lente="pagamento" data-i18n="lentePagamento">Pagamento</div>
+            <button type="button" class="tema-opt sel" data-lente="trabalho" data-i18n="lenteTrabalho">Etapa</button>
+            <button type="button" class="tema-opt" data-lente="pagamento" data-i18n="lentePagamento">Pagamento</button>
           </div>
-          <div class="btn btn-primary" id="btnNovo" style="padding:10px 18px" data-i18n="btnNovoPedido">+ Novo pedido</div>
+          <button type="button" class="btn btn-primary" id="btnNovo" style="padding:10px 18px" data-i18n="btnNovoPedido">+ Novo pedido</button>
         </div>
       </div>
       <div id="listaTodos"></div>
@@ -159,26 +159,26 @@
 
     <!-- ================= INSÍGNIAS ================= -->
     <div class="view" id="view-insignias">
-      <div class="header"><div class="h-title"><span data-i18n="insigniasTitulo">Insígnias</span> <span id="insigniasCount" style="font-size:13px;color:var(--muted)"></span></div></div>
+      <div class="header"><h1 class="h-title"><span data-i18n="insigniasTitulo">Insígnias</span> <span id="insigniasCount" style="font-size:13px;color:var(--muted)"></span></h1></div>
       <div id="insigniasGrid"></div>
       <div id="historicoMeses"></div>
     </div>
 
     <!-- ================= PERFIL ================= -->
     <div class="view" id="view-perfil">
-      <div class="header"><div class="h-title" data-i18n="meuPerfil">Meu perfil</div></div>
+      <div class="header"><h1 class="h-title" data-i18n="meuPerfil">Meu perfil</h1></div>
       <div class="config-card" style="flex-direction:row;align-items:center;gap:16px">
         <div class="perfil-avatar" id="perfilAvatar">V</div>
         <div style="flex-grow:1">
           <div style="font-size:16px;font-weight:800" id="perfilNomeShow">você</div>
           <div class="config-sub" id="perfilSubShow">@voce · GFX designer</div>
         </div>
-        <div class="mini-btn primary" id="btnFoto" data-i18n="trocarFoto">Trocar foto</div>
+        <button type="button" class="mini-btn primary" id="btnFoto" data-i18n="trocarFoto">Trocar foto</button>
         <input type="file" id="fotoInput" accept="image/*" style="display:none">
       </div>
       <div class="config-card">
-        <div class="config-row"><div class="config-k" data-i18n="nomeExibicao">Nome de exibição</div><input id="pfNome" type="text" style="width:200px"></div>
-        <div class="config-row"><div class="config-k" data-i18n="usuario">Usuário</div><input id="pfUser" type="text" style="width:200px" placeholder="@voce"></div>
+        <div class="config-row"><label class="config-k" for="pfNome" data-i18n="nomeExibicao">Nome de exibição</label><input id="pfNome" type="text" style="width:200px"></div>
+        <div class="config-row"><label class="config-k" for="pfUser" data-i18n="usuario">Usuário</label><input id="pfUser" type="text" style="width:200px" placeholder="@voce"></div>
       </div>
       <div class="config-card">
         <div style="margin-bottom:4px"><div class="config-k" data-i18n="insigniaDestaque">Insígnia de destaque</div><div class="config-sub" data-i18n="insigniaDestaqueSub">Aparece ao lado do seu nome e no card do mês.</div></div>
@@ -191,54 +191,54 @@
             <div class="config-sub" id="contaStatus">—</div>
           </div>
           <div style="display:flex;gap:8px">
-            <div class="mini-btn" id="btnSincronizar" data-i18n="btnSincronizar">Sincronizar agora</div>
-            <div class="mini-btn" id="btnSair" data-i18n="btnSair">Sair</div>
-            <div class="mini-btn primary" id="btnEntrarConfig" style="display:none" data-i18n="btnEntrarConta">Entrar na conta</div>
+            <button type="button" class="mini-btn" id="btnSincronizar" data-i18n="btnSincronizar">Sincronizar agora</button>
+            <button type="button" class="mini-btn" id="btnSair" data-i18n="btnSair">Sair</button>
+            <button type="button" class="mini-btn primary" id="btnEntrarConfig" style="display:none" data-i18n="btnEntrarConta">Entrar na conta</button>
           </div>
         </div>
       </div>
-      <div class="btn btn-primary" id="btnSalvarPerfil" data-i18n="salvarPerfil">Salvar perfil</div>
+      <button type="button" class="btn btn-primary" id="btnSalvarPerfil" data-i18n="salvarPerfil">Salvar perfil</button>
     </div>
 
     <!-- ================= CARD DO MÊS ================= -->
     <div class="view" id="view-share">
-      <div class="header"><div class="h-title" data-i18n="cardMes">Finanças</div></div>
+      <div class="header"><h1 class="h-title" data-i18n="cardMes">Finanças</h1></div>
       <div class="share-wrap">
       <div class="share-col">
       <div class="canvas-wrap">
         <canvas id="shareCanvas" width="1120" height="680" style="width:560px;height:340px;border-radius:18px"></canvas>
-        <div class="cal-abrir" id="btnAbrirCal" title="Calendário de lucro do mês">
+        <button type="button" class="cal-abrir" id="btnAbrirCal" title="Calendário de lucro do mês">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="M3 10h18"/></svg>
           <span data-i18n="calendario">Calendário</span>
-        </div>
+        </button>
       </div>
       <div class="share-bar">
         <div class="share-label" style="letter-spacing:0" data-i18n="mascote">Mascote</div>
-        <div class="toggle" id="mascoteToggle"><div class="knob"></div></div>
+        <button type="button" class="toggle" id="mascoteToggle" role="switch" aria-checked="true" data-i18n-aria="mascote"><span class="knob"></span></button>
         <div class="share-sep"></div>
-        <div class="mini-btn" id="btnMidia" data-i18n="fundo">Fundo</div>
-        <div class="mini-btn" id="btnMidiaRemover" style="display:none">✕</div>
+        <button type="button" class="mini-btn" id="btnMidia" data-i18n="fundo">Fundo</button>
+        <button type="button" class="mini-btn" id="btnMidiaRemover" style="display:none">✕</button>
         <div id="opacidadeWrap" class="opacidade-wrap" style="display:none">
           <span class="share-label" style="letter-spacing:0" data-i18n="opacidade">Opacidade</span>
-          <input type="range" id="midiaOpacidade" min="10" max="100" value="40">
+          <input type="range" id="midiaOpacidade" data-i18n-aria="ariaOpacidadeFundo" min="10" max="100" value="40">
         </div>
         <input type="file" id="midiaInput" accept="image/*" style="display:none">
         <div style="flex-grow:1"></div>
-        <div class="btn btn-primary" id="btnCopiarCard" style="padding:9px 16px;font-size:12px" data-i18n="copiarImagem">Copiar imagem</div>
+        <button type="button" class="btn btn-primary" id="btnCopiarCard" style="padding:9px 16px;font-size:12px" data-i18n="copiarImagem">Copiar imagem</button>
       </div>
       </div>
       <div class="share-col viz-col">
         <canvas id="vizCanvas" width="1120" height="680" style="width:100%;height:340px;border-radius:18px"></canvas>
         <div class="share-bar">
-          <div class="mini-btn" id="vizMenos">‹ 6m</div>
-          <div class="mini-btn" id="vizMais">12m ›</div>
+          <button type="button" class="mini-btn" id="vizMenos">‹ 6m</button>
+          <button type="button" class="mini-btn" id="vizMais">12m ›</button>
           <div class="viz-fundo" id="vizFundo">
-            <div class="mini-btn sel" data-fundo="auto" data-i18n="fundoAuto">Auto</div>
-            <div class="mini-btn" data-fundo="preto" data-i18n="fundoPreto">Preto</div>
-            <div class="mini-btn" data-fundo="branco" data-i18n="fundoBranco">Branco</div>
+            <button type="button" class="mini-btn sel" data-fundo="auto" data-i18n="fundoAuto">Auto</button>
+            <button type="button" class="mini-btn" data-fundo="preto" data-i18n="fundoPreto">Preto</button>
+            <button type="button" class="mini-btn" data-fundo="branco" data-i18n="fundoBranco">Branco</button>
           </div>
           <div style="flex-grow:1"></div>
-          <div class="btn btn-primary" id="btnCopiarViz" style="padding:9px 16px;font-size:12px" data-i18n="copiarImagem">Copiar imagem</div>
+          <button type="button" class="btn btn-primary" id="btnCopiarViz" style="padding:9px 16px;font-size:12px" data-i18n="copiarImagem">Copiar imagem</button>
         </div>
       </div>
       </div>
@@ -252,7 +252,7 @@
         <div class="trio-card" id="carteiraCard">
           <div class="trio-head">
             <div class="trio-titulo" data-i18n="carteira">Carteira</div>
-            <div class="mini-btn" id="btnTrocarCarteira" data-i18n-title="trocarCartao">⇄</div>
+            <button type="button" class="mini-btn" id="btnTrocarCarteira" data-i18n-title="trocarCartao">⇄</button>
           </div>
           <div class="carteira-palco" id="carteiraPalco"></div>
           <div class="cart-pontos" id="carteiraPontos"></div>
@@ -263,9 +263,9 @@
           <div class="trio-head">
             <div class="trio-titulo" data-i18n="moedas">Moedas</div>
             <div style="flex-grow:1"></div>
-            <div class="mini-btn" data-moe="prev">‹</div>
+            <button type="button" class="mini-btn" data-moe="prev">‹</button>
             <div class="trio-mes" id="moedasMes">—</div>
-            <div class="mini-btn" data-moe="next">›</div>
+            <button type="button" class="mini-btn" data-moe="next">›</button>
           </div>
           <div class="donut-wrap">
             <canvas id="donutCanvas" width="360" height="360"></canvas>
@@ -284,7 +284,7 @@
             <div class="conv-rot" data-i18n="vcTem">Você tem</div>
             <div class="conv-linha">
               <select id="convDe"><option value="BRL">R$ Real</option><option value="USD">US$ Dólar</option><option value="RBX">Robux</option></select>
-              <input id="convValor" type="number" min="0" value="1000">
+              <input id="convValor" type="number" min="0" value="1000" data-i18n-aria="valor">
             </div>
           </div>
           <div class="conv-troca" id="btnConvTrocar" title="Inverter">⇅</div>
@@ -303,23 +303,23 @@
 
     <!-- calendário de lucro (abre pelo botão no card) -->
     <div class="overlay" id="ovCal">
-      <div class="modal modal-cal">
+      <div class="modal modal-cal" role="dialog" aria-modal="true">
         <div class="cal-panel" id="calPanel"></div>
         <div class="share-bar">
-          <div class="mini-btn" id="btnCalFundo" data-i18n="fundo">Fundo</div>
-          <div class="mini-btn" id="btnCalFundoRemover" style="display:none">✕</div>
+          <button type="button" class="mini-btn" id="btnCalFundo" data-i18n="fundo">Fundo</button>
+          <button type="button" class="mini-btn" id="btnCalFundoRemover" style="display:none">✕</button>
           <input type="file" id="calMidiaInput" accept="image/*" style="display:none">
           <div id="calOpacidadeWrap" class="opacidade-wrap" style="display:none">
             <span class="share-label" style="letter-spacing:0" data-i18n="fundo">Fundo</span>
-            <input type="range" id="calOpacidade" min="10" max="100" value="35">
+            <input type="range" id="calOpacidade" data-i18n-aria="ariaOpacidadeFundo" min="10" max="100" value="35">
           </div>
           <div id="calCelWrap" class="opacidade-wrap" style="display:none">
             <span class="share-label" style="letter-spacing:0" data-i18n="celulas">Células</span>
-            <input type="range" id="calCelOp" min="0" max="100" value="100">
+            <input type="range" id="calCelOp" data-i18n-aria="ariaTransparenciaCelulas" min="0" max="100" value="100">
           </div>
           <div style="flex-grow:1"></div>
-          <div class="btn btn-ghost" id="btnFecharCal" style="padding:9px 16px;font-size:12px;max-width:110px" data-i18n="btnFechar">Fechar</div>
-          <div class="btn btn-primary" id="btnCompartilharCal" style="padding:9px 16px;font-size:12px" data-i18n="salvarImagem">Salvar imagem</div>
+          <button type="button" class="btn btn-ghost" id="btnFecharCal" style="padding:9px 16px;font-size:12px;max-width:110px" data-i18n="btnFechar">Fechar</button>
+          <button type="button" class="btn btn-primary" id="btnCompartilharCal" style="padding:9px 16px;font-size:12px" data-i18n="salvarImagem">Salvar imagem</button>
         </div>
       </div>
     </div>
@@ -333,7 +333,7 @@
               <div class="cofre-hero-titulo" data-i18n="cofreTitulo">Cofre</div>
               <div class="cofre-hero-sub" id="cofreSubtitulo">—</div>
             </div>
-            <div class="btn btn-primary cofre-hero-btn" id="btnCofreGuardar" data-i18n="cofreGuardar">Guardar</div>
+            <button type="button" class="btn btn-primary cofre-hero-btn" id="btnCofreGuardar" data-i18n="cofreGuardar">Guardar</button>
           </div>
           <div class="cofre-visor" id="cofreVisor" data-grad="azul">
             <div class="cofre-marca"><span></span><span></span></div>
@@ -358,7 +358,7 @@
             <div class="cofre-stat-rot" data-i18n="cofreAguardando">Esperando você separar</div>
             <div class="cofre-stat-val ambar" id="cofrePendentesN">0</div>
           </div>
-          <div class="btn btn-ghost" id="btnCofreRetirar" data-i18n="cofreRetirar">Retirar do cofre</div>
+          <button type="button" class="btn btn-ghost" id="btnCofreRetirar" data-i18n="cofreRetirar">Retirar do cofre</button>
         </div>
       </div>
       <div class="section-label" data-i18n="cofreHistoricoRot">Movimentações</div>
@@ -366,162 +366,162 @@
     </div>
 
     <div class="view" id="view-config">
-      <div class="header"><div class="h-title" data-i18n="config">Configurações</div></div>
+      <div class="header"><h1 class="h-title" data-i18n="config">Configurações</h1></div>
       <div class="config-card">
         <div class="config-row">
           <div><div class="config-k" data-i18n="tema">Tema</div><div class="config-sub" data-i18n="temaSub">Como o app aparece pra você</div></div>
           <div class="tema-picker" id="temaPicker">
-            <div class="tema-opt" data-tema="escuro" data-i18n="escuro">Escuro</div>
-            <div class="tema-opt" data-tema="claro" data-i18n="claro">Claro</div>
+            <button type="button" class="tema-opt" data-tema="escuro" data-i18n="escuro">Escuro</button>
+            <button type="button" class="tema-opt" data-tema="claro" data-i18n="claro">Claro</button>
           </div>
         </div>
         <div class="config-row">
           <div><div class="config-k" data-i18n="idioma">Idioma</div><div class="config-sub" data-i18n="idiomaSub">Language of the app</div></div>
           <div class="tema-picker" id="idiomaPicker">
-            <div class="tema-opt" data-idioma="pt">PT</div>
-            <div class="tema-opt" data-idioma="en">EN</div>
+            <button type="button" class="tema-opt" data-idioma="pt">PT</button>
+            <button type="button" class="tema-opt" data-idioma="en">EN</button>
           </div>
         </div>
         <div class="config-row">
           <div><div class="config-k" data-i18n="corMascote">Cor do mascote</div><div class="config-sub" data-i18n="corMascoteSub">Muda o macaco, os ícones e o esquema de cores do app</div></div>
           <div class="cor-picker" id="corPicker">
-            <div class="cor-opt" data-cor="azul" style="background:#339dff"></div>
-            <div class="cor-opt" data-cor="vermelho" style="background:#ff6b5e"></div>
-            <div class="cor-opt" data-cor="verde" style="background:#2fd39c"></div>
-            <div class="cor-opt" data-cor="roxo" style="background:#a06bff"></div>
-            <div class="cor-opt" data-cor="laranja" style="background:#ff9a3d"></div>
-            <div class="cor-opt" data-cor="branco" style="background:#eef2f7"></div>
+            <button type="button" class="cor-opt" data-cor="azul" style="background:#339dff"></button>
+            <button type="button" class="cor-opt" data-cor="vermelho" style="background:#ff6b5e"></button>
+            <button type="button" class="cor-opt" data-cor="verde" style="background:#2fd39c"></button>
+            <button type="button" class="cor-opt" data-cor="roxo" style="background:#a06bff"></button>
+            <button type="button" class="cor-opt" data-cor="laranja" style="background:#ff9a3d"></button>
+            <button type="button" class="cor-opt" data-cor="branco" style="background:#eef2f7"></button>
           </div>
         </div>
         <div class="config-row">
           <div><div class="config-k" data-i18n="gradCofre">Cor do cofre</div><div class="config-sub" data-i18n="gradCofreSub">O degradê do card grande na aba Cofre</div></div>
           <div class="cor-picker" id="gradPicker">
-            <div class="cor-opt grad-mini" data-grad="azul"></div>
-            <div class="cor-opt grad-mini" data-grad="verde"></div>
-            <div class="cor-opt grad-mini" data-grad="roxo"></div>
-            <div class="cor-opt grad-mini" data-grad="laranja"></div>
-            <div class="cor-opt grad-mini" data-grad="vermelho"></div>
-            <div class="cor-opt grad-mini" data-grad="noite"></div>
+            <button type="button" class="cor-opt grad-mini" data-grad="azul"></button>
+            <button type="button" class="cor-opt grad-mini" data-grad="verde"></button>
+            <button type="button" class="cor-opt grad-mini" data-grad="roxo"></button>
+            <button type="button" class="cor-opt grad-mini" data-grad="laranja"></button>
+            <button type="button" class="cor-opt grad-mini" data-grad="vermelho"></button>
+            <button type="button" class="cor-opt grad-mini" data-grad="noite"></button>
           </div>
         </div>
         <div class="config-row">
           <div><div class="config-k" data-i18n="palpite">Adivinhar na captura rápida</div><div class="config-sub" data-i18n="palpiteSub">Ao abrir com Ctrl+Shift+N, lê o nome da janela do Discord e o texto copiado, e sugere cliente, valor e prazo. Nada é preenchido sozinho — você clica na sugestão pra usar.</div></div>
           <div class="tema-picker" id="palpitePicker">
-            <div class="tema-opt" data-palpite="on" data-i18n="ligado">Ligado</div>
-            <div class="tema-opt" data-palpite="off" data-i18n="desligado">Desligado</div>
+            <button type="button" class="tema-opt" data-palpite="on" data-i18n="ligado">Ligado</button>
+            <button type="button" class="tema-opt" data-palpite="off" data-i18n="desligado">Desligado</button>
           </div>
         </div>
         <div class="config-row">
           <div><div class="config-k" data-i18n="glow">Glow da tela inicial</div><div class="config-sub" data-i18n="glowSub">Cards coloridos e vibrantes.</div></div>
           <div class="tema-picker" id="glowPicker">
-            <div class="tema-opt" data-glow="on" data-i18n="ligado">Ligado</div>
-            <div class="tema-opt" data-glow="off" data-i18n="desligado">Desligado</div>
+            <button type="button" class="tema-opt" data-glow="on" data-i18n="ligado">Ligado</button>
+            <button type="button" class="tema-opt" data-glow="off" data-i18n="desligado">Desligado</button>
           </div>
         </div>
       </div>
       <div class="config-card">
-        <div class="config-row"><div class="config-k" data-i18n="metaDiaria">Meta diária (trabalhos)</div><input id="cfgMeta" type="number" min="1" max="20"></div>
-        <div class="config-row"><div class="config-k" data-i18n="slotsSimultaneos">Slots simultâneos</div><input id="cfgSlots" type="number" min="1" max="10"></div>
+        <div class="config-row"><label class="config-k" for="cfgMeta" data-i18n="metaDiaria">Meta diária (trabalhos)</label><input id="cfgMeta" type="number" min="1" max="20"></div>
+        <div class="config-row"><label class="config-k" for="cfgSlots" data-i18n="slotsSimultaneos">Slots simultâneos</label><input id="cfgSlots" type="number" min="1" max="10"></div>
       </div>
       <div class="config-card">
-        <div class="config-row"><div class="config-k" data-i18n="cofrePct">Cofre (% de cada pagamento)</div><input id="cfgCofre" type="number" min="0" max="90"></div>
+        <div class="config-row"><label class="config-k" for="cfgCofre" data-i18n="cofrePct">Cofre (% de cada pagamento)</label><input id="cfgCofre" type="number" min="0" max="90"></div>
         <div class="config-row">
           <div>
             <div class="config-k" data-i18n="cotacaoUSD">Cotação US$ → R$</div>
             <div class="config-sub cotacao-selo" id="cfgUSDaoVivo">—</div>
           </div>
-          <input id="cfgUSD" type="number" step="0.01">
+          <input id="cfgUSD" type="number" step="0.01" data-i18n-aria="cotacaoUSD">
         </div>
-        <div class="config-row"><div class="config-k" data-i18n="cotacaoRBX">1.000 Robux → R$</div><input id="cfgRBX" type="number" step="0.01"></div>
+        <div class="config-row"><label class="config-k" for="cfgRBX" data-i18n="cotacaoRBX">1.000 Robux → R$</label><input id="cfgRBX" type="number" step="0.01"></div>
       </div>
-      <div class="btn btn-primary" id="btnSalvarConfig" data-i18n="salvarConfig">Salvar configurações</div>
+      <button type="button" class="btn btn-primary" id="btnSalvarConfig" data-i18n="salvarConfig">Salvar configurações</button>
       <div class="config-card">
         <div class="config-row">
           <div>
             <div class="config-k" data-i18n="tutRever">Como o Crava funciona</div>
             <div class="config-sub" data-i18n="tutReverSub">A apresentação rápida que aparece na primeira vez</div>
           </div>
-          <div class="mini-btn" id="btnVerTutorial" data-i18n="tutVer">Ver de novo</div>
+          <button type="button" class="mini-btn" id="btnVerTutorial" data-i18n="tutVer">Ver de novo</button>
         </div>
       </div>
       <div class="config-card">
         <div class="config-row">
           <div><div class="config-k" data-i18n="versaoDoApp">Versão</div><div class="config-sub" id="versaoApp">—</div></div>
           <div style="display:flex;gap:6px">
-            <div class="mini-btn" id="btnVerPatch" data-i18n="verPatch">Ver patch</div>
-            <div class="mini-btn" id="btnVerificarUpdate" data-i18n="verificarUpdate">Verificar atualizações</div>
+            <button type="button" class="mini-btn" id="btnVerPatch" data-i18n="verPatch">Ver patch</button>
+            <button type="button" class="mini-btn" id="btnVerificarUpdate" data-i18n="verificarUpdate">Verificar atualizações</button>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </main>
   </div>
 </div>
 
 <!-- ================= MODAL: tutorial ================= -->
 <div class="overlay" id="ovTutorial">
-  <div class="modal tut-modal">
+  <div class="modal tut-modal" role="dialog" aria-modal="true">
     <img class="tut-mascote" id="tutMascote" src="../assets/macaco/azul/macaco-03.png" alt="">
     <div class="tut-titulo" id="tutTitulo">—</div>
     <div class="tut-texto" id="tutTexto">—</div>
     <div class="tut-pontos" id="tutPontos"></div>
     <div class="btn-row">
-      <div class="btn btn-ghost" id="tutPular" data-i18n="tutPular">Pular</div>
-      <div class="btn btn-primary" id="tutProximo" data-i18n="tutProximo">Próximo</div>
+      <button type="button" class="btn btn-ghost" id="tutPular" data-i18n="tutPular">Pular</button>
+      <button type="button" class="btn btn-primary" id="tutProximo" data-i18n="tutProximo">Próximo</button>
     </div>
   </div>
 </div>
 
 <!-- ================= MODAL: guardar no cofre ================= -->
 <div class="overlay" id="ovGuardar">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-title" data-i18n="cofreGuardarTitulo">Guardar no cofre</div>
-    <div class="field"><label data-i18n="valor">Valor</label><input id="guardarValor" type="number" min="0" step="0.01" placeholder="0,00"></div>
-    <div class="field"><label data-i18n="cofreDeOnde">De onde veio? (opcional)</label><input id="guardarMotivo" type="text" placeholder="sobrou do mês"></div>
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:380px">
+    <h2 class="modal-title" data-i18n="cofreGuardarTitulo">Guardar no cofre</h2>
+    <div class="field"><label for="guardarValor" data-i18n="valor">Valor</label><input id="guardarValor" type="number" min="0" step="0.01" placeholder="0,00"></div>
+    <div class="field"><label for="guardarMotivo" data-i18n="cofreDeOnde">De onde veio? (opcional)</label><input id="guardarMotivo" type="text" placeholder="sobrou do mês"></div>
     <div class="btn-row">
-      <div class="btn btn-ghost" id="guardarCancela" data-i18n="cancelar">Cancelar</div>
-      <div class="btn btn-primary" id="guardarOk" data-i18n="cofreGuardar">Guardar</div>
+      <button type="button" class="btn btn-ghost" id="guardarCancela" data-i18n="cancelar">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="guardarOk" data-i18n="cofreGuardar">Guardar</button>
     </div>
   </div>
 </div>
 
 <!-- ================= MODAL: retirar do cofre ================= -->
 <div class="overlay" id="ovRetirar">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-title" data-i18n="cofreRetirarTitulo">Tirar do cofre</div>
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:380px">
+    <h2 class="modal-title" data-i18n="cofreRetirarTitulo">Tirar do cofre</h2>
     <div class="config-sub" id="retirarDisponivel">—</div>
-    <div class="field" style="margin-top:12px"><label data-i18n="valor">Valor</label><input id="retirarValor" type="number" min="0" step="0.01" placeholder="0,00"></div>
-    <div class="field"><label data-i18n="cofreProQue">Pra quê? (opcional)</label><input id="retirarMotivo" type="text" placeholder="notebook novo"></div>
+    <div class="field" style="margin-top:12px"><label for="retirarValor" data-i18n="valor">Valor</label><input id="retirarValor" type="number" min="0" step="0.01" placeholder="0,00"></div>
+    <div class="field"><label for="retirarMotivo" data-i18n="cofreProQue">Pra quê? (opcional)</label><input id="retirarMotivo" type="text" placeholder="notebook novo"></div>
     <div class="btn-row">
-      <div class="btn btn-ghost" id="retirarCancela" data-i18n="cancelar">Cancelar</div>
-      <div class="btn btn-primary" id="retirarOk" data-i18n="cofreRetirar2">Retirar</div>
+      <button type="button" class="btn btn-ghost" id="retirarCancela" data-i18n="cancelar">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="retirarOk" data-i18n="cofreRetirar2">Retirar</button>
     </div>
   </div>
 </div>
 
 <!-- ================= MODAL: novidades da versão ================= -->
 <div class="overlay" id="ovNovidades">
-  <div class="modal" style="max-width:460px">
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:460px">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
       <img id="novidadesMascote" src="../assets/macaco/azul/macaco-06.png" style="width:44px;height:44px;image-rendering:pixelated" alt="">
       <div>
-        <div class="modal-title" style="margin:0" id="novidadesTitulo">Novidades</div>
+        <h2 class="modal-title" style="margin:0" id="novidadesTitulo">Novidades</h2>
         <div class="config-sub" id="novidadesVersao">—</div>
       </div>
     </div>
     <ul class="novidades-lista" id="novidadesLista"></ul>
-    <div class="btn btn-primary" id="btnNovidadesOk" data-i18n="entendi">Entendi</div>
+    <button type="button" class="btn btn-primary" id="btnNovidadesOk" data-i18n="entendi">Entendi</button>
   </div>
 </div>
 
 <!-- ================= MODAL: novo pedido ================= -->
 <div class="overlay" id="ovNovo">
-  <div class="modal">
-    <div class="modal-title" id="npTituloModal" data-i18n="novoPedido">Novo pedido</div>
-    <div class="field"><label data-i18n="oQueE">O que é?</label><input id="npTitulo" type="text" placeholder="Thumbnail — nome do jogo"></div>
+  <div class="modal" role="dialog" aria-modal="true">
+    <h2 class="modal-title" id="npTituloModal" data-i18n="novoPedido">Novo pedido</h2>
+    <div class="field"><label for="npTitulo" data-i18n="oQueE">O que é?</label><input id="npTitulo" type="text" placeholder="Thumbnail — nome do jogo"></div>
     <div class="field-row">
-      <div class="field"><label data-i18n="cliente">Cliente</label><input id="npCliente" type="text" placeholder="@ do cliente"></div>
-      <div class="field" style="max-width:110px"><label data-i18n="valor">Valor</label><input id="npValor" type="number" min="0" placeholder="0"></div>
+      <div class="field"><label for="npCliente" data-i18n="cliente">Cliente</label><input id="npCliente" type="text" placeholder="@ do cliente"></div>
+      <div class="field" style="max-width:110px"><label for="npValor" data-i18n="valor">Valor</label><input id="npValor" type="number" min="0" placeholder="0"></div>
       <div class="field" style="max-width:150px"><label data-i18n="moeda">Moeda</label>
         <div class="moeda-picker" id="npMoeda">
           <div class="moeda-opt sel" data-m="BRL">R$</div>
@@ -531,8 +531,8 @@
       </div>
     </div>
     <div class="field-row">
-      <div class="field"><label data-i18n="prazo">Prazo</label><input id="npPrazo" type="date"></div>
-      <div class="field"><label data-i18n="pagamento">Pagamento</label>
+      <div class="field"><label for="npPrazo" data-i18n="prazo">Prazo</label><input id="npPrazo" type="date"></div>
+      <div class="field"><label for="npPgto" data-i18n="pagamento">Pagamento</label>
         <select id="npPgto">
           <option value="nao_pago">Não pago</option>
           <option value="aguardando">Aguardando</option>
@@ -541,73 +541,73 @@
       </div>
     </div>
     <div class="btn-row">
-      <div class="btn btn-primary" id="npSalvar" data-i18n="salvarNaFila">Salvar na fila</div>
-      <div class="btn btn-ghost" id="npCancelar" style="max-width:110px" data-i18n="btnCancelar">Cancelar</div>
+      <button type="button" class="btn btn-primary" id="npSalvar" data-i18n="salvarNaFila">Salvar na fila</button>
+      <button type="button" class="btn btn-ghost" id="npCancelar" style="max-width:110px" data-i18n="btnCancelar">Cancelar</button>
     </div>
   </div>
 </div>
 
 <!-- ================= MODAL: cofre ================= -->
 <div class="overlay" id="ovCofre">
-  <div class="modal" style="align-items:center;text-align:center">
+  <div class="modal" role="dialog" aria-modal="true" style="align-items:center;text-align:center">
     <img id="cofreImg" src="../assets/macaco/macaco-06.png" alt="" style="width:84px;height:auto;image-rendering:pixelated">
-    <div class="modal-title" data-i18n="pgtoRecebido">Pagamento recebido!</div>
+    <h2 class="modal-title" data-i18n="pgtoRecebido">Pagamento recebido!</h2>
     <div style="font-size:13px;font-weight:600;color:var(--muted)" id="cofreDetalhe"></div>
     <div style="font-size:22px;font-weight:800;color:var(--green)" id="cofreValor"></div>
     <div class="btn-row" style="align-self:stretch">
-      <div class="btn btn-green" id="cofreSim" data-i18n="btnSeparei">Separei ✓</div>
-      <div class="btn btn-ghost" id="cofreDepois" style="max-width:110px" data-i18n="btnDepois">Depois</div>
+      <button type="button" class="btn btn-green" id="cofreSim" data-i18n="btnSeparei">Separei ✓</button>
+      <button type="button" class="btn btn-ghost" id="cofreDepois" style="max-width:110px" data-i18n="btnDepois">Depois</button>
     </div>
   </div>
 </div>
 
 <!-- ================= MODAL: registrar recebimento ================= -->
 <div class="overlay" id="ovReceb">
-  <div class="modal" style="align-items:center;text-align:center">
+  <div class="modal" role="dialog" aria-modal="true" style="align-items:center;text-align:center">
     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="3"/><circle cx="12" cy="12.5" r="3"/></svg>
-    <div class="modal-title" data-i18n="recebTitulo">Registrar recebimento</div>
+    <h2 class="modal-title" data-i18n="recebTitulo">Registrar recebimento</h2>
     <div style="font-size:13px;font-weight:600;color:var(--muted)" id="recebDetalhe"></div>
     <div class="receb-atalhos">
-      <div class="mini-btn" id="recebZero" data-i18n="recebNada">Não recebi</div>
-      <div class="mini-btn" id="recebMetade" data-i18n="recebMetade">Metade (sinal)</div>
-      <div class="mini-btn primary" id="recebTudo" data-i18n="recebTudo">Recebi tudo</div>
+      <button type="button" class="mini-btn" id="recebZero" data-i18n="recebNada">Não recebi</button>
+      <button type="button" class="mini-btn" id="recebMetade" data-i18n="recebMetade">Metade (sinal)</button>
+      <button type="button" class="mini-btn primary" id="recebTudo" data-i18n="recebTudo">Recebi tudo</button>
     </div>
     <div class="field" style="align-self:stretch">
-      <label id="recebLabel" data-i18n="recebQuanto">Quanto já entrou no total?</label>
+      <label for="recebValor" id="recebLabel" data-i18n="recebQuanto">Quanto já entrou no total?</label>
       <input id="recebValor" type="number" min="0" step="0.01">
     </div>
     <div class="btn-row" style="align-self:stretch">
-      <div class="btn btn-primary" id="recebConfirmar" data-i18n="btnConfirmar">Confirmar</div>
-      <div class="btn btn-ghost" id="recebCancelar" style="max-width:110px" data-i18n="btnCancelar">Cancelar</div>
+      <button type="button" class="btn btn-primary" id="recebConfirmar" data-i18n="btnConfirmar">Confirmar</button>
+      <button type="button" class="btn btn-ghost" id="recebCancelar" style="max-width:110px" data-i18n="btnCancelar">Cancelar</button>
     </div>
   </div>
 </div>
 
 <!-- ================= MODAL: liquidação (vendeu robux / caiu o paypal) ================= -->
 <div class="overlay" id="ovLiq">
-  <div class="modal" style="align-items:center;text-align:center">
+  <div class="modal" role="dialog" aria-modal="true" style="align-items:center;text-align:center">
     <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/></svg>
-    <div class="modal-title" id="liqTitulo">Caiu na conta!</div>
+    <h2 class="modal-title" id="liqTitulo">Caiu na conta!</h2>
     <div style="font-size:13px;font-weight:600;color:var(--muted)" id="liqDetalhe"></div>
     <div class="field" style="align-self:stretch">
-      <label id="liqLabel" data-i18n="liqPergunta">Quanto caiu em reais?</label>
+      <label for="liqValor" id="liqLabel" data-i18n="liqPergunta">Quanto caiu em reais?</label>
       <input id="liqValor" type="number" min="0" step="0.01">
     </div>
     <div class="btn-row" style="align-self:stretch">
-      <div class="btn btn-primary" id="liqConfirmar" data-i18n="btnConfirmar">Confirmar</div>
-      <div class="btn btn-ghost" id="liqCancelar" style="max-width:110px" data-i18n="btnCancelar">Cancelar</div>
+      <button type="button" class="btn btn-primary" id="liqConfirmar" data-i18n="btnConfirmar">Confirmar</button>
+      <button type="button" class="btn btn-ghost" id="liqCancelar" style="max-width:110px" data-i18n="btnCancelar">Cancelar</button>
     </div>
   </div>
 </div>
 
 <!-- ================= MODAL: meta batida ================= -->
 <div class="overlay" id="ovMeta">
-  <div class="modal" style="align-items:center;text-align:center;border-color:var(--blue-border)">
+  <div class="modal" role="dialog" aria-modal="true" style="align-items:center;text-align:center;border-color:var(--blue-border)">
     <img id="metaImg" src="../assets/macaco/macaco-03.png" alt="" style="width:96px;height:auto;image-rendering:pixelated">
-    <div class="modal-title" style="font-size:20px" data-i18n="metaBatida">Meta batida!</div>
+    <h2 class="modal-title" style="font-size:20px" data-i18n="metaBatida">Meta batida!</h2>
     <div style="font-size:13px;font-weight:600;color:var(--muted)" id="metaDetalhe"></div>
     <div class="badge-chip bc-amber" id="metaStreak"></div>
-    <div class="btn btn-primary" id="metaFechar" style="align-self:stretch" data-i18n="jogoLiberado">Jogo liberado, sem culpa</div>
+    <button type="button" class="btn btn-primary" id="metaFechar" style="align-self:stretch" data-i18n="jogoLiberado">Jogo liberado, sem culpa</button>
   </div>
 </div>
 
