@@ -1233,7 +1233,11 @@ input:focus, select:focus { border-color: var(--blue); }
   75% { opacity: 1; }
   100% { opacity: 0; }
 }
-.celebra-mascote, .celebra-texto, .confete { position: relative; z-index: 1; }
+/* acima do fundo escuro. O texto e os confetes já são absolutos: forçar
+   relative neles os punha na mesma linha flex do macaco e empurrava o macaco
+   pra esquerda (o grupo inteiro era centralizado, não o macaco). */
+.celebra-mascote { position: relative; z-index: 1; }
+.celebra-texto, .confete { z-index: 1; }
 
 /* card arrastado: sem transicao brigando com o balanco */
 .kb-card.arrastando { transition: none; }
