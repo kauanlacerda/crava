@@ -81,22 +81,15 @@ function dataRealizado(j) { return j.liquidadoEm || j.pagoEm || ''; }
 // USD/RBX: o que entrou nessa moeda e AINDA não foi convertido
 function ganhoMes(moeda) {
   const mes = hoje().slice(0, 7);
-  if (moeda === 'BRL') {
-    return S.jobs.filter(j => j.liquidado && dataRealizado(j).slice(0, 7) === mes)
-      .reduce((a, j) => a + realizadoBRL(j), 0);
-  }
+  if (moeda === 'BRL') return ganhoEntre(d => d.slice(0, 7) === mes);
   return S.jobs
-    .filter(j => j.pagamento === 'pago' && !j.liquidado && j.valor.m === moeda && j.pagoEm && j.pagoEm.slice(0, 7) === mes)
-    .reduce((a, j) => a + Number(j.valor.q), 0);
+    .filter(j => j.valor.m === moeda && pendenteDe(j) > 0 && String(j.pagoEm || j.recebidoEm || '').slice(0, 7) === mes)
+    .reduce((a, j) => a + pendenteDe(j), 0);
 }
 function totalPagoBRLequiv() {
   const c = S.config;
-  return S.jobs.filter(j => j.pagamento === 'pago' || j.liquidado).reduce((a, j) => {
-    if (j.liquidado) return a + realizadoBRL(j);
-    if (j.valor.m === 'BRL') return a + Number(j.valor.q);
-    if (j.valor.m === 'USD') return a + Number(j.valor.q) * taxaUSD();
-    return a + (Number(j.valor.q) / 1000) * c.cotacaoRBX1k;
-  }, 0);
+  // o que já virou real, mais o que entrou e ainda espera conversão (na cotação de hoje)
+  return S.jobs.reduce((a, j) => a + realizadoBRL(j) + equivBRL(pendenteDe(j), j.valor.m), 0);
 }
 
 // ---------- Persistência ----------
@@ -228,18 +221,21 @@ async function ciclarPagamento(id) {
   if (!j) return;
   const ordem = ['nao_pago', 'aguardando', 'pago'];
   j.pagamento = ordem[(ordem.indexOf(j.pagamento) + 1) % 3];
+  // o chip e o resto do app precisam contar a mesma história
+  j.recebido = j.pagamento === 'pago' ? Number(j.valor.q) : 0;
   if (j.pagamento === 'pago') {
     j.pagoEm = new Date().toISOString();
-    if (j.valor.m === 'BRL') { j.liquidado = true; j.liquidadoEm = j.pagoEm; j.liquidadoBRL = Number(j.valor.q); abrirCofre(j); }
-    else j.liquidado = false; // robux/dólar: só vira dinheiro depois da venda/conversão
+    if (!j.recebidoEm) j.recebidoEm = j.pagoEm;
+    zerarLiquidacao(j);
+    if (j.valor.m === 'BRL') { registrarEntrada(j, Number(j.valor.q), Number(j.valor.q), j.pagoEm); abrirCofre(j); }
+    // robux/dólar: só vira dinheiro depois da venda/conversão
   } else {
-    delete j.liquidado; delete j.liquidadoEm; delete j.liquidadoBRL;
+    zerarLiquidacao(j);
+    if (j.pagamento === 'nao_pago') delete j.recebidoEm;
     // desfazer de verdade: o lembrete criado por engano vai junto
     const i = cofreAbertoDe(j.id);
     if (i >= 0) S.stats.cofres.splice(i, 1);
   }
-  // o chip e o resto do app precisam contar a mesma história
-  j.recebido = j.pagamento === 'pago' ? Number(j.valor.q) : 0;
   await salvar();
 }
 async function excluir(id) {
@@ -784,12 +780,62 @@ function recebidoDe(j) {
 }
 function faltaDe(j) { return Math.max(0, Number(j.valor.q) - recebidoDe(j)); }
 
+// Quanto do que já entrou virou dinheiro na conta, na moeda do trabalho.
+// Pix cai na hora: tudo que entrou está na conta. Robux e dólar: só o que já
+// foi vendido ou convertido. Trabalhos antigos não têm o campo: se estavam
+// liquidados era tudo, senão nada.
+function liquidadoQDe(j) {
+  if (j.valor.m === 'BRL') return recebidoDe(j);
+  if (typeof j.liquidadoQ === 'number') return Math.min(j.liquidadoQ, recebidoDe(j));
+  return j.liquidado ? recebidoDe(j) : 0;
+}
+// o que entrou e ainda não virou real
+function pendenteDe(j) { return Math.max(0, recebidoDe(j) - liquidadoQDe(j)); }
+function equivBRL(q, m) {
+  if (m === 'BRL') return q;
+  if (m === 'USD') return q * taxaUSD();
+  return (q / 1000) * S.config.cotacaoRBX1k;
+}
+// Cada vez que dinheiro cai na conta vira uma entrada com data própria: o
+// sinal de agosto fica em agosto e o resto, se cair em setembro, em setembro.
+// Trabalhos antigos têm uma entrada só, na data em que foram liquidados.
+function entradasDe(j) {
+  if (Array.isArray(j.liquidacoes) && j.liquidacoes.length) return j.liquidacoes;
+  return j.liquidado && Number(j.liquidadoBRL) > 0 ? [{ em: dataRealizado(j), brl: Number(j.liquidadoBRL), q: liquidadoQDe(j) }] : [];
+}
+function registrarEntrada(j, brl, q, quando) {
+  const em = quando || new Date().toISOString();
+  if (!Array.isArray(j.liquidacoes)) j.liquidacoes = entradasDe(j).map(e => ({ ...e }));
+  const jaConvertido = typeof j.liquidadoQ === 'number' ? j.liquidadoQ : liquidadoQDe(j);
+  j.liquidacoes.push({ em, brl: Number(brl) || 0, q: Number(q) || 0 });
+  j.liquidado = true;
+  if (!j.liquidadoEm) j.liquidadoEm = em;
+  j.liquidadoBRL = j.liquidacoes.reduce((a, e) => a + Number(e.brl || 0), 0);
+  j.liquidadoQ = Math.min(recebidoDe(j), jaConvertido + (Number(q) || 0));
+}
+function zerarLiquidacao(j) {
+  delete j.liquidado; delete j.liquidadoEm; delete j.liquidadoBRL; delete j.liquidadoQ; delete j.liquidacoes;
+}
+// Pix com valor recebido corrigido pra baixo: o que está na conta é o novo valor
+function ajustarEntradaBRL(j, v) {
+  if (v <= 0) { zerarLiquidacao(j); return; }
+  j.liquidacoes = [{ em: j.liquidadoEm || new Date().toISOString(), brl: v, q: v }];
+  j.liquidado = true; if (!j.liquidadoEm) j.liquidadoEm = j.liquidacoes[0].em;
+  j.liquidadoBRL = v; j.liquidadoQ = v;
+}
+// soma das entradas em R$ cuja data (ISO) passa no filtro
+function ganhoEntre(filtro) {
+  let s = 0;
+  for (const j of S.jobs) for (const e of entradasDe(j)) if (filtro(String(e.em || ''))) s += Number(e.brl || 0);
+  return s;
+}
+
 // nao_pago | parcial | a_converter | na_conta
 function estagioPgto(j) {
   const r = recebidoDe(j), total = Number(j.valor.q);
   if (r <= 0) return 'nao_pago';
   if (r < total) return 'parcial';
-  if (j.valor.m === 'BRL' || j.liquidado) return 'na_conta';
+  if (j.valor.m === 'BRL' || !precisaLiquidar(j)) return 'na_conta';
   return 'a_converter';
 }
 const ESTAGIO_CHIP = () => ({
@@ -852,7 +898,15 @@ function cardKanbanHTML(j) {
     `<button type="button" class="mini-btn perigo-sutil" onclick="event.stopPropagation();excluir('${j.id}')" title="${t('excluir')}">✕</button>`
   ];
   const prazo = prazoDeJob(j);
-  const pend = est === 'a_converter' ? (j.valor.m === 'RBX' ? t('aVender') : t('aCair')) : '';
+  const aguardaTxt = j.valor.m === 'RBX' ? t('aVender') : t('aCair');
+  let pend = '';
+  if (est === 'a_converter') pend = aguardaTxt;
+  else if (est === 'parcial' && j.valor.m !== 'BRL') {
+    const naConta = liquidadoQDe(j), esperando = pendenteDe(j);
+    pend = naConta > 0
+      ? `${fmtValor({ q: naConta, m: j.valor.m })} ${t('liqParte')}${esperando > 0 ? ' · ' + fmtValor({ q: esperando, m: j.valor.m }) + ' ' + aguardaTxt : ''}`
+      : aguardaTxt;
+  }
   const selo = j.status === 'aprovado' ? `<span class="kb-selo-aprovado">${t('aprovadoSelo')}</span>` : '';
   const linhaDinheiro = `
     <div class="kb-dinheiro ${est}" onclick="event.stopPropagation();abrirRecebimento('${j.id}')" title="${t('recebTitulo')}">
@@ -1015,8 +1069,7 @@ function entregasDoMes(mes) {
   return S.jobs.filter(j => j.entregueEm && j.entregueEm.slice(0, 7) === mes);
 }
 function ganhoEquivDoMes(mes) {
-  return S.jobs.filter(j => j.liquidado && dataRealizado(j).slice(0, 7) === mes)
-    .reduce((a, j) => a + realizadoBRL(j), 0);
+  return ganhoEntre(d => d.slice(0, 7) === mes);
 }
 function mesesComAtividade() {
   const set = new Set();
@@ -1873,11 +1926,11 @@ function renderDinheiro() {
       }))
     },
     {
-      id: 'converter', titulo: t('grConverter'), cor: 'var(--blue)', total: somaMoedas(converter, j => Number(j.valor.q)),
+      id: 'converter', titulo: t('grConverter'), cor: 'var(--blue)', total: somaMoedas(converter, pendenteDe),
       vazio: t('grConverterVazio'),
       itens: converter.map(j => ({
         id: j.id, titulo: j.titulo, cliente: j.cliente,
-        info: `${fmtValor(j.valor)} ${t('via')} ${formaPgto(j)} · ${j.valor.m === 'RBX' ? t('aVender') : t('aCair')}`,
+        info: `${fmtValor({ q: pendenteDe(j), m: j.valor.m })}${pendenteDe(j) < Number(j.valor.q) ? ` ${t('de')} ${fmtValor(j.valor)}` : ''} ${t('via')} ${formaPgto(j)} · ${j.valor.m === 'RBX' ? t('aVender') : t('aCair')}`,
         botao: j.valor.m === 'RBX' ? t('btnVendi') : t('btnCaiu'), acao: `abrirLiquidacao('${j.id}')`
       }))
     },
@@ -1941,33 +1994,30 @@ $('recebConfirmar').onclick = async () => {
   $('ovReceb').classList.remove('open');
   recebJob = null;
 
+  if (v > 0 && !j.recebidoEm) j.recebidoEm = new Date().toISOString();
   if (v <= 0) { // desfez o pagamento
     j.pagamento = 'nao_pago';
-    delete j.pagoEm; delete j.liquidado; delete j.liquidadoEm; delete j.liquidadoBRL;
+    delete j.pagoEm; delete j.recebidoEm; zerarLiquidacao(j);
   } else if (v < total) {
     j.pagamento = 'aguardando';
     if (j.valor.m === 'BRL') {
-      // Pix cai na hora: o que já entrou conta como dinheiro na conta, mesmo
-      // faltando o resto. A data fica na do primeiro recebimento, pra não
-      // empurrar o mês do sinal pro mês em que a segunda metade chegar.
-      j.liquidado = true;
-      if (!j.liquidadoEm) j.liquidadoEm = new Date().toISOString();
-      j.liquidadoBRL = v;
-      if (v > antes) { await salvar(); abrirCofreDe(j, v - antes); return; }
-    } else {
-      delete j.liquidado; delete j.liquidadoEm; delete j.liquidadoBRL;
+      // Pix cai na hora: o que entrou agora vira uma entrada com a data de hoje
+      if (v > antes) { registrarEntrada(j, v - antes, v - antes); await salvar(); abrirCofreDe(j, v - antes); return; }
+      ajustarEntradaBRL(j, v);
+    } else if (typeof j.liquidadoQ === 'number' && j.liquidadoQ > v) {
+      // corrigiu pra baixo: não dá pra ter convertido mais do que entrou
+      j.liquidadoQ = v;
     }
+    // robux/dólar: o que já tinha caído continua caído; o resto espera o
+    // botão "Caiu na conta" / "Vendi", que aparece enquanto houver pendência
   } else {
     j.pagamento = 'pago';
     if (!j.pagoEm) j.pagoEm = new Date().toISOString();
     if (j.valor.m === 'BRL') {
-      j.liquidado = true;
-      if (!j.liquidadoEm) j.liquidadoEm = j.pagoEm;
-      j.liquidadoBRL = total;
-      if (antes < total) { await salvar(); abrirCofreDe(j, total - antes); return; }
-    } else if (!j.liquidado) {
-      j.liquidado = false;
-      if (antes < total) { await salvar(); abrirLiquidacao(j.id); return; }
+      if (antes < total) { registrarEntrada(j, total - antes, total - antes); await salvar(); abrirCofreDe(j, total - antes); return; }
+      ajustarEntradaBRL(j, total);
+    } else if (antes < total && pendenteDe(j) > 0) {
+      await salvar(); abrirLiquidacao(j.id); return;
     }
   }
   await salvar();
@@ -1976,7 +2026,7 @@ $('recebConfirmar').onclick = async () => {
 // ---------- Liquidação: moeda estrangeira virando R$ ----------
 let liqJob = null;
 function precisaLiquidar(j) {
-  return j.pagamento === 'pago' && j.valor.m !== 'BRL' && !j.liquidado;
+  return j.valor.m !== 'BRL' && pendenteDe(j) > 0;
 }
 function estimativaBRL(j) {
   if (j.valor.m === 'USD') return Number(j.valor.q) * taxaUSD();
@@ -1986,9 +2036,11 @@ function abrirLiquidacao(id) {
   const j = S.jobs.find(x => x.id === id);
   if (!j) return;
   liqJob = j;
+  const parte = pendenteDe(j);
   $('liqTitulo').textContent = j.valor.m === 'RBX' ? t('liqVendi') : t('liqCaiu');
-  $('liqDetalhe').textContent = `${j.titulo} · ${fmtValor(j.valor)}`;
-  $('liqValor').value = Math.round(estimativaBRL(j) * 100) / 100;
+  // parcial: diz qual pedaço está caindo agora
+  $('liqDetalhe').textContent = `${j.titulo} · ${fmtValor({ q: parte, m: j.valor.m })}${parte < Number(j.valor.q) ? ` ${t('de')} ${fmtValor(j.valor)}` : ''}`;
+  $('liqValor').value = Math.round(equivBRL(parte, j.valor.m) * 100) / 100;
   $('ovLiq').classList.add('open');
   setTimeout(() => $('liqValor').select(), 60);
 }
@@ -1996,9 +2048,7 @@ $('liqCancelar').onclick = () => { $('ovLiq').classList.remove('open'); liqJob =
 $('liqConfirmar').onclick = async () => {
   if (!liqJob) return;
   const v = parseFloat($('liqValor').value) || 0;
-  liqJob.liquidado = true;
-  liqJob.liquidadoEm = new Date().toISOString();
-  liqJob.liquidadoBRL = v;
+  registrarEntrada(liqJob, v, pendenteDe(liqJob));
   $('ovLiq').classList.remove('open');
   // o cofre agora é sobre o dinheiro que realmente entrou
   cofreJob = { titulo: liqJob.titulo, valor: { q: v, m: 'BRL' } };
@@ -2020,8 +2070,8 @@ function pendenteLiquidar() {
   const out = { USD: 0, RBX: 0, equiv: 0 };
   for (const j of S.jobs) {
     if (!precisaLiquidar(j)) continue;
-    out[j.valor.m] += Number(j.valor.q);
-    out.equiv += estimativaBRL(j);
+    out[j.valor.m] += pendenteDe(j);
+    out.equiv += equivBRL(pendenteDe(j), j.valor.m);
   }
   return out;
 }
@@ -2210,14 +2260,11 @@ function renderMoedas() {
   const bruto = { BRL: 0, USD: 0, RBX: 0 };
   const equiv = { BRL: 0, USD: 0, RBX: 0 };
   for (const j of S.jobs) {
-    if (j.pagamento !== 'pago') continue;
-    const quando = dataRealizado(j).slice(0, 7);
+    if (recebidoDe(j) <= 0) continue;
+    const quando = String(dataRealizado(j) || j.recebidoEm || '').slice(0, 7);
     if (quando !== moedasMes) continue;
-    bruto[j.valor.m] += Number(j.valor.q);
-    equiv[j.valor.m] += j.liquidado ? realizadoBRL(j)
-      : j.valor.m === 'BRL' ? Number(j.valor.q)
-      : j.valor.m === 'USD' ? Number(j.valor.q) * taxaUSD()
-      : (Number(j.valor.q) / 1000) * S.config.cotacaoRBX1k;
+    bruto[j.valor.m] += recebidoDe(j);
+    equiv[j.valor.m] += realizadoBRL(j) + equivBRL(pendenteDe(j), j.valor.m);
   }
   const total = equiv.BRL + equiv.USD + equiv.RBX;
 
@@ -2383,8 +2430,7 @@ $('btnConvTrocar').onclick = () => {
 let vizMeses = 8;
 
 function ganhoEquivPeriodo(de, ate) {
-  return S.jobs.filter(j => j.liquidado && dataRealizado(j).slice(0, 10) >= de && dataRealizado(j).slice(0, 10) <= ate)
-    .reduce((a, j) => a + realizadoBRL(j), 0);
+  return ganhoEntre(d => { const x = d.slice(0, 10); return x >= de && x <= ate; });
 }
 function diaMenos(n) {
   return dataLocal(new Date(Date.now() - n * 864e5));
@@ -2456,8 +2502,7 @@ function desenharViz() {
   const mesAtual = ganhoEquivDoMes(hoje().slice(0, 7));
   const mesAnt = serie.length > 1 ? serie[serie.length - 2].valor : 0;
   const anoKey = hoje().slice(0, 4);
-  const ano = S.jobs.filter(j => j.liquidado && dataRealizado(j).slice(0, 4) === anoKey)
-    .reduce((a, j) => a + realizadoBRL(j), 0);
+  const ano = ganhoEntre(d => d.slice(0, 4) === anoKey);
 
   const variacao = (atual, ant) => {
     if (!ant) return atual > 0 ? '+100%' : '—';
@@ -2575,8 +2620,7 @@ let calMes = hoje().slice(0, 7);
 let calModo = 'valores'; // 'calor' (mapa de calor) | 'valores'
 
 function ganhoEquivDoDia(dia) {
-  return S.jobs.filter(j => j.liquidado && dataRealizado(j).slice(0, 10) === dia)
-    .reduce((a, j) => a + realizadoBRL(j), 0);
+  return ganhoEntre(d => d.slice(0, 10) === dia);
 }
 function fmtCompacto(v) {
   if (v >= 1000000) return (v / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'M';
@@ -2603,9 +2647,7 @@ function renderCalendario() {
   let seq = 0, melhorSeq = 0;
   for (const g of ganhos) { seq = g > 0 ? seq + 1 : 0; if (seq > melhorSeq) melhorSeq = seq; }
 
-  const totalAno = S.jobs
-    .filter(j => j.liquidado && dataRealizado(j).slice(0, 4) === String(ano))
-    .reduce((a, j) => a + realizadoBRL(j), 0);
+  const totalAno = ganhoEntre(d => d.slice(0, 4) === String(ano));
 
   const hj = hoje();
   const dows = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -2833,9 +2875,7 @@ function dadosCal() {
   }
   let seq = 0, melhorSeq = 0;
   for (const g of ganhos) { seq = g > 0 ? seq + 1 : 0; if (seq > melhorSeq) melhorSeq = seq; }
-  const totalAno = S.jobs
-    .filter(j => j.liquidado && dataRealizado(j).slice(0, 4) === String(ano))
-    .reduce((a, j) => a + realizadoBRL(j), 0);
+  const totalAno = ganhoEntre(d => d.slice(0, 4) === String(ano));
   const celulas = [];
   for (let i = 0; i < offset; i++) celulas.push(null);
   for (let d = 1; d <= diasNoMes; d++) celulas.push(d);
@@ -3105,6 +3145,7 @@ $('npSalvar').onclick = async () => {
 
       // o que já foi recebido não pode passar do novo total
       if (typeof j.recebido === 'number') j.recebido = Math.min(j.recebido, totalNovo);
+      if (typeof j.liquidadoQ === 'number') j.liquidadoQ = Math.min(j.liquidadoQ, j.recebido);
 
       const pgto = $('npPgto').value;
       if (pgto !== j.pagamento) {
@@ -3114,11 +3155,11 @@ $('npSalvar').onclick = async () => {
           if (!j.pagoEm) j.pagoEm = new Date().toISOString();
         } else if (pgto === 'nao_pago') {
           j.recebido = 0;
-          delete j.pagoEm; delete j.liquidado; delete j.liquidadoEm; delete j.liquidadoBRL;
+          delete j.pagoEm; delete j.recebidoEm; zerarLiquidacao(j);
         }
       }
       // mudou o valor de algo que já caiu em R$? a conta acompanha
-      if (j.liquidado && j.valor.m === 'BRL') j.liquidadoBRL = j.recebido;
+      if (j.liquidado && j.valor.m === 'BRL') ajustarEntradaBRL(j, j.recebido);
     }
     $('ovNovo').classList.remove('open');
     limparModalPedido();
