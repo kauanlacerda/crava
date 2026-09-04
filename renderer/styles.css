@@ -759,7 +759,7 @@ input:focus, select:focus { border-color: var(--blue); }
 /* fix: celebracao centralizada de verdade */
 .celebra-texto {
   position: absolute; left: 0; right: 0; margin-top: 0;
-  top: calc(50% - 150px); text-align: center;
+  top: calc(50% + 78px); text-align: center; /* logo abaixo do macaco (130px, centrado) */
 }
 .confete { left: 50%; top: 50%; }
 
