@@ -1,4 +1,12 @@
 {
+  "1.3.7": {
+    "pt": [
+      "A celebração de entrega estava torta: o macaco aparecia à esquerda do centro e o texto deslocado. Agora os dois ficam no centro exato da janela, com o texto logo abaixo do macaco."
+    ],
+    "en": [
+      "The delivery celebration was off-center: the monkey showed up left of center with the text misplaced. Both now sit at the exact center of the window, with the text right below the monkey."
+    ]
+  },
   "1.3.6": {
     "pt": [
       "Pagamento 50/50 em dólar ou Robux: agora dá pra marcar que a primeira parte caiu na conta sem esperar a segunda. O botão \"Caiu na conta\" (ou \"Vendi\") aparece sempre que houver algo recebido e ainda não convertido, e o app pergunta quanto caiu só dessa parte.",
