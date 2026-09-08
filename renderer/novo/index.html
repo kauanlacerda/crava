@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="fontes.css">
   <link rel="stylesheet" href="shell.css">
   <link rel="stylesheet" href="planilha.css">
+  <link rel="stylesheet" href="trabalhos.css">
 </head>
 <body>
 <div class="app">
@@ -337,6 +338,20 @@
       </div>
     </section>
 
+    <!-- ================= TRABALHOS ================= -->
+    <section class="view" id="view-trabalhos" hidden>
+      <div class="pagina-topo">
+        <h1>Trabalhos</h1>
+        <div class="seg" id="tbLente" role="group" aria-label="Lente do quadro"><button type="button" data-v="etapa" class="sel">Por etapa</button><button type="button" data-v="pagamento">Por pagamento</button></div>
+        <div class="pagina-acoes"><button type="button" class="btn btn-primario" id="btnNovoTrabalho"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo trabalho</button></div>
+      </div>
+      <section class="tb-topo-grade">
+        <article class="card tb-ativo" id="tbAtivo"></article>
+        <article class="card tb-cobrar"><h2>Cobrar <span class="tb-n" id="tbCobrarN">0</span></h2><div id="tbCobrar"></div></article>
+      </section>
+      <section class="tb-quadro" id="tbQuadro"></section>
+    </section>
+
     <section class="view" id="view-outra" hidden>
       <div class="pagina-topo"><h1 id="outraTitulo">Em construção</h1></div>
       <p class="sub" id="outraTexto">Esta tela ainda não foi construída.</p>
@@ -416,6 +431,48 @@
   </form>
 </div>
 
+<!-- ================= TRABALHO ================= -->
+<div class="ov" id="ovTrab" hidden>
+  <form class="modal" id="tbForm" role="dialog" aria-modal="true" aria-labelledby="tbTitulo">
+    <div class="modal-cab"><h2 id="tbTitulo">novo trabalho</h2><button type="button" class="btn-icone" id="tbFechar" aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="modal-corpo">
+      <label class="linha-campo"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><input id="tbNome" placeholder="o que é? (Thumbnail, Icon, Banner…)" aria-label="Título" required></label>
+      <label class="linha-campo"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><input id="tbCliente" placeholder="cliente (@ do Discord)" aria-label="Cliente"></label>
+      <label class="linha-campo"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg><input class="valor" id="tbValor" inputmode="decimal" placeholder="0,00" aria-label="Valor" required><select id="tbMoeda" aria-label="Moeda" style="flex:0 0 7rem;text-align:right"><option value="BRL">R$ · Pix</option><option value="USD">US$ · PayPal</option><option value="RBX">Robux</option></select></label>
+      <label class="linha-campo"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="prefixo" style="font-weight:500;color:var(--texto)">prazo</span><input type="date" id="tbPrazo" aria-label="Prazo" style="text-align:right"></label>
+      <label class="linha-campo" id="tbStatusWrap"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg><select id="tbStatus" aria-label="Onde entra"><option value="aceito">entra na fila</option><option value="esperando">esperando o sinal</option><option value="fazendo">começa agora (cravar)</option></select><svg class="chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></label>
+      <div class="modal-acoes">
+        <button type="submit" class="btn btn-primario" style="height:2.5rem">salvar</button>
+        <button type="button" class="btn btn-contorno" id="tbCancelar">cancelar</button>
+        <button type="button" class="btn btn-contorno" id="tbExcluir" style="color:var(--negativo)" hidden>excluir trabalho</button>
+      </div>
+    </div>
+  </form>
+</div>
+<!-- ================= RECEBIMENTO ================= -->
+<div class="ov" id="ovReceb" hidden>
+  <form class="modal modal-p" id="rbForm" role="dialog" aria-modal="true" aria-labelledby="rbTitulo">
+    <div class="modal-cab"><h2 id="rbTitulo">registrar recebimento</h2><button type="button" class="btn-icone" id="rbCancelar" aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="modal-corpo">
+      <div class="sub" id="rbDetalhe" style="padding-bottom:.5rem"></div>
+      <label class="linha-campo"><span class="prefixo" style="font-weight:500;color:var(--texto)">quanto já entrou no total?</span><span class="prefixo" id="rbMoeda">R$</span><input class="valor" id="rbValor" inputmode="decimal" aria-label="Valor recebido" style="text-align:right;max-width:9rem"></label>
+      <div class="rb-atalhos"><button type="button" class="btn btn-contorno" id="rbZero">não recebi</button><button type="button" class="btn btn-contorno" id="rbMetade">metade (sinal)</button><button type="button" class="btn btn-contorno" id="rbTudo">recebi tudo</button></div>
+      <div class="modal-acoes"><button type="submit" class="btn btn-primario" style="height:2.5rem">confirmar</button></div>
+    </div>
+  </form>
+</div>
+<!-- ================= LIQUIDAÇÃO ================= -->
+<div class="ov" id="ovLiq" hidden>
+  <form class="modal modal-p" id="lqForm" role="dialog" aria-modal="true" aria-labelledby="lqTitulo">
+    <div class="modal-cab"><h2 id="lqTitulo">Caiu na conta!</h2><button type="button" class="btn-icone" id="lqCancelar" aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="modal-corpo">
+      <div class="sub" id="lqDetalhe" style="padding-bottom:.5rem"></div>
+      <label class="linha-campo"><span class="prefixo" style="font-weight:500;color:var(--texto)">quanto caiu em reais?</span><span class="prefixo">R$</span><input class="valor" id="lqValor" inputmode="decimal" aria-label="Valor em reais" style="text-align:right;max-width:9rem"></label>
+      <div class="modal-acoes"><button type="submit" class="btn btn-primario" style="height:2.5rem">confirmar</button></div>
+    </div>
+  </form>
+</div>
+
 <!-- ================= PERSONALIZAR ================= -->
 <div class="veu" id="veuPersonalizar" hidden></div>
 <aside class="folha" id="folhaPersonalizar" role="dialog" aria-modal="true" aria-labelledby="folhaTitulo" hidden>
@@ -442,7 +499,7 @@
 <script src="saldos.js"></script>
 <script src="planilha-telas.js"></script>
 <script src="cartoes.js"></script>
-<script src="trabalhos-mock.js"></script>
+<script src="trabalhos.js"></script>
 <script src="dashboard.js"></script>
 <script src="economia.js"></script>
 <script src="shell.js"></script>
