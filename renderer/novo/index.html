@@ -5,6 +5,7 @@
   <title>Dashboard</title>
   <link rel="stylesheet" href="fontes.css">
   <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="planilha.css">
 </head>
 <body>
 <div class="app">
@@ -93,6 +94,7 @@
     </header>
 
     <main class="main" id="main">
+    <section class="view" id="view-dashboard">
       <div class="pagina-topo">
         <h1>Dashboard</h1>
         <div class="pagina-acoes">
@@ -204,16 +206,73 @@
           <article class="card">
             <header class="card-cab"><div><h2>Carteira</h2><div class="sub">O que já é dinheiro e o que ainda vai virar</div></div><button type="button" class="btn btn-contorno btn-p"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo</button></header>
             <div class="card-corpo cartoes">
-              <div class="cartao cartao-verde"><small>Na conta</small><b>R$ 12.543,00</b><span>Pix · R$</span></div>
-              <div class="cartao cartao-azul"><small>A converter</small><b>US$ 184,00</b><span>PayPal</span></div>
+              <div class="carteira-cartao cartao-verde"><small>Na conta</small><b>R$ 12.543,00</b><span>Pix · R$</span></div>
+              <div class="carteira-cartao cartao-azul"><small>A converter</small><b>US$ 184,00</b><span>PayPal</span></div>
             </div>
           </article>
         </div>
       </section>
 
       <p class="nota-mock">Dados de exemplo, só pra aprovar a casca.</p>
+    </section>
+
+    <!-- ================= PLANILHA · SALDOS ================= -->
+    <section class="view" id="view-saldos" hidden>
+      <div class="pagina-topo">
+        <h1>Saldos</h1>
+        <div class="periodo">
+          <button type="button" class="btn-icone" id="periodoAnoAnt" aria-label="Ano anterior"><svg viewBox="0 0 24 24"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/></svg></button>
+          <button type="button" class="btn-icone" id="periodoMesAnt" aria-label="Mês anterior"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <button type="button" class="btn btn-contorno periodo-rotulo" id="periodoRotulo" aria-label="Período">—</button>
+          <button type="button" class="btn-icone" id="periodoMesProx" aria-label="Próximo mês"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button type="button" class="btn-icone" id="periodoAnoProx" aria-label="Próximo ano"><svg viewBox="0 0 24 24"><path d="m13 17 5-5-5-5M6 17l5-5-5-5"/></svg></button>
+        </div>
+        <div class="pagina-acoes"><button type="button" class="btn btn-primario" id="btnNovaMov"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Adicionar</button></div>
+      </div>
+      <div class="meses" id="meses" aria-label="Meses"></div>
+    </section>
+
+    <section class="view" id="view-outra" hidden>
+      <div class="pagina-topo"><h1 id="outraTitulo">Em construção</h1></div>
+      <p class="sub" id="outraTexto">Esta tela ainda não foi construída.</p>
+    </section>
     </main>
   </div>
+</div>
+
+<!-- ================= PAINEL DO DIA ================= -->
+<aside class="painel-dia" id="painelDia" role="dialog" aria-label="Movimentações do dia" hidden>
+  <div class="pd-cab">
+    <button type="button" class="btn-icone" id="pdFechar" aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <button type="button" class="btn-icone" id="pdAnt" aria-label="Dia anterior"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+    <div class="pd-data" id="pdData">—</div>
+    <button type="button" class="btn-icone" id="pdProx" aria-label="Próximo dia"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+    <button type="button" class="btn-icone" id="pdAdd" aria-label="Adicionar neste dia"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+  </div>
+  <div class="pd-filtro"><select id="pdFiltro" aria-label="Filtrar por tipo"><option value="">todas as movimentações</option><option value="entrada">entradas</option><option value="saida">saídas</option><option value="diario">diários</option><option value="economia">economias</option><option value="cartao">cartão</option></select></div>
+  <div class="pd-lista" id="pdLista"></div>
+</aside>
+
+<!-- ================= MOVIMENTAÇÃO ================= -->
+<div class="ov" id="ovMov" hidden>
+  <form class="modal" id="fmForm" role="dialog" aria-modal="true" aria-labelledby="fmTitulo">
+    <div class="modal-cab"><h2 id="fmTitulo">adicionar</h2><button type="button" class="btn-icone" id="fmFechar" aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="modal-corpo">
+      <label class="linha-campo"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg><span class="prefixo">R$</span><input class="valor" id="fmValor" inputmode="decimal" placeholder="0,00" aria-label="Valor" required></label>
+      <label class="linha-campo"><span class="ic-tipo saida" id="fmIcTipo">S</span><select id="fmTipo" aria-label="Tipo"><option value="entrada">entrada</option><option value="saida" selected>saída</option><option value="diario">diário</option><option value="economia">economia</option><option value="cartao">gasto com cartão</option></select><svg class="chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></label>
+      <label class="linha-campo"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><input id="fmNome" placeholder="saída" aria-label="Nome"></label>
+      <label class="linha-campo"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="prefixo" style="font-weight:500;color:var(--texto)">data</span><input type="date" id="fmData" aria-label="Data" style="text-align:right"></label>
+      <label class="linha-campo"><svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><select id="fmRepete" aria-label="Repetição"><option value="nao">não repete</option><option value="mensal">mensalmente</option><option value="semanal">semanalmente</option><option value="diaria">diariamente</option><option value="parcelado">parcelado</option></select><svg class="chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></label>
+      <label class="linha-campo" id="fmParcelasWrap" hidden><span class="prefixo" style="font-weight:500;color:var(--texto)">parcelas</span><input type="number" id="fmParcelas" min="2" max="120" value="2" aria-label="Número de parcelas" style="text-align:right"></label>
+      <div id="fmCartaoWrap" hidden><label class="linha-campo"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg><select id="fmCartao" aria-label="Cartão"></select><svg class="chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></label><div class="aviso-campo" id="fmCartaoAviso">Nenhum cartão cadastrado ainda. Dá pra lançar mesmo assim e cadastrar em Planilha › Cartões.</div></div>
+      <div class="campo-tags"><div class="cab"><svg viewBox="0 0 24 24"><path d="M20 12 12 20 3 11V3h8l9 9Z"/><circle cx="7.5" cy="7.5" r="1"/></svg>tags</div><div class="chips" id="fmChips"></div></div>
+      <div class="modal-acoes">
+        <button type="submit" class="btn-tipo saida" id="fmSalvar">adicionar saída</button>
+        <button type="button" class="btn btn-contorno" id="fmCancelar">cancelar</button>
+        <button type="button" class="btn btn-contorno" id="fmExcluir" style="color:var(--negativo)" hidden>excluir</button>
+      </div>
+    </div>
+  </form>
 </div>
 
 <!-- ================= PERSONALIZAR ================= -->
@@ -238,6 +297,8 @@
   </div>
 </aside>
 
+<script src="planilha.js"></script>
+<script src="saldos.js"></script>
 <script src="shell.js"></script>
 </body>
 </html>

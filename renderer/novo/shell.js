@@ -108,10 +108,28 @@
       document.querySelectorAll('[data-view]').forEach(x => { x.classList.remove('ativo'); x.removeAttribute('aria-current'); });
       b.classList.add('ativo'); b.setAttribute('aria-current', 'page');
       $('topoTitulo').textContent = TITULOS[b.dataset.view] || b.textContent.trim();
-      document.querySelector('.pagina-topo h1').textContent = (TITULOS[b.dataset.view] || '').split(' · ').pop();
       document.title = TITULOS[b.dataset.view] || 'App';
+      mostrarView(b.dataset.view);
     };
   });
+
+  // ---------- views ----------
+  function mostrarView(nome) {
+    const alvo = document.getElementById('view-' + nome) ? nome : 'outra';
+    document.querySelectorAll('.view').forEach(v => { v.hidden = v.id !== 'view-' + alvo; });
+    if (alvo === 'outra') { $('outraTitulo').textContent = (TITULOS[nome] || nome).split(' · ').pop(); $('outraTexto').textContent = 'A tela ' + (TITULOS[nome] || nome) + ' ainda não foi construída.'; }
+    document.getElementById('main').scrollTop = 0;
+  }
+  // ações da barra lateral: abrem a tela Saldos e agem nela
+  document.querySelectorAll('[data-acao]').forEach(b => {
+    b.onclick = () => {
+      const sal = document.querySelector('[data-view="saldos"]'); if (sal && !sal.classList.contains('ativo')) sal.click();
+      if (b.dataset.acao === 'adicionar') window.Saldos.abrirNovo();
+      if (b.dataset.acao === 'hoje') setTimeout(() => window.Saldos.irParaHoje(), 60);
+    };
+  });
+  const dia = new Date().getDate(); document.querySelectorAll('.sb-dia').forEach(el => el.textContent = dia);
+  $('btnNovaMov').onclick = () => window.Saldos.abrirNovo();
 
   // ---------- gráficos de exemplo ----------
   function desenharGraficos() {
@@ -142,5 +160,7 @@
 
   aplicar();
   desenharGraficos();
+  window.Saldos.montar();
   if (q.get('folha') === '1') abrirFolha(true);
+  if (q.get('view')) { const b = document.querySelector('[data-view="' + q.get('view') + '"]'); if (b) b.click(); }
 })();

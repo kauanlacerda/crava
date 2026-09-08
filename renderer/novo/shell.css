@@ -286,12 +286,12 @@ input:focus-visible, select:focus-visible { outline: none; border-color: var(--a
 .progresso i { display: block; height: 100%; width: var(--w); background: var(--primario); border-radius: 999px; }
 
 .cartoes { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; padding-top: .25rem; }
-.cartao {
+.carteira-cartao {
   border-radius: var(--raio); padding: .875rem; min-height: 6rem; display: flex; flex-direction: column; gap: .125rem; color: #fff;
 }
-.cartao small { font-size: .6875rem; opacity: .85; }
-.cartao b { font-size: 1.125rem; font-weight: 700; font-family: var(--fonte-display); letter-spacing: -.01em; }
-.cartao span { font-size: .75rem; opacity: .85; margin-top: auto; }
+.carteira-cartao small { font-size: .6875rem; opacity: .85; }
+.carteira-cartao b { font-size: 1.125rem; font-weight: 700; font-family: var(--fonte-display); letter-spacing: -.01em; }
+.carteira-cartao span { font-size: .75rem; opacity: .85; margin-top: auto; }
 .cartao-verde { background: linear-gradient(135deg, #22c55e, #15803d); }
 .cartao-azul { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
 
