@@ -30,6 +30,7 @@
   let pref = { ...PADRAO };
   try { pref = { ...PADRAO, ...JSON.parse(localStorage.getItem('pref-casca') || '{}') }; } catch { }
   let persistindo = false; // só depois do boot: o que o usuário muda vai pro estado
+  let modoIcone = false;
 
   function aplicar() {
     raiz.dataset.theme = pref.tema;
@@ -65,6 +66,13 @@
       seg.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === String(pref[k])));
     });
     $('btnSidebar').setAttribute('aria-expanded', String(pref.sidebar === 'expanded'));
+    // recolhida: só ícones, com o nome na dica; os grupos fecham e viram menu flutuante ao clicar
+    const icone = pref.sidebar === 'icon';
+    document.querySelectorAll('.sb-item').forEach(b => { const s = b.querySelector(':scope > span'); b.title = icone && s ? s.textContent.trim() : ''; });
+    if (icone !== modoIcone) {
+      modoIcone = icone;
+      document.querySelectorAll('.sb-recolhivel').forEach(li => { li.classList.toggle('aberto', !icone); li.querySelector('[data-toggle]').setAttribute('aria-expanded', String(!icone)); });
+    }
     try { localStorage.setItem('pref-casca', JSON.stringify(pref)); } catch { }
     if (persistindo) { window.Dados.S.config.casca = { ...pref }; window.Dados.gravarQuieto(); }
   }
@@ -101,10 +109,19 @@
   // ---------- barra lateral ----------
   document.querySelectorAll('[data-toggle]').forEach(b => {
     b.onclick = () => {
-      const li = $(b.dataset.toggle); const aberto = li.classList.toggle('aberto');
+      const li = $(b.dataset.toggle);
+      if (pref.sidebar === 'icon') li.style.setProperty('--flyout-top', b.getBoundingClientRect().top + 'px'); // menu flutuante ao lado do ícone
+      const aberto = li.classList.toggle('aberto');
       b.setAttribute('aria-expanded', String(aberto));
     };
   });
+  // no modo ícone o menu flutuante fecha ao clicar fora, escolher algo ou apertar Esc
+  const fecharFlutuantes = () => {
+    if (pref.sidebar !== 'icon') return;
+    document.querySelectorAll('.sb-recolhivel.aberto').forEach(li => { li.classList.remove('aberto'); li.querySelector('[data-toggle]').setAttribute('aria-expanded', 'false'); });
+  };
+  document.addEventListener('click', (e) => { if (!e.target.closest('.sb-recolhivel > .sb-item')) fecharFlutuantes(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharFlutuantes(); });
   const TITULOS = { dashboard: 'Dashboard', trabalhos: 'Trabalhos', saldos: 'Planilha · Saldos', totais: 'Planilha · Totais', tags: 'Planilha · Tags', cartoes: 'Planilha · Cartões', previsao: 'Planilha · Previsão de diário', horizonte: 'Planilha · Horizonte', economia: 'Economia', config: 'Configurações' };
   document.querySelectorAll('[data-view]').forEach(b => {
     b.onclick = () => {
@@ -164,6 +181,9 @@
   });
   const dia = new Date().getDate(); document.querySelectorAll('.sb-dia').forEach(el => el.textContent = dia);
   $('btnNovaMov').onclick = () => window.Saldos.abrirNovo();
+  // o card da conta e o avatar do cabeçalho levam ao perfil
+  const irParaConfig = () => document.querySelector('[data-view="config"]').click();
+  document.querySelector('.sb-usuario').onclick = irParaConfig; document.querySelector('.avatar-btn').onclick = irParaConfig;
 
   // o dashboard desenha os próprios gráficos a partir da planilha
   function desenharGraficos() { if (window.Dashboard && !$('view-dashboard').hidden) window.Dashboard.render(); }
@@ -192,10 +212,13 @@
   window.PlanilhaCartoes.montar();
   window.Dashboard.montar();
   window.Economia.montar();
+  window.Perfil.montar();
   window.Trabalhos.montar();
   window.Dashboard.render(); // o dashboard é a primeira tela: desenha antes de qualquer clique
   aplicarZoom();
   if (q.get('folha') === '1') abrirFolha(true);
+  if (q.get('grupo') === '1') $('grpPlanilha').querySelector('[data-toggle]').click();
+  if (q.get('menu')) setTimeout(() => { const s = $(q.get('menu')); if (s) window.Menu.abrir(s); }, 400);
   if (q.get('view')) { const b = document.querySelector('[data-view="' + q.get('view') + '"]'); if (b) b.click(); }
   persistindo = true;
   document.body.classList.add('pronto');

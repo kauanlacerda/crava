@@ -41,7 +41,7 @@
               <span>Planilha</span>
               <svg class="sb-seta" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
             </button>
-            <ul class="sb-sub" id="subPlanilha">
+            <ul class="sb-sub" id="subPlanilha" data-titulo="Planilha">
               <li><button type="button" class="sb-subitem" data-view="saldos">Saldos</button></li>
               <li><button type="button" class="sb-subitem" data-view="totais">Totais</button></li>
               <li><button type="button" class="sb-subitem" data-view="tags">Tags</button></li>
@@ -107,7 +107,7 @@
           <label class="btn btn-contorno db-periodo">
             <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
             <span id="dbPeriodo">—</span>
-            <select id="dbPreset" aria-label="Período">
+            <select id="dbPreset" aria-label="Período" data-gatilho="pai">
               <option value="mes">Este mês</option>
               <option value="mes-passado">Mês passado</option>
               <option value="30d">Últimos 30 dias</option>
@@ -314,6 +314,15 @@
     <section class="view" id="view-config" hidden>
       <div class="pagina-topo"><h1>Configurações</h1></div>
       <div class="tags-corpo cfg">
+        <div class="tot-rotulo">perfil</div>
+        <div class="card tot-lista">
+          <div class="tot-linha cfg-linha perfil-linha"><span class="avatar avatar-g" id="pfAvatar" aria-hidden="true">S</span><span><b>Foto</b><small class="sub">Aparece na barra lateral e no cabeçalho. Fica guardada junto com o resto dos seus dados.</small></span>
+            <label class="btn btn-contorno btn-p btn-arquivo">Escolher<input type="file" id="pfFoto" accept="image/*" aria-label="Escolher foto"></label>
+            <button type="button" class="btn btn-contorno btn-p" id="pfFotoTirar" hidden>Tirar</button>
+          </div>
+          <label class="tot-linha cfg-linha"><span><b>Nome</b><small class="sub">Como você quer ser chamado.</small></span><input class="campo-texto" id="pfNome" placeholder="seu nome" maxlength="40" autocomplete="name"></label>
+          <label class="tot-linha cfg-linha"><span><b>Usuário</b><small class="sub">Seu @ no app.</small></span><input class="campo-texto" id="pfUsuario" placeholder="@usuario" maxlength="30" autocomplete="username"></label>
+        </div>
         <div class="tot-rotulo">planilha</div>
         <div class="card tot-lista">
           <label class="tot-linha cfg-linha"><span><b>Trabalho pago vira entrada sozinho</b><small class="sub">Cada valor que cai na conta de um trabalho aparece na planilha como entrada, com a tag Comissão. Desligado, você lança as entradas na mão.</small></span><input type="checkbox" class="switch" id="cfgAuto" role="switch"></label>
@@ -550,6 +559,8 @@
 <script src="trabalhos.js"></script>
 <script src="dashboard.js"></script>
 <script src="economia.js"></script>
+<script src="perfil.js"></script>
+<script src="menu.js"></script>
 <script src="shell.js"></script>
 <script src="conta.js"></script>
 </body>

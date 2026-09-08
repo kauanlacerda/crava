@@ -122,7 +122,7 @@
     $('dbCatLista').innerHTML = topG.length ? topG.map((x, i) => `<li><i style="--c:var(--chart-${i + 1})"></i><span>${esc(x.tag.nome)}</span><b>${totG ? Math.round(x.valor / totG * 100) : 0}%</b></li>`).join('') : `<li><span class="sub">Sem gastos no período.</span></li>`;
 
     // lançamentos: os últimos até hoje
-    const recentes = P.materializar(est.movimentacoes, P.addDias(hj, -60), hj).reverse().slice(0, 6);
+    const recentes = P.materializar(est.movimentacoes, P.addDias(hj, -60), hj).reverse().slice(0, 12); // deitado o CSS mostra 6; em pé, 12
     $('dbLancamentos').innerHTML = recentes.length ? recentes.map(o => {
       const ini = (o.mov.nome || '?').trim()[0].toUpperCase();
       const cor = o.mov.origem ? '#3b82f6' : { entrada: '#22c55e', saida: '#ef4444', diario: '#ec4899', economia: '#84cc16', cartao: '#8b5cf6' }[o.mov.tipo];

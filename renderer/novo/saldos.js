@@ -212,7 +212,7 @@
     renderMeses();
     // estado inicial pela URL, pra captura e teste
     if (q.get('dia')) setTimeout(() => abrirDia(q.get('dia'), q.get('tipo') || ''), 50);
-    if (q.get('novo') === '1') setTimeout(() => abrirNovo(q.get('dia') || hj, q.get('tipo') || 'saida'), 50);
+    if (q.get('novo') === '1') setTimeout(() => { abrirNovo(q.get('dia') || hj, q.get('tipo') || 'saida'); if (q.get('repete')) { $('fmRepete').value = q.get('repete'); sincronizarForm(); } }, 50);
     $('periodoAnoAnt').onclick = () => moverPeriodo(-12); $('periodoMesAnt').onclick = () => moverPeriodo(-1);
     $('periodoMesProx').onclick = () => moverPeriodo(1); $('periodoAnoProx').onclick = () => moverPeriodo(12);
     $('meses').addEventListener('click', (e) => {

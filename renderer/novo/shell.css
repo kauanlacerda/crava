@@ -159,7 +159,7 @@ input:focus-visible, select:focus-visible { outline: none; border-color: var(--a
 /* barra recolhida em ícones */
 [data-sidebar="icon"] .sidebar { width: 3.5rem; }
 [data-sidebar="icon"] .sb-busca, [data-sidebar="icon"] .sb-marca-txt, [data-sidebar="icon"] .sb-rotulo,
-[data-sidebar="icon"] .sb-item span, [data-sidebar="icon"] .sb-seta, [data-sidebar="icon"] .sb-recolhivel.aberto > .sb-sub,
+[data-sidebar="icon"] .sb-item span, [data-sidebar="icon"] .sb-seta,
 [data-sidebar="icon"] .sb-usuario-txt, [data-sidebar="icon"] .sb-seta-v { display: none; }
 [data-sidebar="icon"] .sb-item, [data-sidebar="icon"] .sb-marca, [data-sidebar="icon"] .sb-usuario { justify-content: center; padding: 0; }
 [data-sidebar="hidden"] .sidebar { display: none; }
@@ -365,3 +365,52 @@ input:focus-visible, select:focus-visible { outline: none; border-color: var(--a
 .novidades-lista li::before { content: ''; position: absolute; left: 0; top: .55em; width: .375rem; height: .375rem; border-radius: 50%; background: var(--primario); }
 .patch-versao { font-weight: 700; margin: 1rem 0 .5rem; font-size: .6875rem; color: var(--texto-2); text-transform: uppercase; letter-spacing: .06em; }
 .novidades-nota { padding: .625rem .75rem; border: 1px solid var(--borda); border-radius: var(--raio); margin-bottom: .625rem; line-height: 1.45; }
+
+/* ---------- barra recolhida: o grupo Planilha vira um menu flutuante ---------- */
+[data-sidebar="icon"] .sb-recolhivel.aberto > .sb-sub {
+  display: flex; position: fixed; left: 3.875rem; top: var(--flyout-top, 4rem); z-index: 45; margin: 0; padding: .375rem; min-width: 12rem;
+  border: 1px solid var(--borda); border-radius: var(--raio); background: var(--popover); box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+}
+[data-sidebar="icon"] .sb-recolhivel.aberto > .sb-sub::before { content: attr(data-titulo); font-size: .6875rem; font-weight: 600; color: var(--texto-2); padding: .25rem .5rem .375rem; }
+[data-sidebar="icon"] .sb-recolhivel.aberto > .sb-item { background: var(--sidebar-ativo); color: var(--texto); }
+
+/* ---------- perfil ---------- */
+.avatar.foto { background-size: cover; background-position: center; color: transparent; }
+.avatar-g { width: 2.75rem; height: 2.75rem; font-size: 1rem; }
+.perfil-linha { gap: .875rem; }
+.campo-texto { background: var(--painel); border: 1px solid var(--campo); border-radius: var(--raio); height: 2rem; padding: 0 .625rem; color: var(--texto); font: inherit; font-size: .8125rem; width: 12rem; text-align: right; flex: none; }
+.campo-texto:focus { outline: 2px solid var(--anel); outline-offset: 1px; }
+.btn-arquivo { position: relative; overflow: hidden; cursor: pointer; }
+.btn-arquivo input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+/* ---------- monitor em pé (ex.: 1440x2560): usa a altura em vez de espremer 4 colunas ---------- */
+@media (orientation: portrait) {
+  .grade-4 { grid-template-columns: 1fr 1fr; }
+  .grade-3 { grid-template-columns: 1fr 1fr; }
+  #view-dashboard .grade-3 > :first-child { grid-column: 1 / -1; }
+  #view-economia .grade-3 > :last-child { grid-column: 1 / -1; }
+  .grade-3-1 { grid-template-columns: 1fr; }
+  .grade-3-1 > .coluna { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+  .barras { height: 16rem; }
+  .kpi { font-size: 1.75rem; }
+}
+/* deitado, a lista de lançamentos mostra 6; em pé sobra altura pra 12 */
+@media (orientation: landscape) { #dbLancamentos tr:nth-child(n+7) { display: none; } }
+
+/* ---------- menu (substitui o <select> nativo) ---------- */
+.menu-botao { display: flex; align-items: center; justify-content: space-between; gap: .5rem; height: 2.25rem; padding: 0 .625rem; border: 1px solid var(--campo); border-radius: var(--raio); background: var(--painel); color: var(--texto); font: inherit; font-size: .8125rem; text-align: left; cursor: pointer; min-width: 0; }
+.menu-botao:hover { background: var(--secundario); }
+.menu-botao .menu-valor { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-chev { width: 1rem; height: 1rem; color: var(--texto-2); flex: none; }
+.linha-campo .menu-botao { flex: 1; height: 2.5rem; padding: 0; border: 0; background: none; font-size: .875rem; }
+.linha-campo .menu-botao:hover { background: none; }
+.linha-campo .menu-botao + .chev, .db-periodo .menu-botao { display: none; }
+.pd-filtro .menu-botao { width: 100%; height: 2rem; }
+.menu-lista { position: fixed; z-index: 90; display: flex; flex-direction: column; gap: .125rem; padding: .25rem; max-height: min(20rem, 60vh); overflow-y: auto; background: var(--popover); border: 1px solid var(--borda); border-radius: var(--raio); box-shadow: 0 10px 30px rgba(0, 0, 0, .35); }
+.menu-item { display: flex; align-items: center; justify-content: space-between; gap: 1rem; height: 2rem; padding: 0 .625rem; border-radius: calc(var(--raio) - 3px); font: inherit; font-size: .8125rem; color: var(--texto); text-align: left; white-space: nowrap; cursor: pointer; }
+.menu-item:hover, .menu-item:focus-visible { background: var(--secundario); outline: none; }
+.menu-item svg { width: .875rem; height: .875rem; visibility: hidden; flex: none; }
+.menu-item.sel svg { visibility: visible; }
+.menu-item.off { color: var(--texto-2); cursor: default; }
+/* o avatar do perfil não é um texto de linha: fica redondo e no tamanho dele */
+.perfil-linha > .avatar.avatar-g { flex: none; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; }

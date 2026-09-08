@@ -148,10 +148,12 @@
     $('contaNome').textContent = logado ? (S.config.nome && S.config.nome !== 'você' ? S.config.nome : usuario.email.split('@')[0]) : 'sem conta';
     $('btnSair').hidden = !logado; $('btnSincronizar').hidden = !logado; $('btnEntrarConfig').hidden = logado || !temNuvem;
     statusSync(logado ? (jaSincronizou ? t('syncOk') : '') : '');
+    if (window.Perfil) window.Perfil.render();
   }
   let timerEnvio = null;
   function agendarEnvio() { if (!usuario || modoOffline) return; clearTimeout(timerEnvio); timerEnvio = setTimeout(() => sincronizar(false), 3000); }
   window.agendarEnvio = agendarEnvio;
+  window.Conta = { get usuario() { return usuario; }, get modoOffline() { return modoOffline; } };
   window.addEventListener('estado:trocou', () => { try { atualizarCardConta(); } catch { } });
 
   // ---------- ligações ----------
