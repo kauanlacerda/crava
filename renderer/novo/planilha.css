@@ -55,7 +55,9 @@ td.cel .ver:hover { background: var(--secundario); }
 td.cel.entrada .ver.tem { color: var(--t-entrada); }
 td.saldo { text-align: right; padding: 0 .625rem; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; color: var(--texto); }
 td.saldo.neg { background: rgba(239, 68, 68, var(--f, .25)); }
-td.saldo.pos { background: rgba(34, 197, 94, var(--f, .12)); }
+td.saldo.amarelo { background: rgba(245, 158, 11, .26); }
+td.saldo.verde { background: rgba(34, 197, 94, .14); }
+td.saldo.verde-forte { background: rgba(34, 197, 94, .36); }
 .grade-dias tfoot td { border-bottom: 0; padding: .5rem .625rem; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; background: var(--card); position: sticky; bottom: 0; z-index: 2; box-shadow: inset 0 1px 0 var(--borda); white-space: nowrap; }
 .grade-dias tfoot td:first-child { text-align: center; }
 .ic-tipo { width: .875rem; height: .875rem; border-radius: 50%; display: inline-grid; place-items: center; color: #fff; font-size: .5625rem; font-weight: 800; line-height: 1; flex: none; }
@@ -166,7 +168,9 @@ button.tot-linha:hover { background: var(--secundario); }
 .hz-dia .hz-v { font-variant-numeric: tabular-nums; font-weight: 600; }
 .hz-dia.fds { background: rgba(127, 127, 127, .05); }
 .hz-dia.neg { background: rgba(239, 68, 68, var(--f, .25)); }
-.hz-dia.pos { background: rgba(34, 197, 94, var(--f, .12)); }
+.hz-dia.amarelo { background: rgba(245, 158, 11, .26); }
+.hz-dia.verde { background: rgba(34, 197, 94, .14); }
+.hz-dia.verde-forte { background: rgba(34, 197, 94, .36); }
 .hz-dia.hoje .hz-n { color: var(--texto); text-decoration: underline; }
 .hz-dia:hover { filter: brightness(1.25); }
 

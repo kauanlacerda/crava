@@ -62,8 +62,9 @@
       return;
     }
     const cab = P.TIPOS.map(t => `<th><span class="tp"><span class="ic-tipo ${t}">${LETRA[t]}</span>${P.PLURAL[t]}</span></th>`).join('');
-    cont.innerHTML = mesesVisiveis().map(({ a, m }) => {
-      const r = P.resumoMes(EC, a, m);
+    const resumos = mesesVisiveis().map(({ a, m }) => ({ a, m, r: P.resumoMes(EC, a, m) }));
+    const maxPos = Math.max(1, ...resumos.flatMap(x => x.r.dias.map(d => d.saldo))); // referência do termômetro: o maior saldo dos 12 meses
+    cont.innerHTML = resumos.map(({ a, m, r }) => {
       const maxAbs = Math.max(1, ...r.dias.map(d => Math.abs(d.saldo)));
       const linhas = r.dias.map(d => {
         const cls = [d.fimDeSemana ? 'fds' : '', d.data === hj ? 'hoje' : '', d.checkin ? 'checkin' : ''].filter(Boolean).join(' ');
@@ -72,7 +73,7 @@
           <button type="button" class="ver ${d[t] ? 'tem' : 'zero'}" data-ver="${d.data}" data-tipo="${t}" aria-label="Ver ${P.PLURAL[t]} do dia ${d.dia}">${P.fmtBRL(d[t])}</button>
         </div></td>`).join('');
         const f = d.saldo < 0 ? (0.18 + 0.55 * Math.abs(d.saldo) / maxAbs).toFixed(2) : (0.06 + 0.25 * Math.abs(d.saldo) / maxAbs).toFixed(2);
-        return `<tr class="${cls}" data-linha="${d.data}"><td class="dia"><button type="button" data-checkin="${d.data}" aria-label="Check-in do dia ${d.dia}" aria-pressed="${d.checkin}">${d.dia}</button></td>${cels}<td class="saldo ${d.saldo < 0 ? 'neg' : d.saldo > 0 ? 'pos' : ''}" style="--f:${f}"><button type="button" data-ver="${d.data}" data-tipo="" aria-label="Ver movimentações do dia ${d.dia}" style="width:100%;text-align:right">${P.fmtBRL(d.saldo)}</button></td></tr>`;
+        return `<tr class="${cls}" data-linha="${d.data}"><td class="dia"><button type="button" data-checkin="${d.data}" aria-label="Check-in do dia ${d.dia}" aria-pressed="${d.checkin}">${d.dia}</button></td>${cels}<td class="saldo ${P.faixaSaldo(d.saldo, maxPos)}" style="--f:${f}"><button type="button" data-ver="${d.data}" data-tipo="" aria-label="Ver movimentações do dia ${d.dia}" style="width:100%;text-align:right">${P.fmtBRL(d.saldo)}</button></td></tr>`;
       }).join('');
       const tot = P.TIPOS.map(t => `<td><span class="tp"><span class="ic-tipo ${t}">${LETRA[t]}</span></span> ${P.fmtBRL(r.totais[t])}</td>`).join('');
       return `<section class="mes" data-mes="${a}-${String(m).padStart(2, '0')}">

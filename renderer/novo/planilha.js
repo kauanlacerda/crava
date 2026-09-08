@@ -210,7 +210,17 @@
     return out;
   }
 
-  const api = { TIPOS, SINAL, NOMES, PLURAL, chave, partes, diasNoMes, hoje, addDias, addMeses, diaSemana, fmtBRL, fmtCompacto, novoId, estadoVazio, ocorrencias, materializar, saldoAntes, resumoMes, adicionar, editar, excluir, encerrarEm, alternarCheckin, novaTag, entradasDeTrabalhos, CORES_TAG, periodoFatura, faturaCartao, valorLiquido };
+  // Termômetro do saldo: vermelho abaixo de zero; acima, três faixas em
+  // relação ao maior saldo do período visto — amarelo (menos de um quarto),
+  // verde claro (até 60%) e verde forte (o resto). Lê-se de longe, como semáforo.
+  function faixaSaldo(saldo, maxPos) {
+    if (saldo < 0) return 'neg';
+    if (!(saldo > 0)) return '';
+    const p = saldo / Math.max(1, maxPos);
+    return p < .25 ? 'amarelo' : p < .6 ? 'verde' : 'verde-forte';
+  }
+
+  const api = { faixaSaldo, TIPOS, SINAL, NOMES, PLURAL, chave, partes, diasNoMes, hoje, addDias, addMeses, diaSemana, fmtBRL, fmtCompacto, novoId, estadoVazio, ocorrencias, materializar, saldoAntes, resumoMes, adicionar, editar, excluir, encerrarEm, alternarCheckin, novaTag, entradasDeTrabalhos, CORES_TAG, periodoFatura, faturaCartao, valorLiquido };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   raiz.Planilha = api;
 })(typeof window !== 'undefined' ? window : globalThis);
