@@ -95,5 +95,16 @@ ok('picpay out/26: período 02/set → 01/out, vence 10/10', fp.de === '2026-09-
 ok('picpay out/26: total 20', fp.total === 20, fp.total);
 ok('fecha 31 / vence 10: a fatura de março fecha em 28/fev', P.periodoFatura({ fechamento: 31, vencimento: 10 }, 2026, 3).ate === '2026-02-28', P.periodoFatura({ fechamento: 31, vencimento: 10 }, 2026, 3).ate);
 
+// retirada da economia
+const I = P.estadoVazio();
+P.adicionar(I, { tipo: 'entrada', valor: 1000, nome: 'Pgto', data: '2026-09-01' });
+P.adicionar(I, { tipo: 'economia', valor: 300, nome: 'Guardei', data: '2026-09-02' });
+P.adicionar(I, { tipo: 'economia', valor: 100, nome: 'Peguei de volta', data: '2026-09-03', retirada: true });
+const si = P.resumoMes(I, 2026, 9);
+ok('retirada: saldo dia 2 = 700', si.dias[1].saldo === 700, si.dias[1].saldo);
+ok('retirada: saldo dia 3 = 800 (voltou pro saldo)', si.dias[2].saldo === 800, si.dias[2].saldo);
+ok('retirada: economias do mês = 200 (líquido)', si.totais.economia === 200, si.totais.economia);
+ok('retirada: célula do dia 3 mostra -100', si.dias[2].economia === -100, si.dias[2].economia);
+
 console.log(falhas ? `\n>> ${falhas} FALHA(S)` : '\n>> tudo passou');
 process.exit(falhas ? 1 : 0);

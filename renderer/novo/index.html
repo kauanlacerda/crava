@@ -284,6 +284,59 @@
       </div>
     </section>
 
+    <!-- ================= ECONOMIA ================= -->
+    <section class="view" id="view-economia" hidden>
+      <div class="pagina-topo"><h1>Economia</h1><div class="pagina-acoes"><button type="button" class="btn btn-contorno" id="ecRetirar"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>Retirar</button><button type="button" class="btn btn-primario" id="ecGuardar"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Guardar</button></div></div>
+      <section class="grade grade-3">
+        <article class="card">
+          <header class="card-cab"><h2>Guardado</h2><span class="chip chip-neutro" id="ecChip">—</span></header>
+          <div class="card-corpo">
+            <div class="kpi"><span id="ecTotal">—</span> <span class="sub-inline" id="ecMetaTxt"></span></div>
+            <div class="progresso" aria-hidden="true"><i id="ecBarra" style="--w:0%"></i></div>
+            <form class="ec-meta" id="ecMetaForm"><label><span>meta</span><span class="prefixo">R$</span><input id="ecMetaInput" inputmode="decimal" placeholder="opcional" aria-label="Meta de economia"></label><button type="submit" class="btn btn-contorno btn-p">salvar meta</button></form>
+          </div>
+        </article>
+        <article class="card">
+          <header class="card-cab"><h2>Este mês</h2></header>
+          <div class="card-corpo"><div class="kpi" id="ecMes">—</div><div class="sub" id="ecMesSub"></div></div>
+        </article>
+        <article class="card">
+          <header class="card-cab"><h2>Por mês</h2><button type="button" class="btn btn-contorno btn-p" id="ecVerGrade">Ver na planilha</button></header>
+          <div class="card-corpo"><div class="barras barras-p" id="ecBarras" aria-label="Guardado por mês, últimos 6 meses"></div></div>
+        </article>
+      </section>
+      <div class="tot-rotulo">histórico</div>
+      <div class="card tags-lista" id="ecLista"></div>
+    </section>
+
+    <!-- ================= CONFIGURAÇÕES ================= -->
+    <section class="view" id="view-config" hidden>
+      <div class="pagina-topo"><h1>Configurações</h1></div>
+      <div class="tags-corpo cfg">
+        <div class="tot-rotulo">planilha</div>
+        <div class="card tot-lista">
+          <label class="tot-linha cfg-linha"><span><b>Trabalho pago vira entrada sozinho</b><small class="sub">Cada valor que cai na conta de um trabalho aparece na planilha como entrada, com a tag Comissão. Desligado, você lança as entradas na mão.</small></span><input type="checkbox" class="switch" id="cfgAuto" role="switch"></label>
+        </div>
+        <div class="tot-rotulo">aparência</div>
+        <div class="card tot-lista">
+          <button type="button" class="tot-linha cfg-linha" id="cfgPersonalizar"><span><b>Personalizar</b><small class="sub">Cor do tema e dos gráficos, fonte, escala, raio, claro ou escuro, barra lateral.</small></span><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+          <div class="tot-linha cfg-linha"><span><b>Tamanho por aba</b><small class="sub">O controle − 100% + no cabeçalho vale só pra tela aberta. Ctrl + e Ctrl − também funcionam; Ctrl 0 volta a 100%.</small></span></div>
+        </div>
+        <div class="tot-rotulo">meus dados</div>
+        <div class="card tot-lista">
+          <div class="tot-linha cfg-linha"><span><b>O que está guardado</b><small class="sub" id="cfgResumoDados">—</small></span></div>
+          <button type="button" class="tot-linha cfg-linha" id="cfgExportar"><span><b>Exportar</b><small class="sub">Baixa um arquivo .json com toda a planilha. Guarde onde quiser: você nunca fica refém do app.</small></span><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg></button>
+          <label class="tot-linha cfg-linha"><span><b>Importar</b><small class="sub">Substitui a planilha pelo conteúdo de um arquivo exportado.</small></span><input type="file" id="cfgImportar" accept="application/json,.json" aria-label="Importar arquivo"><svg viewBox="0 0 24 24"><path d="M12 21V9M7 14l5-5 5 5M4 3h16"/></svg></label>
+          <button type="button" class="tot-linha cfg-linha perigo" id="cfgZerar"><span><b>Zerar planilha</b><small class="sub">Apaga lançamentos, tags, cartões e check-ins. Não tem volta.</small></span></button>
+          <div class="sub tot-nota" id="cfgMsg"></div>
+        </div>
+        <div class="tot-rotulo">conta</div>
+        <div class="card tot-lista">
+          <div class="tot-linha cfg-linha"><span><b>sak</b><small class="sub">sakarquivo@gmail.com · a conta e a sincronização vêm do app atual quando a casca for ligada ao Electron.</small></span></div>
+        </div>
+      </div>
+    </section>
+
     <section class="view" id="view-outra" hidden>
       <div class="pagina-topo"><h1 id="outraTitulo">Em construção</h1></div>
       <p class="sub" id="outraTexto">Esta tela ainda não foi construída.</p>
@@ -315,6 +368,7 @@
       <label class="linha-campo"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><input id="fmNome" placeholder="saída" aria-label="Nome"></label>
       <label class="linha-campo"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="prefixo" style="font-weight:500;color:var(--texto)">data</span><input type="date" id="fmData" aria-label="Data" style="text-align:right"></label>
       <label class="linha-campo"><svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><select id="fmRepete" aria-label="Repetição"><option value="nao">não repete</option><option value="mensal">mensalmente</option><option value="semanal">semanalmente</option><option value="diaria">diariamente</option><option value="parcelado">parcelado</option></select><svg class="chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></label>
+      <div class="linha-campo" id="fmRetiradaWrap" hidden><span class="prefixo" style="font-weight:500;color:var(--texto)">no guardado</span><div class="seg seg-mini"><button type="button" id="fmGuardar" class="sel">guardar</button><button type="button" id="fmRetirar">retirar</button></div></div>
       <label class="linha-campo" id="fmParcelasWrap" hidden><span class="prefixo" style="font-weight:500;color:var(--texto)">parcelas</span><input type="number" id="fmParcelas" min="2" max="120" value="2" aria-label="Número de parcelas" style="text-align:right"></label>
       <div id="fmCartaoWrap" hidden><label class="linha-campo"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg><select id="fmCartao" aria-label="Cartão"></select><svg class="chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></label><div class="aviso-campo" id="fmCartaoAviso">Nenhum cartão cadastrado ainda. Dá pra lançar mesmo assim e cadastrar em Planilha › Cartões.</div></div>
       <div class="campo-tags"><div class="cab"><svg viewBox="0 0 24 24"><path d="M20 12 12 20 3 11V3h8l9 9Z"/><circle cx="7.5" cy="7.5" r="1"/></svg>tags</div><div class="chips" id="fmChips"></div></div>
@@ -390,6 +444,7 @@
 <script src="cartoes.js"></script>
 <script src="trabalhos-mock.js"></script>
 <script src="dashboard.js"></script>
+<script src="economia.js"></script>
 <script src="shell.js"></script>
 </body>
 </html>

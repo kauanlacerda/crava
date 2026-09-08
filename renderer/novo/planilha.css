@@ -193,3 +193,26 @@ button.tot-linha:hover { background: var(--secundario); }
 .gm-valor input { width: 7rem; text-align: right; }
 .prev-dias { width: 3.5rem; height: 1.75rem; border-radius: calc(var(--raio) - 3px); border: 1px solid var(--campo); background: var(--painel); color: var(--texto); font: inherit; text-align: right; padding: 0 .375rem; }
 .prev-final b { font-size: 1.125rem; }
+
+/* ---------- Economia ---------- */
+.ec-meta { display: flex; align-items: center; gap: .5rem; margin-top: .875rem; }
+.ec-meta label { display: flex; align-items: center; gap: .375rem; flex: 1; font-size: .75rem; color: var(--texto-2); font-weight: 600; }
+.ec-meta input { flex: 1; min-width: 0; height: 1.75rem; border-radius: calc(var(--raio) - 3px); border: 1px solid var(--campo); background: var(--painel); color: var(--texto); font: inherit; padding: 0 .5rem; text-align: right; }
+.barras-p { height: 7rem; }
+.tag-linha b.pos { color: var(--positivo-texto); } .tag-linha b.neg { color: var(--negativo); }
+.tag-linha small { font-weight: 400; }
+.seg-mini { padding: .125rem; }
+.seg-mini button { height: 1.5rem; padding: 0 .625rem; flex: none; }
+
+/* ---------- Configurações ---------- */
+.cfg-linha { align-items: center; }
+.cfg-linha > span { flex-direction: column; align-items: flex-start; gap: .125rem; }
+.cfg-linha small { font-size: .75rem; font-weight: 400; line-height: 1.4; }
+.cfg-linha > svg { color: var(--texto-2); }
+.cfg-linha.perigo b { color: var(--negativo); }
+label.cfg-linha { cursor: pointer; }
+label.cfg-linha input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.switch { appearance: none; -webkit-appearance: none; width: 2.25rem; height: 1.25rem; border-radius: 999px; background: var(--secundario); border: 1px solid var(--borda); position: relative; cursor: pointer; flex: none; margin: 0; transition: background-color .15s ease; }
+.switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: calc(1.25rem - 6px); height: calc(1.25rem - 6px); border-radius: 50%; background: var(--texto-2); transition: transform .15s ease, background-color .15s ease; }
+.switch:checked { background: var(--primario); border-color: var(--primario); }
+.switch:checked::after { transform: translateX(1rem); background: var(--primario-texto); }

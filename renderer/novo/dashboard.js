@@ -32,7 +32,7 @@
   const somaTipos = (ocs, tipos) => P.deCentavos ? 0 : 0; // (placeholder, não usado)
   function totais(est, p) {
     const t = { entrada: 0, saida: 0, diario: 0, economia: 0, cartao: 0 };
-    for (const o of P.materializar(est.movimentacoes, p.de, p.ate)) t[o.mov.tipo] += Math.round(o.valor * 100);
+    for (const o of P.materializar(est.movimentacoes, p.de, p.ate)) t[o.mov.tipo] += Math.round(P.valorLiquido(o) * 100);
     for (const k in t) t[k] /= 100;
     return { ...t, gastos: t.saida + t.diario + t.cartao, lucro: t.entrada - t.saida - t.diario - t.economia - t.cartao };
   }
@@ -126,12 +126,12 @@
     $('dbLancamentos').innerHTML = recentes.length ? recentes.map(o => {
       const ini = (o.mov.nome || '?').trim()[0].toUpperCase();
       const cor = o.mov.origem ? '#3b82f6' : { entrada: '#22c55e', saida: '#ef4444', diario: '#ec4899', economia: '#84cc16', cartao: '#8b5cf6' }[o.mov.tipo];
-      const sinal = o.mov.tipo === 'entrada' ? 'pos' : 'neg';
-      return `<tr><td><span class="ava-l" style="--c:${cor}">${esc(ini)}</span>${esc(o.mov.nome)}${o.parcela ? ` ${o.parcela}/${o.parcelas}` : ''}</td><td>${fmtData(o.data)}</td><td><span class="chip chip-neutro">${TIPO_ROTULO[o.mov.tipo]}</span></td><td class="num ${sinal}">${P.fmtBRL(o.mov.tipo === 'entrada' ? o.valor : -o.valor, { sinal: true })}</td></tr>`;
+      const sinal = (o.mov.tipo === 'entrada' || o.mov.retirada) ? 'pos' : 'neg';
+      return `<tr><td><span class="ava-l" style="--c:${cor}">${esc(ini)}</span>${esc(o.mov.nome)}${o.parcela ? ` ${o.parcela}/${o.parcelas}` : ''}</td><td>${fmtData(o.data)}</td><td><span class="chip chip-neutro">${TIPO_ROTULO[o.mov.tipo]}</span></td><td class="num ${sinal}">${P.fmtBRL((o.mov.tipo === 'entrada' || o.mov.retirada) ? o.valor : -o.valor, { sinal: true })}</td></tr>`;
     }).join('') : `<tr><td colspan="4" class="sub" style="text-align:center;height:4rem">Nenhum lançamento nos últimos 60 dias.</td></tr>`;
 
     // economia
-    const guardadoTotal = P.materializar(est.movimentacoes, '1970-01-01', hj).filter(o => o.mov.tipo === 'economia').reduce((s, o) => s + o.valor, 0);
+    const guardadoTotal = P.materializar(est.movimentacoes, '1970-01-01', hj).filter(o => o.mov.tipo === 'economia').reduce((s, o) => s + P.valorLiquido(o), 0);
     const meta = Number(est.metaEconomia) || 0;
     $('dbEconomia').textContent = P.fmtBRL(guardadoTotal);
     $('dbEconomiaMeta').textContent = meta ? `de ${P.fmtBRL(meta)}` : `guardado até hoje · ${P.fmtBRL(T.economia)} neste período`;

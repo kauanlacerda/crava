@@ -112,7 +112,7 @@
       return `<div class="pd-item" data-id="${o.mov.id}">
         <span class="ic-tipo ${o.mov.tipo}">${LETRA[o.mov.tipo]}</span>
         <div class="nome">${esc(o.mov.nome)}${parc}</div>
-        <div class="valor">${P.fmtBRL(o.valor)}</div>
+        <div class="valor">${o.mov.retirada ? '− ' : ''}${P.fmtBRL(o.valor)}</div>
         ${o.mov.origem ? `<span class="menu sub" title="veio de um trabalho pago"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></svg></span>` : `<button type="button" class="btn-icone btn-ghost menu" data-menu="${o.mov.id}" aria-label="Opções"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>`}
         <div class="meta">${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}${tags}</div>
         <div class="tipo-txt">${rep}${P.NOMES[o.mov.tipo]}</div>
@@ -141,9 +141,9 @@
   function depoisDeMudar() { gravar(); renderMeses(); if (diaAberto) renderDia(); window.dispatchEvent(new CustomEvent('planilha:mudou')); }
 
   // ---------- formulário ----------
-  let editando = null; let tagsSel = new Set();
-  function abrirNovo(data, tipo) {
-    editando = null; tagsSel = new Set();
+  let editando = null; let tagsSel = new Set(); let retiradaSel = false;
+  function abrirNovo(data, tipo, extra) {
+    editando = null; tagsSel = new Set(); retiradaSel = !!(extra && extra.retirada);
     $('fmTitulo').textContent = 'adicionar';
     $('fmValor').value = ''; $('fmTipo').value = tipo || 'saida'; $('fmNome').value = ''; $('fmData').value = data || hj;
     $('fmRepete').value = 'nao'; $('fmParcelas').value = 2;
@@ -151,7 +151,7 @@
     sincronizarForm(); $('ovMov').hidden = false; setTimeout(() => $('fmValor').focus(), 40);
   }
   function abrirEditar(m) {
-    editando = m; tagsSel = new Set(m.tags || []);
+    editando = m; tagsSel = new Set(m.tags || []); retiradaSel = !!m.retirada;
     $('fmTitulo').textContent = 'editar';
     $('fmValor').value = String(m.valor).replace('.', ','); $('fmTipo').value = m.tipo; $('fmNome').value = m.nome; $('fmData').value = m.data;
     $('fmRepete').value = m.repete ? m.repete.tipo : 'nao'; $('fmParcelas').value = m.repete?.parcelas || 2;
@@ -164,9 +164,11 @@
     const tipo = $('fmTipo').value;
     $('fmIcTipo').className = 'ic-tipo ' + tipo; $('fmIcTipo').textContent = LETRA[tipo];
     $('fmNome').placeholder = P.NOMES[tipo];
-    $('fmSalvar').className = 'btn-tipo ' + tipo; $('fmSalvar').textContent = (editando ? 'salvar ' : 'adicionar ') + P.NOMES[tipo];
+    $('fmSalvar').className = 'btn-tipo ' + tipo; $('fmSalvar').textContent = (editando ? 'salvar ' : 'adicionar ') + (tipo === 'economia' && retiradaSel ? 'retirada' : P.NOMES[tipo]);
     $('fmParcelasWrap').hidden = $('fmRepete').value !== 'parcelado';
     $('fmCartaoWrap').hidden = tipo !== 'cartao';
+    $('fmRetiradaWrap').hidden = tipo !== 'economia';
+    $('fmGuardar').classList.toggle('sel', !retiradaSel); $('fmRetirar').classList.toggle('sel', retiradaSel);
     if (tipo === 'cartao') {
       const sel = $('fmCartao'); const atual = sel.value;
       sel.innerHTML = `<option value="">sem cartão</option>` + E.cartoes.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join('');
@@ -181,7 +183,7 @@
     const valor = parseFloat(String($('fmValor').value).replace(/\./g, '').replace(',', '.')) || 0;
     if (valor <= 0) { $('fmValor').focus(); return; }
     const rep = $('fmRepete').value === 'nao' ? null : { tipo: $('fmRepete').value, parcelas: +$('fmParcelas').value || 2 };
-    const dados = { tipo: $('fmTipo').value, valor, nome: $('fmNome').value, data: $('fmData').value || hj, repete: rep, tags: [...tagsSel], cartaoId: $('fmTipo').value === 'cartao' ? $('fmCartao').value : '' };
+    const dados = { tipo: $('fmTipo').value, valor, nome: $('fmNome').value, data: $('fmData').value || hj, repete: rep, tags: [...tagsSel], cartaoId: $('fmTipo').value === 'cartao' ? $('fmCartao').value : '', retirada: $('fmTipo').value === 'economia' && retiradaSel };
     if (editando) P.editar(E, editando.id, dados); else P.adicionar(E, dados);
     fecharForm(); depoisDeMudar();
     // se o mês do lançamento não está visível, traz pra perto
@@ -234,6 +236,7 @@
     $('fmCancelar').onclick = fecharForm; $('fmFechar').onclick = fecharForm;
     $('ovMov').addEventListener('click', (e) => { if (e.target === $('ovMov')) fecharForm(); });
     $('fmTipo').onchange = sincronizarForm; $('fmRepete').onchange = sincronizarForm;
+    $('fmGuardar').onclick = () => { retiradaSel = false; sincronizarForm(); }; $('fmRetirar').onclick = () => { retiradaSel = true; sincronizarForm(); };
     $('fmChips').addEventListener('click', (e) => { const b = e.target.closest('button[data-tag]'); if (!b) return; const id = b.dataset.tag; if (tagsSel.has(id)) tagsSel.delete(id); else tagsSel.add(id); sincronizarForm(); });
     $('fmExcluir').onclick = () => { if (editando) { P.excluir(E, editando.id); fecharForm(); depoisDeMudar(); } };
     document.addEventListener('keydown', (e) => {

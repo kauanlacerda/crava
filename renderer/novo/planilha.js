@@ -44,7 +44,7 @@
 
   // ---------- estado ----------
   function estadoVazio() {
-    return { movimentacoes: [], tags: [], cartoes: [], checkins: [], previsaoDiario: 0, previsaoDias: 30, gastosMensais: [] };
+    return { movimentacoes: [], tags: [], cartoes: [], checkins: [], previsaoDiario: 0, previsaoDias: 30, gastosMensais: [], metaEconomia: 0, entradaAutomatica: true };
   }
 
   // ---------- ocorrências de uma movimentação num período ----------
@@ -89,6 +89,9 @@
 
   // ---------- resumos ----------
   const zeros = () => ({ entrada: 0, saida: 0, diario: 0, economia: 0, cartao: 0 });
+  // Uma economia com `retirada` tira do guardado e devolve pro saldo: conta
+  // negativa no total de economias e com sinal invertido no saldo.
+  const valorLiquido = (o) => (o.mov.tipo === 'economia' && o.mov.retirada) ? -o.valor : o.valor;
 
   // saldo acumulado até o dia anterior a `data`
   function saldoAntes(movs, data) {
@@ -96,7 +99,7 @@
     for (const m of movs) if (!minimo || m.data < minimo) minimo = m.data;
     if (!minimo || minimo >= data) return 0;
     let s = 0;
-    for (const o of materializar(movs, minimo, addDias(data, -1))) s += SINAL[o.mov.tipo] * centavos(o.valor);
+    for (const o of materializar(movs, minimo, addDias(data, -1))) s += SINAL[o.mov.tipo] * centavos(valorLiquido(o));
     return deCentavos(s);
   }
 
@@ -112,7 +115,7 @@
     const checkins = new Set(estado.checkins || []);
     for (let d = 1; d <= n; d++) {
       const k = chave(ano, mes, d); const itens = porDia.get(k) || []; const t = zeros();
-      for (const o of itens) { const c = centavos(o.valor); t[o.mov.tipo] += c; totais[o.mov.tipo] += c; saldo += SINAL[o.mov.tipo] * c; }
+      for (const o of itens) { const c = centavos(valorLiquido(o)); t[o.mov.tipo] += c; totais[o.mov.tipo] += c; saldo += SINAL[o.mov.tipo] * c; }
       for (const tp of TIPOS) t[tp] = deCentavos(t[tp]);
       dias.push({ data: k, dia: d, fimDeSemana: [0, 6].includes(diaSemana(k)), checkin: checkins.has(k), itens, ...t, saldo: deCentavos(saldo) });
     }
@@ -125,6 +128,7 @@
     const m = { id: novoId(), tipo: TIPOS.includes(dados.tipo) ? dados.tipo : 'saida', valor: Math.abs(Number(dados.valor) || 0), nome: (dados.nome || '').trim() || NOMES[dados.tipo] || 'saída', data: dados.data || hoje(), repete: normalizaRepete(dados.repete), tags: [...new Set(dados.tags || [])], criadoEm: new Date().toISOString() };
     if (dados.cartaoId) m.cartaoId = dados.cartaoId;
     if (dados.origem) m.origem = dados.origem;
+    if (m.tipo === 'economia' && dados.retirada) m.retirada = true;
     estado.movimentacoes.push(m);
     return m;
   }
@@ -144,6 +148,7 @@
     if (dados.repete !== undefined) m.repete = normalizaRepete(dados.repete);
     if (dados.tags) m.tags = [...new Set(dados.tags)];
     if (dados.cartaoId !== undefined) { if (dados.cartaoId) m.cartaoId = dados.cartaoId; else delete m.cartaoId; }
+    if (dados.retirada !== undefined) { if (m.tipo === 'economia' && dados.retirada) m.retirada = true; else delete m.retirada; }
     m.atualizadoEm = new Date().toISOString();
     return m;
   }
@@ -205,7 +210,7 @@
     return out;
   }
 
-  const api = { TIPOS, SINAL, NOMES, PLURAL, chave, partes, diasNoMes, hoje, addDias, addMeses, diaSemana, fmtBRL, fmtCompacto, novoId, estadoVazio, ocorrencias, materializar, saldoAntes, resumoMes, adicionar, editar, excluir, encerrarEm, alternarCheckin, novaTag, entradasDeTrabalhos, CORES_TAG, periodoFatura, faturaCartao };
+  const api = { TIPOS, SINAL, NOMES, PLURAL, chave, partes, diasNoMes, hoje, addDias, addMeses, diaSemana, fmtBRL, fmtCompacto, novoId, estadoVazio, ocorrencias, materializar, saldoAntes, resumoMes, adicionar, editar, excluir, encerrarEm, alternarCheckin, novaTag, entradasDeTrabalhos, CORES_TAG, periodoFatura, faturaCartao, valorLiquido };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   raiz.Planilha = api;
 })(typeof window !== 'undefined' ? window : globalThis);

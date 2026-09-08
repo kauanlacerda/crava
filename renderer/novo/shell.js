@@ -147,6 +147,7 @@
     if (window.PlanilhaTelas) window.PlanilhaTelas.mostrar(alvo);
     if (window.PlanilhaCartoes) window.PlanilhaCartoes.mostrar(alvo);
     if (alvo === 'dashboard' && window.Dashboard) window.Dashboard.render();
+    if (window.Economia) window.Economia.mostrar(alvo);
   }
   // ações da barra lateral: abrem a tela Saldos e agem nela
   document.querySelectorAll('[data-acao]').forEach(b => {
@@ -173,6 +174,7 @@
   window.PlanilhaTelas.montar();
   window.PlanilhaCartoes.montar();
   window.Dashboard.montar();
+  window.Economia.montar();
   window.Dashboard.render(); // o dashboard é a primeira tela: desenha antes de qualquer clique
   aplicarZoom();
   if (q.get('folha') === '1') abrirFolha(true);
