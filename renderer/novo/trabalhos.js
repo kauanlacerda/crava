@@ -1,13 +1,13 @@
 // Trabalhos: motor de regras + tela. Mesmo formato de dados do Crava
 // (valor {q,m}, status, pagamento, recebido, liquidadoQ, liquidacoes…), pra
-// que os trabalhos que já existem continuem valendo. No mock, persiste em
-// localStorage; no app de verdade, a lista é S.jobs.
+// que os trabalhos que já existem continuem valendo. A lista é S.jobs, por
+// referência: nunca é trocada, só alterada por dentro.
 (() => {
   const P = window.Planilha;
   const $ = (id) => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const hj = P.hoje();
-  const COT = { USD: 5.14, RBX1k: 35 }; // no app de verdade: S.config.cotacaoUSD (ao vivo) e cotacaoRBX1k
+  const COT = { get USD() { return window.Dados.cotacao().USD; }, get RBX1k() { return window.Dados.cotacao().RBX1k; } }; // ao vivo (Dados)
   const MOEDA = {
     BRL: { fmt: v => P.fmtBRL(v), forma: 'Pix' },
     USD: { fmt: v => 'US$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), forma: 'PayPal' },
@@ -18,14 +18,12 @@
   const DIAS_COBRAR = 3;
 
   // ---------- dados ----------
-  const CHAVE = 'jobs-mock';
-  let jobs = [];
-  try { jobs = JSON.parse(localStorage.getItem(CHAVE) || '[]'); } catch { jobs = []; }
-  const gravar = () => { try { localStorage.setItem(CHAVE, JSON.stringify(jobs)); } catch { } window.dispatchEvent(new CustomEvent('planilha:mudou')); };
+  const jobs = window.Dados.jobs;
+  const gravar = () => { window.Dados.gravar(); window.dispatchEvent(new CustomEvent('planilha:mudou')); };
   function semear() {
     if (jobs.length) return;
     const d = (n) => P.addDias(hj, n);
-    jobs = [
+    jobs.push(
       { id: 't1', titulo: 'Zed · Pack Halloween', cliente: 'zed', valor: { q: 100, m: 'USD' }, status: 'fazendo', pagamento: 'aguardando', recebido: 50, liquidadoQ: 50, liquidacoes: [{ em: d(-3) + 'T15:50:00.000Z', brl: 260, q: 50 }], prazo: d(2), criadoEm: d(-5) + 'T10:00:00.000Z', tempoTotalMs: 5400000 },
       { id: 't2', titulo: 'Furiqus · Thumb Nova flow', cliente: 'furiqus', valor: { q: 15000, m: 'RBX' }, status: 'entregue', pagamento: 'pago', recebido: 15000, liquidadoQ: 0, pagoEm: d(-1) + 'T12:00:00.000Z', entregueEm: d(-2) + 'T12:00:00.000Z', prazo: d(-1), criadoEm: d(-9) + 'T10:00:00.000Z' },
       { id: 't3', titulo: 'Theo · Thumb Get GFX', cliente: 'theo', valor: { q: 95, m: 'USD' }, status: 'entregue', pagamento: 'nao_pago', recebido: 0, entregueEm: d(-6) + 'T12:00:00.000Z', prazo: d(-6), criadoEm: d(-12) + 'T10:00:00.000Z' },
@@ -34,7 +32,7 @@
       { id: 't6', titulo: 'Soulzin · Icon + Thumb', cliente: 'soulzin', valor: { q: 260, m: 'USD' }, status: 'aprovado', pagamento: 'pago', recebido: 260, liquidadoQ: 260, liquidacoes: [{ em: d(-12) + 'T12:00:00.000Z', brl: 1340, q: 260 }], entregueEm: d(-14) + 'T12:00:00.000Z', prazo: d(-14), criadoEm: d(-20) + 'T10:00:00.000Z' },
       { id: 't7', titulo: 'Denis · Thumb Brainrot', cliente: 'denis', valor: { q: 25000, m: 'RBX' }, status: 'esperando', pagamento: 'nao_pago', recebido: 0, prazo: d(9), criadoEm: hj + 'T09:00:00.000Z' },
       { id: 't8', titulo: 'Lucas · Thumb Pack Verão', cliente: 'lucasgfx', valor: { q: 900, m: 'BRL' }, status: 'aceito', pagamento: 'aguardando', recebido: 450, liquidadoQ: 450, liquidacoes: [{ em: d(-1) + 'T12:00:00.000Z', brl: 450, q: 450 }], prazo: d(1), criadoEm: d(-2) + 'T10:00:00.000Z' }
-    ];
+    );
     gravar();
   }
 
@@ -95,7 +93,7 @@
     j.status = status; j.pausado = false; gravar(); render();
   }
   function cobrei(id) { const j = jobs.find(x => x.id === id); if (j) { j.cobradoEm = hj; gravar(); render(); } }
-  function excluir(id) { const j = jobs.find(x => x.id === id); if (!j) return; if (!confirm(`Excluir "${j.titulo}"?`)) return; jobs = jobs.filter(x => x.id !== id); gravar(); render(); }
+  function excluir(id) { const j = jobs.find(x => x.id === id); if (!j) return; if (!confirm(`Excluir "${j.titulo}"?`)) return; jobs.splice(jobs.findIndex(x => x.id === id), 1); gravar(); render(); }
   const aCobrar = () => jobs.filter(j => entregueJa(j) && faltaDe(j) > 0 && diasDesde(j.entregueEm) >= DIAS_COBRAR && j.cobradoEm !== hj).sort((a, b) => diasDesde(b.entregueEm) - diasDesde(a.entregueEm));
   function aReceber() {
     const lista = jobs.filter(j => entregueJa(j) && faltaDe(j) > 0);

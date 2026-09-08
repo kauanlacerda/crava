@@ -1,6 +1,7 @@
 // Casca do app novo: barra lateral, tema, painel de personalização e os
 // gráficos de exemplo do dashboard. Sem framework. Preferências em
-// localStorage por enquanto; no app de verdade vão pra S.config.
+// S.config.casca (sincronizam com a conta) com cópia em localStorage pra
+// pintar certo antes dos dados chegarem.
 (() => {
   const $ = (id) => document.getElementById(id);
   const raiz = document.documentElement;
@@ -28,6 +29,7 @@
   const PADRAO = { cor: 'padrao', corGrafico: 'padrao', fonte: 'DM Sans', fonteDisplay: '', escala: '1', raio: '10', tema: 'dark', layout: 'full', sidebar: 'expanded', variant: 'inset', zoom: {} };
   let pref = { ...PADRAO };
   try { pref = { ...PADRAO, ...JSON.parse(localStorage.getItem('pref-casca') || '{}') }; } catch { }
+  let persistindo = false; // só depois do boot: o que o usuário muda vai pro estado
 
   function aplicar() {
     raiz.dataset.theme = pref.tema;
@@ -64,6 +66,7 @@
     });
     $('btnSidebar').setAttribute('aria-expanded', String(pref.sidebar === 'expanded'));
     try { localStorage.setItem('pref-casca', JSON.stringify(pref)); } catch { }
+    if (persistindo) { window.Dados.S.config.casca = { ...pref }; window.Dados.gravarQuieto(); }
   }
 
   // ---------- controles ----------
@@ -164,6 +167,18 @@
   // o dashboard desenha os próprios gráficos a partir da planilha
   function desenharGraficos() { if (window.Dashboard && !$('view-dashboard').hidden) window.Dashboard.render(); }
 
+  // quando outro PC (ou a nuvem) manda um estado novo, a tela aberta é refeita
+  window.addEventListener('estado:trocou', () => {
+    const c = window.Dados.S.config.casca;
+    if (c && JSON.stringify({ ...PADRAO, ...c }) !== JSON.stringify(pref)) { pref = { ...PADRAO, ...c }; persistindo = false; aplicar(); aplicarZoom(); persistindo = true; }
+    window.Saldos.renderMeses(); mostrarView(viewAtual);
+    window.dispatchEvent(new CustomEvent('planilha:mudou'));
+  });
+  window.addEventListener('cotacao:mudou', () => { desenharGraficos(); if (!$('view-trabalhos').hidden) window.Trabalhos.render(); });
+
+  window.Dados.pronto.then(() => {
+  const casca = window.Dados.S.config.casca;
+  if (casca && typeof casca === 'object') pref = { ...PADRAO, ...casca };
   // estado inicial pela URL, pra captura e teste: ?tema=light&sidebar=icon&folha=1
   const q = new URLSearchParams(location.search);
   for (const k of ['tema', 'sidebar', 'variant', 'layout', 'cor', 'corGrafico', 'fonte', 'escala', 'raio']) if (q.has(k)) pref[k] = q.get(k);
@@ -181,4 +196,7 @@
   aplicarZoom();
   if (q.get('folha') === '1') abrirFolha(true);
   if (q.get('view')) { const b = document.querySelector('[data-view="' + q.get('view') + '"]'); if (b) b.click(); }
+  persistindo = true;
+  document.body.classList.add('pronto');
+  });
 })();

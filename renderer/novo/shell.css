@@ -341,3 +341,27 @@ input:focus-visible, select:focus-visible { outline: none; border-color: var(--a
 .kpi.neg { color: var(--negativo); }
 .cartao-roxo { background: linear-gradient(135deg, #a855f7, #6d28d9); }
 .nota-mock { display: none; }
+
+/* ---------- conta, atualização, novidades ---------- */
+.tela-login { position: fixed; inset: 0; z-index: 60; background: var(--bg); display: grid; place-items: center; padding: 1rem; }
+.login-caixa { width: 100%; max-width: 22rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+.login-marca { display: flex; align-items: center; gap: .625rem; font-size: 1.125rem; font-weight: 700; font-family: var(--fonte-display); }
+.login-caixa .sub { margin: 0; line-height: 1.45; }
+.login-caixa .linha-campo:last-of-type { border-bottom: 0; }
+.login-abas { display: grid; grid-template-columns: 1fr 1fr; }
+.login-link { background: none; border: 0; color: var(--texto-2); font: inherit; font-size: .75rem; cursor: pointer; padding: 0; text-align: left; }
+.login-link:hover { color: var(--texto); text-decoration: underline; }
+.login-link.centro { text-align: center; padding-top: .25rem; }
+.login-aviso { min-height: 1rem; font-size: .75rem; font-weight: 600; text-align: center; }
+.login-aviso.erro { color: var(--negativo); } .login-aviso.ok { color: var(--positivo-texto); }
+#btnEntrar.carregando { opacity: .6; pointer-events: none; }
+.faixa-update { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 55; display: flex; align-items: center; gap: .625rem; padding: .75rem .875rem; max-width: 28rem; box-shadow: var(--sombra-card), 0 12px 32px rgba(0, 0, 0, .35); }
+.update-texto { display: flex; flex-direction: column; gap: .125rem; min-width: 10rem; font-size: .875rem; }
+.update-barra { height: .25rem; margin-top: .375rem; background: var(--secundario); border-radius: 999px; overflow: hidden; }
+.update-barra i { display: block; height: 100%; width: 0; background: var(--primario); transition: width .3s ease; }
+.novidades-corpo { max-height: 50vh; overflow-y: auto; font-size: .8125rem; }
+.novidades-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.novidades-lista li { padding-left: 1rem; position: relative; line-height: 1.45; }
+.novidades-lista li::before { content: ''; position: absolute; left: 0; top: .55em; width: .375rem; height: .375rem; border-radius: 50%; background: var(--primario); }
+.patch-versao { font-weight: 700; margin: 1rem 0 .5rem; font-size: .6875rem; color: var(--texto-2); text-transform: uppercase; letter-spacing: .06em; }
+.novidades-nota { padding: .625rem .75rem; border: 1px solid var(--borda); border-radius: var(--raio); margin-bottom: .625rem; line-height: 1.45; }

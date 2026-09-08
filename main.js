@@ -15,13 +15,13 @@ const ICON = path.join(__dirname, 'assets', 'icon.png');
 function createMain() {
   mainWin = new BrowserWindow({
     width: 1280, height: 820, minWidth: 1020, minHeight: 660,
-    backgroundColor: '#0b0e13',
+    backgroundColor: '#0a0a0a',
     icon: ICON,
     show: false,
     webPreferences: { preload: path.join(__dirname, 'preload.js') }
   });
   mainWin.setMenuBarVisibility(false);
-  mainWin.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  mainWin.loadFile(path.join(__dirname, 'renderer', 'novo', 'index.html'));
   mainWin.once('ready-to-show', () => mainWin.show());
   // Fechar minimiza pra bandeja — o app continua vivo (widget, atalho, alertas)
   mainWin.on('close', (e) => {
@@ -358,7 +358,7 @@ ipcMain.on('capture:save', (_e, job) => {
   broadcast();
   captureWin.hide();
   new Notification({
-    title: cravar ? 'Cravado!' : 'Pedido salvo na fila',
+    title: cravar ? 'Trabalho ativado' : 'Trabalho salvo na fila',
     body: job.titulo, icon: ICON
   }).show();
 });

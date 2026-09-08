@@ -10,11 +10,9 @@
   const ICONE = { entrada: '↙', saida: '↗', diario: 'D', economia: 'E', cartao: 'C' };
   const REPETE = { mensal: 'mensalmente', semanal: 'semanalmente', diaria: 'diariamente', parcelado: 'parcelado' };
 
-  // ---------- estado (por enquanto localStorage; depois S.fin) ----------
-  const CHAVE = 'fin-mock';
-  let E = P.estadoVazio();
-  try { const s = JSON.parse(localStorage.getItem(CHAVE) || 'null'); if (s && s.movimentacoes) E = { ...P.estadoVazio(), ...s }; } catch { }
-  const gravar = () => { try { localStorage.setItem(CHAVE, JSON.stringify(E)); } catch { } };
+  // ---------- estado: S.fin, por referência (a camada Dados nunca troca o objeto) ----------
+  const E = window.Dados.fin;
+  const gravar = () => window.Dados.gravar();
   // O estado que as telas leem: as movimentações digitadas mais as entradas
   // automáticas dos trabalhos pagos (chave pra desligar: E.entradaAutomatica).
   function estadoCompleto() {
@@ -250,5 +248,5 @@
   // abre a grade num mês / dia (usado por Totais, Tags e Horizonte)
   function irParaMes(a, m) { if (!mesesVisiveis().some(x => x.a === a && x.m === m)) { inicio = { a, m }; renderMeses(); } setTimeout(() => rolarAte(P.chave(a, m, 1)), 30); }
   function irParaDia(data) { const { a, m } = P.partes(data); if (!mesesVisiveis().some(x => x.a === a && x.m === m)) { inicio = { a, m }; renderMeses(); } setTimeout(() => rolarAte(data, true), 30); }
-  window.Saldos = { montar, irParaHoje, irParaMes, irParaDia, abrirNovo, renderMeses, gravar, estadoCompleto, get estado() { return E; } };
+  window.Saldos = { montar, irParaHoje, irParaMes, irParaDia, abrirNovo, renderMeses, gravar, estadoCompleto, semear, get estado() { return E; } };
 })();

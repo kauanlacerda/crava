@@ -26,6 +26,8 @@ const DEFAULTS = {
     nome: 'você'
   },
   jobs: [],
+  // a planilha (movimentações, tags, cartões…) do app novo
+  fin: { movimentacoes: [], tags: [], cartoes: [], checkins: [], previsaoDiario: 0, previsaoDias: 30, gastosMensais: [], metaEconomia: 0, entradaAutomatica: true },
   stats: {
     streak: 0,
     maxStreak: 0,
@@ -54,6 +56,7 @@ class Store {
       return {
         config: { ...DEFAULTS.config, ...raw.config },
         jobs: Array.isArray(raw.jobs) ? raw.jobs : [],
+        fin: { ...DEFAULTS.fin, ...(raw.fin || {}) },
         stats: { ...DEFAULTS.stats, ...raw.stats }
       };
     } catch {

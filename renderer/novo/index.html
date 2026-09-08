@@ -333,7 +333,18 @@
         </div>
         <div class="tot-rotulo">conta</div>
         <div class="card tot-lista">
-          <div class="tot-linha cfg-linha"><span><b>sak</b><small class="sub">sakarquivo@gmail.com · a conta e a sincronização vêm do app atual quando a casca for ligada ao Electron.</small></span></div>
+          <div class="tot-linha cfg-linha"><span><b id="contaNome">sem conta</b><small class="sub" id="contaStatus">só neste PC</small></span>
+            <button type="button" class="btn btn-contorno btn-p" id="btnSincronizar" hidden>Sincronizar agora</button>
+            <button type="button" class="btn btn-contorno btn-p" id="btnEntrarConfig" hidden>Entrar</button>
+            <button type="button" class="btn btn-contorno btn-p" id="btnSair" hidden>Sair</button>
+          </div>
+        </div>
+        <div class="tot-rotulo">app</div>
+        <div class="card tot-lista">
+          <div class="tot-linha cfg-linha"><span><b>Versão</b><small class="sub" id="versaoApp">—</small></span>
+            <button type="button" class="btn btn-contorno btn-p" id="btnVerPatch">Ver novidades</button>
+            <button type="button" class="btn btn-contorno btn-p" id="btnVerificarUpdate">Verificar atualizações</button>
+          </div>
         </div>
       </div>
     </section>
@@ -473,6 +484,39 @@
   </form>
 </div>
 
+<!-- ================= CONTA: ENTRAR ================= -->
+<div class="tela-login" id="telaLogin" hidden>
+  <form class="login-caixa card" id="loginForm">
+    <div class="login-marca"><span class="sb-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h16"/></svg></span><b>Nome do app</b></div>
+    <p class="sub">Entre pra ter os trabalhos e a planilha em qualquer PC. Sem conta, tudo fica só aqui.</p>
+    <div class="seg login-abas" role="tablist"><button type="button" class="login-aba sel" data-aba="entrar" role="tab">Entrar</button><button type="button" class="login-aba" data-aba="criar" role="tab">Criar conta</button></div>
+    <label class="linha-campo so-criar" hidden><span class="prefixo">nome</span><input id="loginNome" placeholder="sak" autocomplete="name"></label>
+    <label class="linha-campo so-criar" hidden><span class="prefixo">usuário</span><input id="loginUsuario" placeholder="sak" autocomplete="username"></label>
+    <label class="linha-campo"><span class="prefixo">email</span><input id="loginEmail" type="email" placeholder="voce@email.com" autocomplete="email"></label>
+    <label class="linha-campo"><span class="prefixo">senha</span><input id="loginSenha" type="password" placeholder="••••••••" autocomplete="current-password"></label>
+    <button type="button" class="login-link so-entrar" id="btnEsqueci">Esqueci minha senha</button>
+    <div class="login-aviso" id="loginAviso" aria-live="polite"></div>
+    <button type="submit" class="btn btn-primario" id="btnEntrar" style="height:2.5rem">Entrar</button>
+    <button type="button" class="login-link centro" id="btnOffline">Usar sem conta (só neste PC)</button>
+  </form>
+</div>
+
+<!-- ================= ATUALIZAÇÃO ================= -->
+<div class="faixa-update card" id="faixaUpdate" hidden role="status">
+  <div class="update-texto"><b id="updateTitulo">Nova versão disponível</b><small class="sub" id="updateSub">—</small><div class="update-barra" id="updateBarra" hidden><i id="updateBarraFill"></i></div></div>
+  <button type="button" class="btn btn-contorno btn-p" id="btnUpdateNotas">Novidades</button>
+  <button type="button" class="btn btn-primario btn-p" id="btnUpdateAgir">Atualizar</button>
+  <button type="button" class="btn-icone btn-ghost" id="btnUpdateFechar" aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+</div>
+
+<!-- ================= NOVIDADES ================= -->
+<div class="ov" id="ovNovidades" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="novidadesTitulo">
+    <div class="modal-cab"><div><h2 id="novidadesTitulo">Novidades</h2><small class="sub" id="novidadesVersao">—</small></div><button type="button" class="btn-icone" id="btnNovidadesOk" aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="modal-corpo"><div class="novidades-corpo" id="novidadesLista"></div><div class="modal-acoes"><button type="button" class="btn btn-primario" id="btnNovidadesFechar" style="height:2.5rem">Entendi</button></div></div>
+  </div>
+</div>
+
 <!-- ================= PERSONALIZAR ================= -->
 <div class="veu" id="veuPersonalizar" hidden></div>
 <aside class="folha" id="folhaPersonalizar" role="dialog" aria-modal="true" aria-labelledby="folhaTitulo" hidden>
@@ -495,7 +539,11 @@
   </div>
 </aside>
 
+<script src="../lib/supabase.js"></script>
+<script src="../i18n.js"></script>
+<script src="../nuvem.js"></script>
 <script src="planilha.js"></script>
+<script src="dados.js"></script>
 <script src="saldos.js"></script>
 <script src="planilha-telas.js"></script>
 <script src="cartoes.js"></script>
@@ -503,5 +551,6 @@
 <script src="dashboard.js"></script>
 <script src="economia.js"></script>
 <script src="shell.js"></script>
+<script src="conta.js"></script>
 </body>
 </html>

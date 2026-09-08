@@ -8,7 +8,7 @@
   const MES3 = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
   const TIPO_ROTULO = { entrada: 'Entrada', saida: 'Saída', diario: 'Diário', economia: 'Economia', cartao: 'Cartão' };
   const hj = P.hoje();
-  const COT = { USD: 5.14, RBX1k: 35 }; // no app de verdade vem de S.config / cotação ao vivo
+  const COT = { get USD() { return window.Dados.cotacao().USD; }, get RBX1k() { return window.Dados.cotacao().RBX1k; } }; // ao vivo (Dados)
 
   // ---------- período ----------
   let preset = 'mes';
