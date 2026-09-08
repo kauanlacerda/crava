@@ -225,21 +225,12 @@
         <div class="ac-dir">
           <div class="kv"><span>valor</span><b>${fmtValor(a.valor)}</b></div>
           <div class="kv"><span>prazo</span><b class="tb-prazo ${pz.cls}">${pz.txt || '—'}</b></div>
-          <div class="kv"><span>pagamento</span><button type="button" class="chip chip-neutro ${ecls}" data-acao="receber" data-id="${a.id}">${etxt}</button></div>
-          <div class="ac-botoes">
-            ${precisaLiquidar(a) ? `<button type="button" class="btn btn-contorno verde" data-acao="liquidar" data-id="${a.id}">${a.valor.m === 'RBX' ? 'Vendi' : 'Caiu na conta'}</button>` : ''}
-            <button type="button" class="btn btn-primario" data-acao="avancar" data-id="${a.id}">Marcar entregue</button>
-            <div class="btn-linha" style="margin:0">
-              ${faltaDe(a) > 0 ? `<button type="button" class="btn btn-contorno" data-acao="receber" data-id="${a.id}">Recebi</button>` : ''}
-              <button type="button" class="btn btn-contorno" data-acao="pausar" data-id="${a.id}">Pausar</button>
-              <button type="button" class="btn btn-contorno" data-acao="fila" data-id="${a.id}" title="Devolver pra fila">Fila</button>
-            </div>
-          </div>
+          <div class="kv"><span>pagamento</span><b class="chip chip-neutro ${ecls}">${etxt}</b></div>
         </div>`;
     } else {
       const prox = fila[0];
       at.innerHTML = `<div class="ac-vazio"><div class="ac-tag"><i class="off"></i>nenhum trabalho ativo</div>
-        ${prox ? `<div class="ac-titulo">Próximo da fila: ${esc(prox.titulo)}</div><div class="sub">${esc(prox.cliente || '')}${prox.prazo ? ' · ' + prazoInfo(prox).txt : ''}</div><div style="margin-top:.75rem"><button type="button" class="btn btn-primario" data-acao="ativar" data-id="${prox.id}">Ativar</button></div>` : `<div class="sub">A fila está vazia. Crie um trabalho novo.</div>`}
+        ${prox ? `<div class="ac-titulo">Próximo da fila: ${esc(prox.titulo)}</div><div class="sub">${esc(prox.cliente || '')}${prox.prazo ? ' · ' + prazoInfo(prox).txt : ''}</div>` : `<div class="sub">A fila está vazia. Crie um trabalho novo.</div>`}
       </div>`;
     }
     // cobrar
