@@ -8,7 +8,7 @@
 }
 [data-theme="light"] { --t-entrada: #16a34a; --t-saida: #dc2626; --t-diario: #db2777; --t-economia: #65a30d; --t-cartao: #7c3aed; }
 
-.view { display: flex; flex-direction: column; gap: 1rem; min-height: 0; }
+.view { display: flex; flex-direction: column; gap: 1rem; min-height: 0; flex: 1; }
 .view[hidden] { display: none; }
 
 /* ---------- cabeÃ§alho da tela ---------- */
@@ -17,15 +17,16 @@
 .periodo-rotulo { min-width: 12rem; justify-content: center; }
 
 /* ---------- meses lado a lado ---------- */
+/* os meses ocupam a altura toda; cada grade rola por dentro, com cabeçalho e rodapé fixos */
 .meses {
-  display: flex; gap: 1rem; overflow-x: auto; overflow-y: hidden; padding-bottom: .5rem; scroll-snap-type: x proximity;
-  flex: 1; min-height: 0; align-items: flex-start;
+  display: flex; gap: 1rem; overflow-x: auto; overflow-y: hidden; padding-bottom: .25rem; scroll-snap-type: x proximity;
+  flex: 1; min-height: 0; align-items: stretch;
 }
-.mes { flex: none; width: 49rem; scroll-snap-align: start; display: flex; flex-direction: column; gap: .5rem; }
+.mes { flex: none; width: 49rem; scroll-snap-align: start; display: flex; flex-direction: column; gap: .5rem; min-height: 0; }
 .mes-titulo { font-size: .875rem; font-weight: 600; padding: 0 .25rem; }
-.grade-dias { background: var(--card); border-radius: var(--raio-card); box-shadow: var(--sombra-card); overflow: hidden; }
+.grade-dias { background: var(--card); border-radius: var(--raio-card); box-shadow: var(--sombra-card); overflow: auto; flex: 1; min-height: 0; }
 .grade-dias table { width: 100%; border-collapse: collapse; font-size: .8125rem; table-layout: fixed; }
-.grade-dias th { font-weight: 600; text-align: right; padding: .5rem .625rem; border-bottom: 1px solid var(--borda); white-space: nowrap; color: var(--texto); }
+.grade-dias th { font-weight: 600; text-align: right; padding: .5rem .625rem; white-space: nowrap; color: var(--texto); position: sticky; top: 0; z-index: 2; background: var(--card); box-shadow: inset 0 -1px 0 var(--borda); }
 .grade-dias th:first-child { text-align: center; width: 2.75rem; }
 .grade-dias th .tp { display: inline-flex; align-items: center; gap: .375rem; }
 .grade-dias td { padding: 0; border-bottom: 1px solid var(--borda); height: 2.125rem; }
@@ -54,7 +55,7 @@ td.cel.entrada .ver.tem { color: var(--t-entrada); }
 td.saldo { text-align: right; padding: 0 .625rem; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; color: var(--texto); }
 td.saldo.neg { background: rgba(239, 68, 68, var(--f, .25)); }
 td.saldo.pos { background: rgba(34, 197, 94, var(--f, .12)); }
-.grade-dias tfoot td { border-top: 1px solid var(--borda); border-bottom: 0; padding: .5rem .625rem; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; background: var(--card); }
+.grade-dias tfoot td { border-bottom: 0; padding: .5rem .625rem; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; background: var(--card); position: sticky; bottom: 0; z-index: 2; box-shadow: inset 0 1px 0 var(--borda); white-space: nowrap; }
 .grade-dias tfoot td:first-child { text-align: center; }
 .ic-tipo { width: .875rem; height: .875rem; border-radius: 50%; display: inline-grid; place-items: center; color: #fff; font-size: .5625rem; font-weight: 800; line-height: 1; flex: none; }
 .ic-tipo.entrada { background: var(--t-entrada); } .ic-tipo.saida { background: var(--t-saida); } .ic-tipo.diario { background: var(--t-diario); }

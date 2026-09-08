@@ -1,6 +1,6 @@
-// Casca do app novo: barra lateral, tema, painel de personalização e os
-// gráficos de exemplo do dashboard. Sem framework. Preferências em
-// localStorage por enquanto; no app de verdade vão pra S.config.
+// Casca do app novo: barra lateral, tema, painel de personalizaÃƒÂ§ÃƒÂ£o e os
+// grÃƒÂ¡ficos de exemplo do dashboard. Sem framework. PreferÃƒÂªncias em
+// localStorage por enquanto; no app de verdade vÃƒÂ£o pra S.config.
 (() => {
   const $ = (id) => document.getElementById(id);
   const raiz = document.documentElement;
@@ -15,17 +15,17 @@
     rose: ['#f43f5e', '#e11d48']
   };
   const NOMES = {
-    padrao: 'Padrão', red: 'Vermelho', orange: 'Laranja', amber: 'Âmbar', yellow: 'Amarelo', lime: 'Lima', green: 'Verde',
-    emerald: 'Esmeralda', teal: 'Petróleo', cyan: 'Ciano', sky: 'Céu', blue: 'Azul', indigo: 'Índigo', violet: 'Violeta',
-    purple: 'Roxo', fuchsia: 'Fúcsia', pink: 'Rosa', rose: 'Rosé'
+    padrao: 'PadrÃƒÂ£o', red: 'Vermelho', orange: 'Laranja', amber: 'Ãƒâ€šmbar', yellow: 'Amarelo', lime: 'Lima', green: 'Verde',
+    emerald: 'Esmeralda', teal: 'PetrÃƒÂ³leo', cyan: 'Ciano', sky: 'CÃƒÂ©u', blue: 'Azul', indigo: 'ÃƒÂndigo', violet: 'Violeta',
+    purple: 'Roxo', fuchsia: 'FÃƒÂºcsia', pink: 'Rosa', rose: 'RosÃƒÂ©'
   };
-  // 5 tons de um matiz pros gráficos: clareia/escurece o hex
+  // 5 tons de um matiz pros grÃƒÂ¡ficos: clareia/escurece o hex
   const mistura = (hex, alvo, p) => {
     const a = hex.match(/\w\w/g).map(h => parseInt(h, 16)), b = alvo.match(/\w\w/g).map(h => parseInt(h, 16));
     return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * p).toString(16).padStart(2, '0')).join('');
   };
 
-  const PADRAO = { cor: 'padrao', corGrafico: 'padrao', fonte: 'DM Sans', fonteDisplay: '', escala: '1', raio: '10', tema: 'dark', layout: 'full', sidebar: 'expanded', variant: 'inset' };
+  const PADRAO = { cor: 'padrao', corGrafico: 'padrao', fonte: 'DM Sans', fonteDisplay: '', escala: '1', raio: '10', tema: 'dark', layout: 'full', sidebar: 'expanded', variant: 'inset', zoom: {} };
   let pref = { ...PADRAO };
   try { pref = { ...PADRAO, ...JSON.parse(localStorage.getItem('pref-casca') || '{}') }; } catch { }
 
@@ -39,14 +39,14 @@
     raiz.style.setProperty('--fonte', `'${pref.fonte}', 'Segoe UI', system-ui, sans-serif`);
     raiz.style.setProperty('--fonte-display', pref.fonteDisplay ? `'${pref.fonteDisplay}', sans-serif` : 'var(--fonte)');
     const escuro = pref.tema === 'dark';
-    // cor do tema: o botão primário e o anel de foco
+    // cor do tema: o botÃƒÂ£o primÃƒÂ¡rio e o anel de foco
     const m = MATIZES[pref.cor];
     if (m) {
       raiz.style.setProperty('--primario', m[escuro ? 0 : 1]);
       raiz.style.setProperty('--primario-texto', '#ffffff');
       raiz.style.setProperty('--anel', m[0]);
     } else { ['--primario', '--primario-texto', '--anel'].forEach(p => raiz.style.removeProperty(p)); }
-    // cor dos gráficos: 5 tons do matiz
+    // cor dos grÃƒÂ¡ficos: 5 tons do matiz
     const g = MATIZES[pref.corGrafico];
     if (g) {
       const base = g[0];
@@ -85,7 +85,7 @@
   $('btnTema').onclick = () => { pref.tema = pref.tema === 'dark' ? 'light' : 'dark'; aplicar(); desenharGraficos(); };
   $('btnSidebar').onclick = () => { pref.sidebar = pref.sidebar === 'expanded' ? 'icon' : 'expanded'; aplicar(); };
 
-  // painel de personalização
+  // painel de personalizaÃƒÂ§ÃƒÂ£o
   const abrirFolha = (aberto) => {
     $('folhaPersonalizar').hidden = !aberto; $('veuPersonalizar').hidden = !aberto;
     if (aberto) $('btnFecharFolha').focus(); else $('btnPersonalizar').focus();
@@ -102,7 +102,7 @@
       b.setAttribute('aria-expanded', String(aberto));
     };
   });
-  const TITULOS = { dashboard: 'Dashboard', trabalhos: 'Trabalhos', saldos: 'Planilha · Saldos', totais: 'Planilha · Totais', tags: 'Planilha · Tags', cartoes: 'Planilha · Cartões', previsao: 'Planilha · Previsão de diário', horizonte: 'Planilha · Horizonte', economia: 'Economia', config: 'Configurações' };
+  const TITULOS = { dashboard: 'Dashboard', trabalhos: 'Trabalhos', saldos: 'Planilha Ã‚Â· Saldos', totais: 'Planilha Ã‚Â· Totais', tags: 'Planilha Ã‚Â· Tags', cartoes: 'Planilha Ã‚Â· CartÃƒÂµes', previsao: 'Planilha Ã‚Â· PrevisÃƒÂ£o de diÃƒÂ¡rio', horizonte: 'Planilha Ã‚Â· Horizonte', economia: 'Economia', config: 'ConfiguraÃƒÂ§ÃƒÂµes' };
   document.querySelectorAll('[data-view]').forEach(b => {
     b.onclick = () => {
       document.querySelectorAll('[data-view]').forEach(x => { x.classList.remove('ativo'); x.removeAttribute('aria-current'); });
@@ -113,14 +113,39 @@
     };
   });
 
+  // ---------- zoom por aba ----------
+  // Cada tela guarda o prÃƒÂ³prio tamanho: a planilha costuma ser usada menor,
+  // pra caber mais meses e dias na vista; o dashboard, no tamanho normal.
+  let viewAtual = 'dashboard';
+  const ZOOM_MIN = 0.6, ZOOM_MAX = 1.4;
+  function aplicarZoom() {
+    const z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, +(pref.zoom || {})[viewAtual] || 1));
+    document.querySelectorAll('.view').forEach(v => { v.style.zoom = v.id === 'view-' + viewAtual ? String(z) : ''; });
+    $('zoomValor').value = Math.round(z * 100) + '%';
+  }
+  function mudarZoom(delta) {
+    const z = +(pref.zoom || {})[viewAtual] || 1;
+    pref.zoom = { ...(pref.zoom || {}), [viewAtual]: delta === 0 ? 1 : Math.round((z + delta) * 100) / 100 };
+    aplicarZoom(); aplicar();
+  }
+  $('zoomMenos').onclick = () => mudarZoom(-0.1); $('zoomMais').onclick = () => mudarZoom(0.1); $('zoomValor').onclick = () => mudarZoom(0);
+  document.addEventListener('keydown', e => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    if (e.key === '=' || e.key === '+') { e.preventDefault(); mudarZoom(0.1); }
+    else if (e.key === '-') { e.preventDefault(); mudarZoom(-0.1); }
+    else if (e.key === '0') { e.preventDefault(); mudarZoom(0); }
+  });
+
   // ---------- views ----------
   function mostrarView(nome) {
+    viewAtual = nome;
     const alvo = document.getElementById('view-' + nome) ? nome : 'outra';
     document.querySelectorAll('.view').forEach(v => { v.hidden = v.id !== 'view-' + alvo; });
-    if (alvo === 'outra') { $('outraTitulo').textContent = (TITULOS[nome] || nome).split(' · ').pop(); $('outraTexto').textContent = 'A tela ' + (TITULOS[nome] || nome) + ' ainda não foi construída.'; }
+    if (alvo === 'outra') { $('outraTitulo').textContent = (TITULOS[nome] || nome).split(' Ã‚Â· ').pop(); $('outraTexto').textContent = 'A tela ' + (TITULOS[nome] || nome) + ' ainda nÃƒÂ£o foi construÃƒÂ­da.'; }
     document.getElementById('main').scrollTop = 0;
+    aplicarZoom();
   }
-  // ações da barra lateral: abrem a tela Saldos e agem nela
+  // aÃƒÂ§ÃƒÂµes da barra lateral: abrem a tela Saldos e agem nela
   document.querySelectorAll('[data-acao]').forEach(b => {
     b.onclick = () => {
       const sal = document.querySelector('[data-view="saldos"]'); if (sal && !sal.classList.contains('ativo')) sal.click();
@@ -131,13 +156,13 @@
   const dia = new Date().getDate(); document.querySelectorAll('.sb-dia').forEach(el => el.textContent = dia);
   $('btnNovaMov').onclick = () => window.Saldos.abrirNovo();
 
-  // ---------- gráficos de exemplo ----------
+  // ---------- grÃƒÂ¡ficos de exemplo ----------
   function desenharGraficos() {
     // mini-barras do "a receber": o que caiu por dia, 40 dias
     const mb = $('miniBarras'); mb.innerHTML = '';
     const semente = [3, 5, 4, 6, 9, 7, 5, 4, 6, 8, 10, 7, 5, 6, 9, 11, 8, 6, 7, 9, 12, 10, 8, 9, 11, 13, 10, 9, 12, 14, 11, 10, 12, 15, 13, 11, 14, 16, 13, 12];
     for (const v of semente) { const i = document.createElement('i'); i.style.setProperty('--h', Math.round(v / 16 * 100) + '%'); mb.appendChild(i); }
-    // barras por mês
+    // barras por mÃƒÂªs
     const bm = $('barrasMes'); bm.innerHTML = '';
     const meses = [['abr', 52], ['mai', 100], ['jun', 60], ['jul', 92], ['ago', 64], ['set', 66]];
     for (const [m, h] of meses) { const d = document.createElement('div'); d.innerHTML = `<i style="--h:${h}%"></i><span>${m}</span>`; bm.appendChild(d); }
@@ -157,10 +182,13 @@
   // estado inicial pela URL, pra captura e teste: ?tema=light&sidebar=icon&folha=1
   const q = new URLSearchParams(location.search);
   for (const k of ['tema', 'sidebar', 'variant', 'layout', 'cor', 'corGrafico', 'fonte', 'escala', 'raio']) if (q.has(k)) pref[k] = q.get(k);
+  // zoom de uma aba pela URL, pra captura: ?zoomSaldos=0.8
+  for (const [k, v] of q.entries()) if (k.startsWith('zoom') && k.length > 4) pref.zoom = { ...(pref.zoom || {}), [k.slice(4).toLowerCase()]: +v };
 
   aplicar();
   desenharGraficos();
   window.Saldos.montar();
+  aplicarZoom();
   if (q.get('folha') === '1') abrirFolha(true);
   if (q.get('view')) { const b = document.querySelector('[data-view="' + q.get('view') + '"]'); if (b) b.click(); }
 })();
