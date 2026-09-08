@@ -6,6 +6,7 @@
 .ac-tag i { width: .5rem; height: .5rem; border-radius: 50%; background: var(--positivo); box-shadow: 0 0 0 3px var(--positivo-bg); }
 .ac-tag i.off { background: var(--texto-2); box-shadow: none; }
 .ac-titulo { font-size: 1.375rem; font-weight: 700; letter-spacing: -.02em; font-family: var(--fonte-display); margin-top: .25rem; }
+.tb-ativo { min-height: 0; }
 .ac-pipe { display: flex; gap: .375rem; margin-top: auto; padding-top: 1rem; }
 .ac-passo { flex: 1; display: flex; flex-direction: column; gap: .375rem; }
 .ac-passo i { display: block; height: .375rem; border-radius: 999px; background: var(--secundario); }

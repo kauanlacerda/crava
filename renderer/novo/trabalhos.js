@@ -74,7 +74,7 @@
   const zerarLiquidacao = (j) => { delete j.liquidado; delete j.liquidadoEm; delete j.liquidadoBRL; delete j.liquidadoQ; delete j.liquidacoes; };
   const ativo = () => jobs.find(j => j.status === 'fazendo' && !j.pausado);
   const filaOrdenada = () => jobs.filter(j => j.status === 'aceito' || (j.status === 'fazendo' && j.pausado)).sort((a, b) => (a.prazo || '9999') < (b.prazo || '9999') ? -1 : 1);
-  function cravar(id) {
+  function ativar(id) {
     const j = jobs.find(x => x.id === id); if (!j) return;
     for (const o of jobs) if (o.status === 'fazendo' && o.id !== id) o.pausado = true; // um por vez
     j.status = 'fazendo'; j.pausado = false; if (!j.iniciadoEm) j.iniciadoEm = new Date().toISOString();
@@ -90,7 +90,7 @@
   function devolverFila(id) { const j = jobs.find(x => x.id === id); if (!j) return; j.status = 'aceito'; j.pausado = false; gravar(); render(); }
   function moverPara(id, status) {
     const j = jobs.find(x => x.id === id); if (!j || j.status === status) return;
-    if (status === 'fazendo') return cravar(id);
+    if (status === 'fazendo') return ativar(id);
     if (status === 'entregue' && !entregueJa(j)) { j.entregueEm = new Date().toISOString(); }
     j.status = status; j.pausado = false; gravar(); render();
   }
@@ -176,7 +176,7 @@
   const COLS_ETAPA = [
     { id: 'esperando', titulo: 'Esperando pagamento', sub: 'aceito, esperando o sinal', filtro: j => j.status === 'esperando' },
     { id: 'aceito', titulo: 'Na fila', sub: 'prontos pra começar', filtro: j => j.status === 'aceito' || (j.status === 'fazendo' && j.pausado) },
-    { id: 'fazendo', titulo: 'Fazendo', sub: 'um por vez', filtro: j => j.status === 'fazendo' && !j.pausado },
+    { id: 'fazendo', titulo: 'Fazendo', sub: 'o trabalho ativo', filtro: j => j.status === 'fazendo' && !j.pausado },
     { id: 'entregue', titulo: 'Entregue', sub: 'entregues e aprovados', filtro: j => entregueJa(j) }
   ];
   const COLS_PGTO = [
@@ -193,7 +193,7 @@
     if (est === 'a_converter') din = j.valor.m === 'RBX' ? 'a vender' : 'a cair na conta';
     const acoes = [];
     if (j.status === 'esperando') acoes.push(`<button type="button" class="btn btn-contorno btn-p" data-acao="fila" data-id="${j.id}">Pra fila</button>`);
-    if (j.status === 'aceito' || (j.status === 'fazendo' && j.pausado)) acoes.push(`<button type="button" class="btn btn-primario btn-p" data-acao="cravar" data-id="${j.id}">Cravar</button>`);
+    if (j.status === 'aceito' || (j.status === 'fazendo' && j.pausado)) acoes.push(`<button type="button" class="btn btn-primario btn-p" data-acao="ativar" data-id="${j.id}">Ativar</button>`);
     if (j.status === 'fazendo' && !j.pausado) acoes.push(`<button type="button" class="btn btn-primario btn-p" data-acao="avancar" data-id="${j.id}">Marcar entregue</button>`);
     if (j.status === 'entregue') acoes.push(`<button type="button" class="btn btn-contorno btn-p" data-acao="avancar" data-id="${j.id}">Aprovado</button>`);
     if (faltaDe(j) > 0) acoes.push(`<button type="button" class="btn btn-contorno btn-p" data-acao="receber" data-id="${j.id}">Recebi</button>`);
@@ -218,11 +218,9 @@
     const at = $('tbAtivo');
     if (a) {
       const pz = prazoInfo(a); const [etxt, ecls] = ESTAGIO[estagioPgto(a)];
-      const passos = ['aceito', 'fazendo', 'entregue', 'aprovado']; const idx = 1;
       at.innerHTML = `<div class="ac-esq">
           <div class="ac-tag"><i></i>trabalho ativo</div>
           <div class="ac-titulo">${esc(a.titulo)}</div><div class="sub">${esc(a.cliente || 'sem cliente')}</div>
-          <div class="ac-pipe">${passos.map((p, i) => `<div class="ac-passo ${i < idx ? 'feito' : i === idx ? 'agora' : ''}"><i></i><span>${['aceito', 'fazendo', 'entregue', 'aprovado'][i]}</span></div>`).join('')}</div>
         </div>
         <div class="ac-dir">
           <div class="kv"><span>valor</span><b>${fmtValor(a.valor)}</b></div>
@@ -241,7 +239,7 @@
     } else {
       const prox = fila[0];
       at.innerHTML = `<div class="ac-vazio"><div class="ac-tag"><i class="off"></i>nenhum trabalho ativo</div>
-        ${prox ? `<div class="ac-titulo">Próximo da fila: ${esc(prox.titulo)}</div><div class="sub">${esc(prox.cliente || '')}${prox.prazo ? ' · ' + prazoInfo(prox).txt : ''}</div><div style="margin-top:.75rem"><button type="button" class="btn btn-primario" data-acao="cravar" data-id="${prox.id}">Cravar</button></div>` : `<div class="sub">A fila está vazia. Crie um trabalho novo.</div>`}
+        ${prox ? `<div class="ac-titulo">Próximo da fila: ${esc(prox.titulo)}</div><div class="sub">${esc(prox.cliente || '')}${prox.prazo ? ' · ' + prazoInfo(prox).txt : ''}</div><div style="margin-top:.75rem"><button type="button" class="btn btn-primario" data-acao="ativar" data-id="${prox.id}">Ativar</button></div>` : `<div class="sub">A fila está vazia. Crie um trabalho novo.</div>`}
       </div>`;
     }
     // cobrar
@@ -265,7 +263,7 @@
   function acao(e) {
     const b = e.target.closest('[data-acao]'); if (!b) return;
     const id = b.dataset.id; const a = b.dataset.acao;
-    if (a === 'cravar') cravar(id); else if (a === 'avancar') avancar(id); else if (a === 'pausar') pausar(id); else if (a === 'fila') devolverFila(id);
+    if (a === 'ativar') ativar(id); else if (a === 'avancar') avancar(id); else if (a === 'pausar') pausar(id); else if (a === 'fila') devolverFila(id);
     else if (a === 'receber') abrirRecebimento(id); else if (a === 'liquidar') abrirLiquidacao(id); else if (a === 'cobrei') cobrei(id);
     else if (a === 'editar') abrirTrabalho(jobs.find(x => x.id === id)); else if (a === 'excluir') excluir(id);
   }
@@ -288,5 +286,5 @@
     document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; for (const id of ['ovTrab', 'ovReceb', 'ovLiq']) if (!$(id).hidden) { $(id).hidden = true; } });
     for (const id of ['ovTrab', 'ovReceb', 'ovLiq']) $(id).addEventListener('click', (e) => { if (e.target === $(id)) $(id).hidden = true; });
   }
-  window.Trabalhos = { montar, render, semear, lista: () => jobs, aReceber, aConverter, pendenteDe, faltaDe, cravar, abrirRecebimento, abrirLiquidacao, abrirTrabalho, estagioPgto };
+  window.Trabalhos = { montar, render, semear, lista: () => jobs, aReceber, aConverter, pendenteDe, faltaDe, abrirRecebimento, abrirLiquidacao, abrirTrabalho, estagioPgto, ativar };
 })();
