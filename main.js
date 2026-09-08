@@ -112,7 +112,7 @@ function checarPrazos() {
     if (resta > 0 && resta < 24 * 3600e3 && s.stats.notificados[j.id] !== hoje) {
       new Notification({
         title: 'Prazo chegando!',
-        body: `"${j.titulo}" vence em menos de 24h. Bora cravar.`,
+        body: `"${j.titulo}" vence em menos de 24h.`,
         icon: ICON
       }).show();
       s.stats.notificados[j.id] = hoje;

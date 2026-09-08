@@ -1,4 +1,28 @@
 {
+  "1.4.0": {
+    "pt": [
+      "O app foi refeito, com visual sóbrio: barra lateral, Dashboard financeiro, Trabalhos e uma Planilha completa (Saldos por dia, Totais, Tags, Cartões, Previsão de diário e Horizonte de 12 meses).",
+      "Seus trabalhos, valores, pagamentos e a conta continuam exatamente como estavam. A planilha começa vazia, mas cada pagamento que já caiu na conta aparece nela como entrada automática (dá pra desligar em Configurações).",
+      "A gamificação saiu: sem macaco, insígnias, streak, meta diária, celebração e share card. O app mede pra você decidir, não pra exibir.",
+      "Economia virou uma aba própria, com meta e histórico do que foi guardado e retirado.",
+      "Personalizar: cor do tema e dos gráficos, fonte, escala, raio, claro ou escuro e barra lateral. Cada aba tem o próprio tamanho (Ctrl + e Ctrl −).",
+      "Perfil (foto, nome e @) nas Configurações. Cotação do dólar ao vivo nos valores em US$.",
+      "A captura rápida (Ctrl+Shift+N) continua; \"Salvar e cravar\" virou \"Salvar e ativar\".",
+      "O layout se adapta a monitores em pé.",
+      "Versão de teste: o nome definitivo e o ícone novo vêm depois."
+    ],
+    "en": [
+      "The app was rebuilt with a sober look: sidebar, finance Dashboard, Jobs and a full Spreadsheet (daily Balances, Totals, Tags, Cards, Daily forecast and a 12-month Horizon).",
+      "Your jobs, amounts, payments and account stay exactly as they were. The spreadsheet starts empty, but every payment that already hit your account shows up there as an automatic entry (you can turn it off in Settings).",
+      "Gamification is gone: no monkey, badges, streak, daily goal, celebration or share card. The app measures so you can decide, not to show off.",
+      "Savings got its own tab, with a goal and a history of what was saved and withdrawn.",
+      "Customize: theme and chart colors, font, scale, radius, light or dark and the sidebar. Each tab keeps its own zoom (Ctrl + and Ctrl −).",
+      "Profile (photo, name and @) in Settings. Live dollar rate on US$ amounts.",
+      "Quick capture (Ctrl+Shift+N) is still there; \"Save and pin\" became \"Save and activate\".",
+      "The layout adapts to portrait monitors.",
+      "Test build: the final name and new icon come later."
+    ]
+  },
   "1.3.7": {
     "pt": [
       "A celebração de entrega estava torta: o macaco aparecia à esquerda do centro e o texto deslocado. Agora os dois ficam no centro exato da janela, com o texto logo abaixo do macaco."

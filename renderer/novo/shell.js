@@ -200,6 +200,7 @@
   window.Dados.pronto.then(() => {
   const casca = window.Dados.S.config.casca;
   if (casca && typeof casca === 'object') pref = { ...PADRAO, ...casca };
+  else if (window.Dados.S.config.tema === 'claro') pref.tema = 'light'; // quem usava o tema claro no app antigo continua no claro
   // estado inicial pela URL, pra captura e teste: ?tema=light&sidebar=icon&folha=1
   const q = new URLSearchParams(location.search);
   for (const k of ['tema', 'sidebar', 'variant', 'layout', 'cor', 'corGrafico', 'fonte', 'escala', 'raio']) if (q.has(k)) pref[k] = q.get(k);
