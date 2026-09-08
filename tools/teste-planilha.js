@@ -75,5 +75,25 @@ const ent = P.entradasDeTrabalhos(jobs, 'tagc');
 ok('2 liquidações + 1 legado = 3 entradas', ent.length === 3, ent.length);
 ok('entrada leva origem e tag', ent[0].origem.jobId === 'j1' && ent[0].tags[0] === 'tagc' && ent[0].data === '2026-09-03');
 
+// fatura de cartão
+const H = P.estadoVazio();
+const nub = { id: 'nub', nome: 'Nubank', fechamento: 25, vencimento: 5 };   // fecha 25, vence 5 do mês seguinte
+const pic = { id: 'pic', nome: 'PicPay', fechamento: 1, vencimento: 10 };   // fecha 1, vence 10 do mesmo mês
+H.cartoes.push(nub, pic);
+P.adicionar(H, { tipo: 'cartao', valor: 100, nome: 'A', data: '2026-08-26', cartaoId: 'nub' }); // primeiro dia da fatura de out
+P.adicionar(H, { tipo: 'cartao', valor: 50, nome: 'B', data: '2026-09-25', cartaoId: 'nub' });  // último dia
+P.adicionar(H, { tipo: 'cartao', valor: 7, nome: 'C', data: '2026-09-26', cartaoId: 'nub' });   // já é a de nov
+P.adicionar(H, { tipo: 'cartao', valor: 20, nome: 'D', data: '2026-09-25', cartaoId: 'pic' });  // outro cartão
+P.adicionar(H, { tipo: 'saida', valor: 999, nome: 'E', data: '2026-09-10', cartaoId: 'nub' });  // não é cartão
+const fo = P.faturaCartao(H, nub, 2026, 10);
+ok('nubank out/26: período 26/ago → 25/set', fo.de === '2026-08-26' && fo.ate === '2026-09-25', fo.de + ' ' + fo.ate);
+ok('nubank out/26: vence 05/10', fo.vencimento === '2026-10-05');
+ok('nubank out/26: total 150 (A + B)', fo.total === 150, fo.total);
+ok('nubank nov/26: total 7 (C)', P.faturaCartao(H, nub, 2026, 11).total === 7);
+const fp = P.faturaCartao(H, pic, 2026, 10);
+ok('picpay out/26: período 02/set → 01/out, vence 10/10', fp.de === '2026-09-02' && fp.ate === '2026-10-01' && fp.vencimento === '2026-10-10', fp.de + ' ' + fp.ate + ' ' + fp.vencimento);
+ok('picpay out/26: total 20', fp.total === 20, fp.total);
+ok('fecha 31 / vence 10: a fatura de março fecha em 28/fev', P.periodoFatura({ fechamento: 31, vencimento: 10 }, 2026, 3).ate === '2026-02-28', P.periodoFatura({ fechamento: 31, vencimento: 10 }, 2026, 3).ate);
+
 console.log(falhas ? `\n>> ${falhas} FALHA(S)` : '\n>> tudo passou');
 process.exit(falhas ? 1 : 0);

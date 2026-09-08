@@ -44,7 +44,7 @@
 
   // ---------- estado ----------
   function estadoVazio() {
-    return { movimentacoes: [], tags: [], cartoes: [], checkins: [], previsaoDiario: 0 };
+    return { movimentacoes: [], tags: [], cartoes: [], checkins: [], previsaoDiario: 0, previsaoDias: 30, gastosMensais: [] };
   }
 
   // ---------- ocorrências de uma movimentação num período ----------
@@ -171,6 +171,26 @@
     estado.tags.push(t); return t;
   }
 
+  // ---------- cartão de crédito ----------
+  // A fatura que vence no mês (ano, mes) fecha no dia `fechamento` do mês
+  // anterior ao vencimento quando o fechamento é depois do vencimento no
+  // calendário (fecha 25, vence 5) e no mesmo mês quando é antes (fecha 1, vence 10).
+  // Cobre do dia seguinte ao fechamento anterior até o fechamento.
+  function periodoFatura(cartao, ano, mes) {
+    const fech = Math.max(1, Math.min(31, cartao.fechamento || 1)), venc = Math.max(1, Math.min(31, cartao.vencimento || 10));
+    const mesFech = fech > venc ? addMeses(chave(ano, mes, 1), -1, 1) : chave(ano, mes, 1);
+    const { a, m } = partes(mesFech);
+    const ate = chave(a, m, Math.min(fech, diasNoMes(a, m)));
+    const antes = addMeses(chave(a, m, 1), -1, 1); const { a: a0, m: m0 } = partes(antes);
+    const de = addDias(chave(a0, m0, Math.min(fech, diasNoMes(a0, m0))), 1);
+    return { de, ate, vencimento: chave(ano, mes, Math.min(venc, diasNoMes(ano, mes))) };
+  }
+  function faturaCartao(estado, cartao, ano, mes) {
+    const p = periodoFatura(cartao, ano, mes);
+    const itens = materializar(estado.movimentacoes, p.de, p.ate).filter(o => o.mov.tipo === 'cartao' && o.mov.cartaoId === cartao.id);
+    return { ...p, itens, total: deCentavos(itens.reduce((s, o) => s + centavos(o.valor), 0)) };
+  }
+
   // entradas automáticas a partir dos trabalhos pagos do app (as liquidações)
   function entradasDeTrabalhos(jobs, tagId) {
     const out = [];
@@ -185,7 +205,7 @@
     return out;
   }
 
-  const api = { TIPOS, SINAL, NOMES, PLURAL, chave, partes, diasNoMes, hoje, addDias, addMeses, diaSemana, fmtBRL, fmtCompacto, novoId, estadoVazio, ocorrencias, materializar, saldoAntes, resumoMes, adicionar, editar, excluir, encerrarEm, alternarCheckin, novaTag, entradasDeTrabalhos, CORES_TAG };
+  const api = { TIPOS, SINAL, NOMES, PLURAL, chave, partes, diasNoMes, hoje, addDias, addMeses, diaSemana, fmtBRL, fmtCompacto, novoId, estadoVazio, ocorrencias, materializar, saldoAntes, resumoMes, adicionar, editar, excluir, encerrarEm, alternarCheckin, novaTag, entradasDeTrabalhos, CORES_TAG, periodoFatura, faturaCartao };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   raiz.Planilha = api;
 })(typeof window !== 'undefined' ? window : globalThis);

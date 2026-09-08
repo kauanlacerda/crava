@@ -276,6 +276,32 @@
       <div class="hz-corpo" id="horizonteCorpo"></div>
     </section>
 
+    <!-- ================= PLANILHA · CARTÕES ================= -->
+    <section class="view" id="view-cartoes" hidden>
+      <div class="pagina-topo"><h1>Cartões</h1><div class="pagina-acoes"><button type="button" class="btn btn-primario" id="btnNovoCartao"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo cartão</button></div></div>
+      <div class="cartoes-lista" id="cartoesLista"></div>
+    </section>
+
+    <!-- ================= PLANILHA · PREVISÃO DE DIÁRIO ================= -->
+    <section class="view" id="view-previsao" hidden>
+      <div class="pagina-topo"><h1>Previsão de diário</h1><div class="pagina-acoes"><span class="sub">O que você gasta por mês no dia a dia, dividido por dia. Entra nos cálculos de Totais.</span></div></div>
+      <div class="tags-corpo">
+        <div class="tot-rotulo">gastos mensais</div>
+        <form class="card gm-form" id="gmForm">
+          <input id="gmNome" placeholder="nome (mercado, transporte, lanche…)" aria-label="Nome do gasto mensal" maxlength="60">
+          <label class="gm-valor"><span>R$</span><input id="gmValor" inputmode="decimal" placeholder="0,00" aria-label="Valor mensal"></label>
+          <button type="submit" class="btn btn-primario btn-p">adicionar</button>
+        </form>
+        <div class="card tags-lista" id="previsaoLista"></div>
+        <div class="tot-rotulo">resultado</div>
+        <div class="card tot-lista">
+          <div class="tot-linha"><span>total mensal</span><b id="prevTotal">R$ 0,00</b></div>
+          <div class="tot-linha"><span>dividido por</span><b><input type="number" id="prevDias" min="1" max="31" value="30" class="prev-dias" aria-label="Dias"> dias</b></div>
+          <div class="tot-linha prev-final"><span><span class="ic-tipo diario prev">D</span> previsão por dia</span><b id="prevResultado">R$ 0,00</b></div>
+        </div>
+      </div>
+    </section>
+
     <section class="view" id="view-outra" hidden>
       <div class="pagina-topo"><h1 id="outraTitulo">Em construção</h1></div>
       <p class="sub" id="outraTexto">Esta tela ainda não foi construída.</p>
@@ -335,6 +361,25 @@
   </form>
 </div>
 
+<!-- ================= CARTÃO ================= -->
+<div class="ov" id="ovCartao" hidden>
+  <form class="modal modal-p" id="ctForm" role="dialog" aria-modal="true" aria-labelledby="ctTitulo">
+    <div class="modal-cab"><h2 id="ctTitulo">novo cartão</h2><button type="button" class="btn-icone" id="ctFechar" aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="modal-corpo">
+      <label class="linha-campo"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg><input id="ctNome" placeholder="nome do cartão" aria-label="Nome do cartão" maxlength="40"></label>
+      <label class="linha-campo"><span class="prefixo" style="font-weight:500;color:var(--texto)">fecha no dia</span><input type="number" id="ctFechamento" min="1" max="31" value="1" aria-label="Dia de fechamento" style="text-align:right"></label>
+      <label class="linha-campo"><span class="prefixo" style="font-weight:500;color:var(--texto)">vence no dia</span><input type="number" id="ctVencimento" min="1" max="31" value="10" aria-label="Dia de vencimento" style="text-align:right"></label>
+      <label class="linha-campo"><span class="prefixo" style="font-weight:500;color:var(--texto)">limite</span><span class="prefixo">R$</span><input id="ctLimite" inputmode="decimal" placeholder="opcional" aria-label="Limite" style="text-align:right"></label>
+      <div class="campo-tags"><div class="cab">cor</div><div class="chips cores" id="ctCores"></div></div>
+      <div class="modal-acoes">
+        <button type="submit" class="btn btn-primario">salvar</button>
+        <button type="button" class="btn btn-contorno" id="ctCancelar">cancelar</button>
+        <button type="button" class="btn btn-contorno" id="ctExcluir" style="color:var(--negativo)" hidden>excluir cartão</button>
+      </div>
+    </div>
+  </form>
+</div>
+
 <!-- ================= PERSONALIZAR ================= -->
 <div class="veu" id="veuPersonalizar" hidden></div>
 <aside class="folha" id="folhaPersonalizar" role="dialog" aria-modal="true" aria-labelledby="folhaTitulo" hidden>
@@ -360,6 +405,7 @@
 <script src="planilha.js"></script>
 <script src="saldos.js"></script>
 <script src="planilha-telas.js"></script>
+<script src="cartoes.js"></script>
 <script src="shell.js"></script>
 </body>
 </html>

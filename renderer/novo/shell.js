@@ -145,6 +145,7 @@
     document.getElementById('main').scrollTop = 0;
     aplicarZoom();
     if (window.PlanilhaTelas) window.PlanilhaTelas.mostrar(alvo);
+    if (window.PlanilhaCartoes) window.PlanilhaCartoes.mostrar(alvo);
   }
   // ações da barra lateral: abrem a tela Saldos e agem nela
   document.querySelectorAll('[data-acao]').forEach(b => {
@@ -190,6 +191,7 @@
   desenharGraficos();
   window.Saldos.montar();
   window.PlanilhaTelas.montar();
+  window.PlanilhaCartoes.montar();
   aplicarZoom();
   if (q.get('folha') === '1') abrirFolha(true);
   if (q.get('view')) { const b = document.querySelector('[data-view="' + q.get('view') + '"]'); if (b) b.click(); }

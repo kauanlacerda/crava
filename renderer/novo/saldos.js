@@ -30,7 +30,11 @@
     P.adicionar(E, { tipo: 'diario', valor: 72.64, nome: 'Mercado', data: '2026-09-07', tags: [tMerc.id] });
     P.adicionar(E, { tipo: 'diario', valor: 8.65, nome: 'Café', data: '2026-09-07' });
     P.adicionar(E, { tipo: 'economia', valor: 300, nome: 'Reserva', data: '2026-09-08' });
-    P.adicionar(E, { tipo: 'cartao', valor: 1000, nome: 'Monitor', data: '2026-09-12', repete: { tipo: 'parcelado', parcelas: 3 } });
+    E.cartoes.push({ id: 'c1', nome: 'Nubank', fechamento: 25, vencimento: 5, limite: 5000, cor: '#8b5cf6' });
+    P.adicionar(E, { tipo: 'cartao', valor: 1000, nome: 'Monitor', data: '2026-09-12', repete: { tipo: 'parcelado', parcelas: 3 }, cartaoId: 'c1' });
+    P.adicionar(E, { tipo: 'cartao', valor: 189.9, nome: 'Fone', data: '2026-09-03', cartaoId: 'c1' });
+    E.gastosMensais = [{ id: 'g1', nome: 'Mercado', valor: 900 }, { id: 'g2', nome: 'Transporte', valor: 240 }, { id: 'g3', nome: 'Lanches', valor: 180 }];
+    E.previsaoDias = 30; E.previsaoDiario = 44;
     E.checkins = ['2026-09-01', '2026-09-02', '2026-09-03'];
     gravar();
   }
