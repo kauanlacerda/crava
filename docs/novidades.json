@@ -1,4 +1,18 @@
 {
+  "1.4.1": {
+    "pt": [
+      "Temas prontos no Personalizar: Escuro, Claro e o novo \"Branco e laranja\" (fundo branco, item ativo e gráficos em laranja). Também dá pra escolher \"Fundo no claro\": cinza ou branco.",
+      "Termômetro do saldo na planilha: vermelho quando negativo; amarelo quando o saldo cobre menos de 1 mês do seu custo de vida; verde claro de 1 a 2 meses; verde forte acima de 2. O custo de vida é a média de saídas, cartão e diários dos últimos 3 meses com gastos.",
+      "Sábado e domingo não apagam mais a cor do saldo.",
+      "No tema claro, a cor dos gráficos começa na cor pura em vez de escurecida (o laranja saía marrom)."
+    ],
+    "en": [
+      "Theme presets in Customize: Dark, Light and the new \"White & orange\" (white background, active item and charts in orange). You can also pick the light background: gray or white.",
+      "Balance thermometer in the spreadsheet: red when negative; yellow when the balance covers less than 1 month of your cost of living; light green for 1 to 2 months; strong green above 2. Cost of living is the average of expenses, card and daily spending over the last 3 months with data.",
+      "Weekends no longer wipe the balance color.",
+      "On the light theme, chart colors start at the pure hue instead of a darkened one (orange looked brown)."
+    ]
+  },
   "1.4.0": {
     "pt": [
       "O app foi refeito, com visual sóbrio: barra lateral, Dashboard financeiro, Trabalhos e uma Planilha completa (Saldos por dia, Totais, Tags, Cartões, Previsão de diário e Horizonte de 12 meses).",
