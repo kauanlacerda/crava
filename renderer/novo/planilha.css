@@ -32,7 +32,7 @@
 .grade-dias th .tp { display: inline-flex; align-items: center; gap: .375rem; }
 .grade-dias td { padding: 0; border-bottom: 1px solid var(--borda); height: 2.125rem; }
 .grade-dias tr:last-child td { border-bottom: 0; }
-.grade-dias tr.fds td { background: rgba(127, 127, 127, .05); }
+.grade-dias tr.fds td:not(.saldo) { background: rgba(127, 127, 127, .05); } /* o saldo mantém o verde/vermelho no fim de semana */
 .grade-dias tr.hoje td.dia { background: var(--texto); color: var(--bg); font-weight: 700; }
 .grade-dias tr.marcada { outline: 2px solid var(--anel); outline-offset: -2px; }
 td.dia { text-align: center; width: 2.75rem; }
