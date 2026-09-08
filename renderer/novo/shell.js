@@ -26,7 +26,14 @@
     return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * p).toString(16).padStart(2, '0')).join('');
   };
 
-  const PADRAO = { cor: 'padrao', corGrafico: 'padrao', fonte: 'DM Sans', fonteDisplay: '', escala: '1', raio: '10', tema: 'dark', layout: 'full', sidebar: 'expanded', variant: 'inset', zoom: {} };
+  const PADRAO = { cor: 'padrao', corGrafico: 'padrao', fonte: 'DM Sans', fonteDisplay: '', escala: '1', raio: '10', tema: 'dark', paleta: 'neutra', layout: 'full', sidebar: 'expanded', variant: 'inset', zoom: {} };
+  // temas prontos: um clique ajusta várias coisas de uma vez
+  const PREDEFS = {
+    escuro: { tema: 'dark', cor: 'padrao', corGrafico: 'padrao', paleta: 'neutra' },
+    claro: { tema: 'light', cor: 'padrao', corGrafico: 'padrao', paleta: 'neutra' },
+    laranja: { tema: 'light', cor: 'orange', corGrafico: 'orange', paleta: 'branca' } // a planilha de referência: branco e laranja
+  };
+  const predefAtivo = () => Object.keys(PREDEFS).find(k => Object.entries(PREDEFS[k]).every(([c, v]) => pref[c] === v)) || '';
   let pref = { ...PADRAO };
   try { pref = { ...PADRAO, ...JSON.parse(localStorage.getItem('pref-casca') || '{}') }; } catch { }
   let persistindo = false; // só depois do boot: o que o usuário muda vai pro estado
@@ -34,6 +41,7 @@
 
   function aplicar() {
     raiz.dataset.theme = pref.tema;
+    raiz.dataset.paleta = pref.paleta || 'neutra';
     raiz.dataset.layout = pref.layout;
     raiz.dataset.sidebar = pref.sidebar;
     raiz.dataset.variant = pref.variant;
@@ -55,7 +63,7 @@
       const base = g[0];
       const tons = escuro
         ? [mistura(base, '#ffffff', .25), base, mistura(base, '#000000', .25), mistura(base, '#000000', .45), mistura(base, '#000000', .62)]
-        : [mistura(base, '#000000', .25), base, mistura(base, '#ffffff', .3), mistura(base, '#ffffff', .55), mistura(base, '#ffffff', .75)];
+        : [base, mistura(base, '#000000', .22), mistura(base, '#ffffff', .3), mistura(base, '#ffffff', .55), mistura(base, '#ffffff', .75)]; // no claro a cor pura lidera; escurecer deixava marrom
       tons.forEach((t, i) => raiz.style.setProperty('--chart-' + (i + 1), t));
     } else { for (let i = 1; i <= 5; i++) raiz.style.removeProperty('--chart-' + i); }
     // estado dos controles
@@ -65,6 +73,7 @@
       const k = seg.dataset.opt;
       seg.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === String(pref[k])));
     });
+    document.querySelectorAll('.predef').forEach(b => b.classList.toggle('sel', b.dataset.predef === predefAtivo()));
     $('btnSidebar').setAttribute('aria-expanded', String(pref.sidebar === 'expanded'));
     // recolhida: só ícones, com o nome na dica; os grupos fecham e viram menu flutuante ao clicar
     const icone = pref.sidebar === 'icon';
@@ -93,6 +102,7 @@
     });
   });
   $('btnRestaurar').onclick = () => { pref = { ...PADRAO }; aplicar(); desenharGraficos(); };
+  document.querySelectorAll('.predef').forEach(b => { b.onclick = () => { pref = { ...pref, ...PREDEFS[b.dataset.predef] }; aplicar(); desenharGraficos(); }; });
   $('btnTema').onclick = () => { pref.tema = pref.tema === 'dark' ? 'light' : 'dark'; aplicar(); desenharGraficos(); };
   $('btnSidebar').onclick = () => { pref.sidebar = pref.sidebar === 'expanded' ? 'icon' : 'expanded'; aplicar(); };
 
@@ -203,7 +213,7 @@
   else if (window.Dados.S.config.tema === 'claro') pref.tema = 'light'; // quem usava o tema claro no app antigo continua no claro
   // estado inicial pela URL, pra captura e teste: ?tema=light&sidebar=icon&folha=1
   const q = new URLSearchParams(location.search);
-  for (const k of ['tema', 'sidebar', 'variant', 'layout', 'cor', 'corGrafico', 'fonte', 'escala', 'raio']) if (q.has(k)) pref[k] = q.get(k);
+  for (const k of ['tema', 'paleta', 'sidebar', 'variant', 'layout', 'cor', 'corGrafico', 'fonte', 'escala', 'raio']) if (q.has(k)) pref[k] = q.get(k);
   // zoom de uma aba pela URL, pra captura: ?zoomSaldos=0.8
   for (const [k, v] of q.entries()) if (k.startsWith('zoom') && k.length > 4) pref.zoom = { ...(pref.zoom || {}), [k.slice(4).toLowerCase()]: +v };
 

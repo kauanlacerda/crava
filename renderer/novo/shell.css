@@ -414,3 +414,23 @@ input:focus-visible, select:focus-visible { outline: none; border-color: var(--a
 .menu-item.off { color: var(--texto-2); cursor: default; }
 /* o avatar do perfil não é um texto de linha: fica redondo e no tamanho dele */
 .perfil-linha > .avatar.avatar-g { flex: none; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; }
+
+/* ---------- fundo branco (tema claro): base branca e item ativo na cor do tema, como a planilha de referência ---------- */
+[data-theme="light"][data-paleta="branca"] {
+  --bg: #ffffff; --painel: #ffffff; --card: #ffffff; --card-40: #ffffff; --secundario: #f4f4f5; --sidebar-ativo: #f4f4f5;
+  --borda: rgba(0, 0, 0, .10); --campo: rgba(0, 0, 0, .14); --sidebar-ativo-texto: var(--primario);
+}
+[data-theme="light"][data-paleta="branca"] .sidebar { border-right: 1px solid var(--borda); }
+[data-theme="light"][data-paleta="branca"] .sb-item.ativo, [data-theme="light"][data-paleta="branca"] .sb-subitem.ativo { background: none; color: var(--sidebar-ativo-texto); font-weight: 700; }
+[data-theme="light"][data-paleta="branca"] .sb-item.ativo svg { color: var(--sidebar-ativo-texto); }
+[data-theme="light"][data-paleta="branca"] .sb-acao svg, [data-theme="light"][data-paleta="branca"] .sb-dia { color: var(--sidebar-ativo-texto); }
+[data-theme="light"][data-paleta="branca"] .sb-logo { background: var(--primario); color: #fff; }
+
+/* ---------- temas prontos (painel Personalizar) ---------- */
+.predefs { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+.predef { display: flex; flex-direction: column; gap: .375rem; padding: .5rem; border: 1px solid var(--campo); border-radius: var(--raio); background: var(--card-40); font: inherit; font-size: .75rem; font-weight: 500; color: var(--texto); text-align: left; cursor: pointer; }
+.predef:hover { background: var(--secundario); }
+.predef.sel { outline: 2px solid var(--anel); outline-offset: 1px; }
+.predef i { display: block; height: 2rem; border-radius: calc(var(--raio) - 3px); border: 1px solid rgba(127, 127, 127, .35); background: var(--p-fundo); position: relative; overflow: hidden; }
+.predef i::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 30%; background: var(--p-lateral); border-right: 1px solid rgba(127, 127, 127, .35); }
+.predef i::after { content: ''; position: absolute; left: 42%; top: 35%; width: 40%; height: 30%; border-radius: 999px; background: var(--p-acento); }

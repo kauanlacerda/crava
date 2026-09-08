@@ -534,6 +534,11 @@
     <button type="button" class="btn-icone" id="btnFecharFolha" aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </header>
   <div class="folha-corpo">
+    <div class="opt"><span>Temas prontos</span><div class="predefs" id="predefs">
+      <button type="button" class="predef" data-predef="escuro" style="--p-fundo:#0a0a0a;--p-lateral:#171717;--p-acento:#e5e5e5">Escuro<i aria-hidden="true"></i></button>
+      <button type="button" class="predef" data-predef="claro" style="--p-fundo:#f5f5f5;--p-lateral:#ffffff;--p-acento:#171717">Claro<i aria-hidden="true"></i></button>
+      <button type="button" class="predef" data-predef="laranja" style="--p-fundo:#ffffff;--p-lateral:#ffffff;--p-acento:#f97316">Branco e laranja<i aria-hidden="true"></i></button>
+    </div></div>
     <label class="opt"><span>Cor do tema</span><select id="optCor"></select></label>
     <label class="opt"><span>Cor dos gráficos</span><select id="optCorGrafico"></select></label>
     <label class="opt"><span>Fonte</span><select id="optFonte"><option value="DM Sans">Padrão (DM Sans)</option><option value="Inter">Inter</option><option value="Geist">Geist</option></select></label>
@@ -541,6 +546,7 @@
     <div class="opt"><span>Escala</span><div class="seg" data-opt="escala"><button type="button" data-v="0.9">XS</button><button type="button" data-v="0.95">S</button><button type="button" data-v="1" class="sel">M</button><button type="button" data-v="1.05">L</button></div></div>
     <div class="opt"><span>Raio</span><div class="seg" data-opt="raio"><button type="button" data-v="6">SM</button><button type="button" data-v="10" class="sel">MD</button><button type="button" data-v="14">LG</button><button type="button" data-v="18">XL</button></div></div>
     <div class="opt"><span>Esquema</span><div class="seg" data-opt="tema"><button type="button" data-v="light">Claro</button><button type="button" data-v="dark" class="sel">Escuro</button></div></div>
+    <div class="opt"><span>Fundo no claro</span><div class="seg" data-opt="paleta"><button type="button" data-v="neutra" class="sel">Cinza</button><button type="button" data-v="branca">Branco</button></div></div>
     <div class="opt"><span>Layout</span><div class="seg" data-opt="layout"><button type="button" data-v="full" class="sel">Cheio</button><button type="button" data-v="centered">Centralizado</button></div></div>
     <div class="opt"><span>Barra lateral</span><div class="seg" data-opt="sidebar"><button type="button" data-v="expanded" class="sel">Expandida</button><button type="button" data-v="icon">Ícones</button><button type="button" data-v="hidden">Escondida</button></div></div>
     <div class="opt"><span>Variante</span><div class="seg" data-opt="variant"><button type="button" data-v="inset" class="sel">Inset</button><button type="button" data-v="flat">Colada</button><button type="button" data-v="floating">Flutuante</button></div></div>
