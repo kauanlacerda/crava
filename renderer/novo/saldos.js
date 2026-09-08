@@ -15,10 +15,19 @@
   let E = P.estadoVazio();
   try { const s = JSON.parse(localStorage.getItem(CHAVE) || 'null'); if (s && s.movimentacoes) E = { ...P.estadoVazio(), ...s }; } catch { }
   const gravar = () => { try { localStorage.setItem(CHAVE, JSON.stringify(E)); } catch { } };
+  // O estado que as telas leem: as movimentações digitadas mais as entradas
+  // automáticas dos trabalhos pagos (chave pra desligar: E.entradaAutomatica).
+  function estadoCompleto() {
+    if (E.entradaAutomatica === false || !window.Trabalhos) return E;
+    const tag = E.tags.find(t => t.nome.toLowerCase() === 'comissão');
+    const auto = P.entradasDeTrabalhos(window.Trabalhos.lista(), tag ? tag.id : undefined);
+    return auto.length ? { ...E, movimentacoes: [...E.movimentacoes, ...auto] } : E;
+  }
 
   // dados de exemplo (os mesmos do app do Breno do usuário) quando pedido por ?semente=1
   function semear() {
     if (E.movimentacoes.length) return;
+    if (window.Trabalhos) window.Trabalhos.semear();
     const tFixo = P.novaTag(E, 'Fixo'), tGuga = P.novaTag(E, 'Cartão do guga'), tMerc = P.novaTag(E, 'Mercado'), tCom = P.novaTag(E, 'Comissão');
     P.adicionar(E, { tipo: 'entrada', valor: 15.87, nome: 'Saldo inicial', data: '2026-08-31' });
     P.adicionar(E, { tipo: 'saida', valor: 59.14, nome: 'Assinatura', data: '2026-09-01', repete: { tipo: 'mensal' } });
@@ -49,13 +58,14 @@
   function renderMeses() {
     const cont = $('meses'); if (!cont) return;
     $('periodoRotulo').textContent = rotuloPeriodo();
-    if (!E.movimentacoes.length) {
+    const EC = estadoCompleto();
+    if (!EC.movimentacoes.length) {
       cont.innerHTML = `<div class="vazio-planilha" style="width:100%">Nenhuma movimentação ainda. Use <b>+ Adicionar</b> na barra lateral, ou o + em qualquer célula.</div>`;
       return;
     }
     const cab = P.TIPOS.map(t => `<th><span class="tp"><span class="ic-tipo ${t}">${LETRA[t]}</span>${P.PLURAL[t]}</span></th>`).join('');
     cont.innerHTML = mesesVisiveis().map(({ a, m }) => {
-      const r = P.resumoMes(E, a, m);
+      const r = P.resumoMes(EC, a, m);
       const maxAbs = Math.max(1, ...r.dias.map(d => Math.abs(d.saldo)));
       const linhas = r.dias.map(d => {
         const cls = [d.fimDeSemana ? 'fds' : '', d.data === hj ? 'hoje' : '', d.checkin ? 'checkin' : ''].filter(Boolean).join(' ');
@@ -92,7 +102,7 @@
     const { a, m, d } = P.partes(diaAberto);
     $('pdData').textContent = `${d}/${MES3[m - 1]}`;
     $('pdFiltro').value = filtro;
-    const itens = P.materializar(E.movimentacoes, diaAberto, diaAberto).filter(o => !filtro || o.mov.tipo === filtro);
+    const itens = P.materializar(estadoCompleto().movimentacoes, diaAberto, diaAberto).filter(o => !filtro || o.mov.tipo === filtro);
     const lista = $('pdLista');
     if (!itens.length) { lista.innerHTML = `<div class="pd-vazio">Nada ${filtro ? 'em ' + P.PLURAL[filtro] : ''} neste dia.</div>`; return; }
     lista.innerHTML = itens.map(o => {
@@ -103,7 +113,7 @@
         <span class="ic-tipo ${o.mov.tipo}">${LETRA[o.mov.tipo]}</span>
         <div class="nome">${esc(o.mov.nome)}${parc}</div>
         <div class="valor">${P.fmtBRL(o.valor)}</div>
-        <button type="button" class="btn-icone btn-ghost menu" data-menu="${o.mov.id}" aria-label="Opções"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>
+        ${o.mov.origem ? `<span class="menu sub" title="veio de um trabalho pago"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></svg></span>` : `<button type="button" class="btn-icone btn-ghost menu" data-menu="${o.mov.id}" aria-label="Opções"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>`}
         <div class="meta">${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}${tags}</div>
         <div class="tipo-txt">${rep}${P.NOMES[o.mov.tipo]}</div>
       </div>`;
@@ -128,7 +138,7 @@
       else if (acao === 'excluir') { P.excluir(E, m.id); depoisDeMudar(); }
     };
   }
-  function depoisDeMudar() { gravar(); renderMeses(); if (diaAberto) renderDia(); }
+  function depoisDeMudar() { gravar(); renderMeses(); if (diaAberto) renderDia(); window.dispatchEvent(new CustomEvent('planilha:mudou')); }
 
   // ---------- formulário ----------
   let editando = null; let tagsSel = new Set();
@@ -237,5 +247,5 @@
   // abre a grade num mês / dia (usado por Totais, Tags e Horizonte)
   function irParaMes(a, m) { if (!mesesVisiveis().some(x => x.a === a && x.m === m)) { inicio = { a, m }; renderMeses(); } setTimeout(() => rolarAte(P.chave(a, m, 1)), 30); }
   function irParaDia(data) { const { a, m } = P.partes(data); if (!mesesVisiveis().some(x => x.a === a && x.m === m)) { inicio = { a, m }; renderMeses(); } setTimeout(() => rolarAte(data, true), 30); }
-  window.Saldos = { montar, irParaHoje, irParaMes, irParaDia, abrirNovo, renderMeses, gravar, get estado() { return E; } };
+  window.Saldos = { montar, irParaHoje, irParaMes, irParaDia, abrirNovo, renderMeses, gravar, estadoCompleto, get estado() { return E; } };
 })();

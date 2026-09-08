@@ -146,6 +146,7 @@
     aplicarZoom();
     if (window.PlanilhaTelas) window.PlanilhaTelas.mostrar(alvo);
     if (window.PlanilhaCartoes) window.PlanilhaCartoes.mostrar(alvo);
+    if (alvo === 'dashboard' && window.Dashboard) window.Dashboard.render();
   }
   // ações da barra lateral: abrem a tela Saldos e agem nela
   document.querySelectorAll('[data-acao]').forEach(b => {
@@ -158,28 +159,8 @@
   const dia = new Date().getDate(); document.querySelectorAll('.sb-dia').forEach(el => el.textContent = dia);
   $('btnNovaMov').onclick = () => window.Saldos.abrirNovo();
 
-  // ---------- gráficos de exemplo ----------
-  function desenharGraficos() {
-    // mini-barras do "a receber": o que caiu por dia, 40 dias
-    const mb = $('miniBarras'); mb.innerHTML = '';
-    const semente = [3, 5, 4, 6, 9, 7, 5, 4, 6, 8, 10, 7, 5, 6, 9, 11, 8, 6, 7, 9, 12, 10, 8, 9, 11, 13, 10, 9, 12, 14, 11, 10, 12, 15, 13, 11, 14, 16, 13, 12];
-    for (const v of semente) { const i = document.createElement('i'); i.style.setProperty('--h', Math.round(v / 16 * 100) + '%'); mb.appendChild(i); }
-    // barras por mês
-    const bm = $('barrasMes'); bm.innerHTML = '';
-    const meses = [['abr', 52], ['mai', 100], ['jun', 60], ['jul', 92], ['ago', 64], ['set', 66]];
-    for (const [m, h] of meses) { const d = document.createElement('div'); d.innerHTML = `<i style="--h:${h}%"></i><span>${m}</span>`; bm.appendChild(d); }
-    // rosquinha
-    const r = $('rosca'); r.innerHTML = '';
-    const partes = [[48, 'var(--chart-1)'], [32, 'var(--chart-2)'], [13, 'var(--chart-3)'], [7, 'var(--chart-4)']];
-    const C = 2 * Math.PI * 50; let acc = 0;
-    for (const [p, cor] of partes) {
-      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      c.setAttribute('cx', 60); c.setAttribute('cy', 60); c.setAttribute('r', 50);
-      c.setAttribute('stroke', cor); c.setAttribute('stroke-dasharray', `${C * p / 100 - 3} ${C - C * p / 100 + 3}`);
-      c.setAttribute('stroke-dashoffset', -acc * C / 100 + C / 4); c.setAttribute('stroke-linecap', 'butt');
-      r.appendChild(c); acc += p;
-    }
-  }
+  // o dashboard desenha os próprios gráficos a partir da planilha
+  function desenharGraficos() { if (window.Dashboard && !$('view-dashboard').hidden) window.Dashboard.render(); }
 
   // estado inicial pela URL, pra captura e teste: ?tema=light&sidebar=icon&folha=1
   const q = new URLSearchParams(location.search);
@@ -188,10 +169,11 @@
   for (const [k, v] of q.entries()) if (k.startsWith('zoom') && k.length > 4) pref.zoom = { ...(pref.zoom || {}), [k.slice(4).toLowerCase()]: +v };
 
   aplicar();
-  desenharGraficos();
   window.Saldos.montar();
   window.PlanilhaTelas.montar();
   window.PlanilhaCartoes.montar();
+  window.Dashboard.montar();
+  window.Dashboard.render(); // o dashboard é a primeira tela: desenha antes de qualquer clique
   aplicarZoom();
   if (q.get('folha') === '1') abrirFolha(true);
   if (q.get('view')) { const b = document.querySelector('[data-view="' + q.get('view') + '"]'); if (b) b.click(); }

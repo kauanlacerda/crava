@@ -334,3 +334,10 @@ input:focus-visible, select:focus-visible { outline: none; border-color: var(--a
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: .001ms !important; animation-duration: .001ms !important; }
 }
+
+/* ---------- dashboard vivo ---------- */
+.db-periodo { position: relative; cursor: pointer; }
+.db-periodo select { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.kpi.neg { color: var(--negativo); }
+.cartao-roxo { background: linear-gradient(135deg, #a855f7, #6d28d9); }
+.nota-mock { display: none; }

@@ -103,42 +103,47 @@
       <div class="pagina-topo">
         <h1>Dashboard</h1>
         <div class="pagina-acoes">
-          <button type="button" class="btn btn-contorno">
+          <label class="btn btn-contorno db-periodo">
             <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-            <span>12 ago 2026 – 8 set 2026</span>
-          </button>
-          <button type="button" class="btn-icone btn-contorno" aria-label="Exportar">
-            <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
-          </button>
+            <span id="dbPeriodo">—</span>
+            <select id="dbPreset" aria-label="Período">
+              <option value="mes">Este mês</option>
+              <option value="mes-passado">Mês passado</option>
+              <option value="30d">Últimos 30 dias</option>
+              <option value="90d">Últimos 90 dias</option>
+              <option value="ano">Este ano</option>
+            </select>
+            <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+          </label>
         </div>
       </div>
 
       <!-- linha 1: KPIs -->
       <section class="grade grade-4">
         <article class="card">
-          <header class="card-cab"><h2>Saldo</h2><span class="chip chip-pos"><svg viewBox="0 0 24 24"><path d="m3 17 6-6 4 4 8-8M14 7h7v7"/></svg>12,5%</span></header>
+          <header class="card-cab"><h2>Saldo</h2><span id="dbSaldoVar"></span></header>
           <div class="card-corpo">
-            <div class="kpi">R$ 12.543,00</div>
-            <div class="sub">em relação ao mês passado</div>
+            <div class="kpi" id="dbSaldo">—</div>
+            <div class="sub">em relação ao período anterior</div>
             <div class="btn-linha">
-              <button type="button" class="btn btn-primario"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Entrada</button>
-              <button type="button" class="btn btn-contorno"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>Saída</button>
+              <button type="button" class="btn btn-primario" id="dbEntrada"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Entrada</button>
+              <button type="button" class="btn btn-contorno" id="dbSaida"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>Saída</button>
             </div>
           </div>
         </article>
         <article class="card">
-          <header class="card-cab"><h2>Lucro do período</h2><span class="chip chip-pos"><svg viewBox="0 0 24 24"><path d="m3 17 6-6 4 4 8-8M14 7h7v7"/></svg>8,5%</span></header>
-          <div class="card-corpo"><div class="kpi">R$ 3.870,00</div><div class="sub">em relação ao mês passado</div></div>
+          <header class="card-cab"><h2>Lucro do período</h2><span id="dbLucroVar"></span></header>
+          <div class="card-corpo"><div class="kpi" id="dbLucro">—</div><div class="sub">entradas menos tudo que saiu</div></div>
         </article>
         <article class="card">
-          <header class="card-cab"><h2>Gastos</h2><span class="chip chip-neg"><svg viewBox="0 0 24 24"><path d="m3 7 6 6 4-4 8 8M14 17h7v-7"/></svg>5,5%</span></header>
-          <div class="card-corpo"><div class="kpi">R$ 6.237,41</div><div class="sub">em relação ao mês passado</div></div>
+          <header class="card-cab"><h2>Gastos</h2><span id="dbGastosVar"></span></header>
+          <div class="card-corpo"><div class="kpi" id="dbGastos">—</div><div class="sub">saídas, diários e cartão</div></div>
         </article>
         <article class="card">
-          <header class="card-cab"><h2>A receber</h2><span class="chip chip-neg">3 atrasados</span></header>
+          <header class="card-cab"><h2>A receber</h2><span id="dbReceberVar"></span></header>
           <div class="card-corpo">
-            <div class="kpi">R$ 3.200,00</div>
-            <div class="mini-barras" aria-hidden="true" id="miniBarras"></div>
+            <div class="kpi" id="dbReceber">—</div>
+            <div class="mini-barras" aria-hidden="true" id="miniBarras" title="o que entrou por dia, últimos 40 dias"></div>
           </div>
         </article>
       </section>
@@ -146,39 +151,27 @@
       <!-- linha 2 -->
       <section class="grade grade-3">
         <article class="card">
-          <header class="card-cab"><h2>Fontes de renda</h2><button type="button" class="btn-icone btn-ghost" aria-label="Abrir relatório de renda"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></button></header>
+          <header class="card-cab"><h2>Fontes de renda</h2><button type="button" class="btn-icone btn-ghost" id="dbVerRenda" aria-label="Ver por tag"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></button></header>
           <div class="card-corpo">
             <div class="sub">Total de entradas</div>
-            <div class="kpi kpi-g">R$ 9.200,00</div>
-            <div class="sub"><span class="chip chip-pos"><svg viewBox="0 0 24 24"><path d="m3 17 6-6 4 4 8-8M14 7h7v7"/></svg>15,5%</span> em relação ao mês passado</div>
-            <div class="barra-seg" aria-hidden="true">
-              <i style="--w:38%;--c:var(--serie-1)"></i><i style="--w:30%;--c:var(--serie-2)"></i><i style="--w:20%;--c:var(--serie-3)"></i><i style="--w:12%;--c:var(--serie-4)"></i>
-            </div>
-            <ul class="lista-fontes">
-              <li><i style="--c:var(--serie-1)"></i><span>Pix</span><b>R$ 3.500,00</b></li>
-              <li><i style="--c:var(--serie-2)"></i><span>PayPal</span><b>R$ 2.800,00</b></li>
-              <li><i style="--c:var(--serie-3)"></i><span>Robux vendidos</span><b>R$ 1.800,00</b></li>
-              <li><i style="--c:var(--serie-4)"></i><span>Outros</span><b>R$ 1.100,00</b></li>
-            </ul>
+            <div class="kpi kpi-g" id="dbRendaTotal">—</div>
+            <div class="sub"><span id="dbRendaVar"></span> em relação ao período anterior</div>
+            <div class="barra-seg" aria-hidden="true" id="dbRendaBarra"></div>
+            <ul class="lista-fontes" id="dbRendaLista"></ul>
           </div>
         </article>
         <article class="card">
-          <header class="card-cab"><h2>Gastos por mês <svg class="ic-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg></h2><button type="button" class="btn btn-contorno btn-p">Ver relatório</button></header>
+          <header class="card-cab"><h2>Gastos por mês <svg class="ic-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg></h2><button type="button" class="btn btn-contorno btn-p" id="dbVerRelatorio">Ver totais</button></header>
           <div class="card-corpo">
             <div class="barras" id="barrasMes" aria-label="Gastos por mês, últimos 6 meses"></div>
-            <div class="rodape-nota"><b>Subiu 5,2% este mês</b> <svg viewBox="0 0 24 24"><path d="m3 17 6-6 4 4 8-8M14 7h7v7"/></svg><br><span class="sub">Mostrando os últimos 6 meses</span></div>
+            <div class="rodape-nota"><span id="dbMesNota"></span><br><span class="sub">Saídas, diários e cartão nos últimos 6 meses</span></div>
           </div>
         </article>
         <article class="card">
-          <header class="card-cab"><h2>Resumo <svg class="ic-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg></h2><button type="button" class="btn-icone btn-ghost" aria-label="Ver detalhes"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button></header>
+          <header class="card-cab"><h2>Resumo <svg class="ic-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg></h2><button type="button" class="btn-icone btn-ghost" id="dbVerResumo" aria-label="Ver tags"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button></header>
           <div class="card-corpo">
-            <div class="rosca-wrap"><svg class="rosca" viewBox="0 0 120 120" id="rosca" aria-hidden="true"></svg><div class="rosca-total">R$ 1.125</div></div>
-            <ul class="lista-cat">
-              <li><i style="--c:var(--chart-1)"></i><span>Comida</span><b>48%</b></li>
-              <li><i style="--c:var(--chart-2)"></i><span>Mercado</span><b>32%</b></li>
-              <li><i style="--c:var(--chart-3)"></i><span>Compras</span><b>13%</b></li>
-              <li><i style="--c:var(--chart-4)"></i><span>Transporte</span><b>7%</b></li>
-            </ul>
+            <div class="rosca-wrap"><svg class="rosca" viewBox="0 0 120 120" id="rosca" aria-hidden="true"></svg><div class="rosca-total" id="dbRoscaTotal">—</div></div>
+            <ul class="lista-cat" id="dbCatLista"></ul>
           </div>
         </article>
       </section>
@@ -186,39 +179,28 @@
       <!-- linha 3 -->
       <section class="grade grade-3-1">
         <article class="card">
-          <header class="card-cab"><h2>Lançamentos</h2><button type="button" class="btn btn-contorno btn-p">Ver todos</button></header>
+          <header class="card-cab"><h2>Lançamentos</h2><button type="button" class="btn btn-contorno btn-p" id="dbVerTodos">Ver na planilha</button></header>
           <div class="tabela-wrap">
             <table class="tabela">
               <thead><tr><th>Lançamento</th><th>Data</th><th>Tipo</th><th class="num">Valor</th></tr></thead>
-              <tbody>
-                <tr><td><span class="ava-l" style="--c:#ec4899">F</span>Furiqus · Thumb Nova flow</td><td>8 set 2026, 14:20</td><td><span class="chip chip-neutro">Entrada</span></td><td class="num pos">+R$ 1.640,26</td></tr>
-                <tr><td><span class="ava-l" style="--c:#22c55e">M</span>Mercado</td><td>7 set 2026, 18:45</td><td><span class="chip chip-neutro">Diário</span></td><td class="num neg">−R$ 72,64</td></tr>
-                <tr><td><span class="ava-l" style="--c:#f59e0b">C</span>Café</td><td>7 set 2026, 08:30</td><td><span class="chip chip-neutro">Diário</span></td><td class="num neg">−R$ 8,65</td></tr>
-                <tr><td><span class="ava-l" style="--c:#a855f7">Z</span>Zed · Pack Halloween (sinal)</td><td>5 set 2026, 15:50</td><td><span class="chip chip-neutro">Entrada</span></td><td class="num pos">+R$ 842,50</td></tr>
-                <tr><td><span class="ava-l" style="--c:#3b82f6">F</span>Fixo · aluguel</td><td>10 ago 2026, 09:00</td><td><span class="chip chip-neutro">Saída</span></td><td class="num neg">−R$ 3.000,00</td></tr>
-              </tbody>
+              <tbody id="dbLancamentos"></tbody>
             </table>
           </div>
         </article>
         <div class="coluna">
           <article class="card">
-            <header class="card-cab"><h2>Economia <span class="chip chip-neutro">75% da meta</span></h2><button type="button" class="btn btn-contorno btn-p">Ver relatório</button></header>
+            <header class="card-cab"><h2>Economia <span class="chip chip-neutro" id="dbEconomiaChip">—</span></h2><button type="button" class="btn btn-contorno btn-p" id="dbVerEconomia">Ver economia</button></header>
             <div class="card-corpo">
-              <div class="kpi">R$ 1.052,98 <span class="sub-inline">de R$ 1.200</span></div>
-              <div class="progresso" aria-hidden="true"><i style="--w:75%"></i></div>
+              <div class="kpi"><span id="dbEconomia">—</span> <span class="sub-inline" id="dbEconomiaMeta"></span></div>
+              <div class="progresso" aria-hidden="true"><i id="dbEconomiaBarra" style="--w:0%"></i></div>
             </div>
           </article>
           <article class="card">
-            <header class="card-cab"><div><h2>Carteira</h2><div class="sub">O que já é dinheiro e o que ainda vai virar</div></div><button type="button" class="btn btn-contorno btn-p"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo</button></header>
-            <div class="card-corpo cartoes">
-              <div class="carteira-cartao cartao-verde"><small>Na conta</small><b>R$ 12.543,00</b><span>Pix · R$</span></div>
-              <div class="carteira-cartao cartao-azul"><small>A converter</small><b>US$ 184,00</b><span>PayPal</span></div>
-            </div>
+            <header class="card-cab"><div><h2>Carteira</h2><div class="sub">O que já é dinheiro e o que ainda vai virar</div></div><button type="button" class="btn btn-contorno btn-p" id="dbNovoCartao"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Cartão</button></header>
+            <div class="card-corpo cartoes" id="dbCarteira"></div>
           </article>
         </div>
       </section>
-
-      <p class="nota-mock">Dados de exemplo, só pra aprovar a casca.</p>
     </section>
 
     <!-- ================= PLANILHA · SALDOS ================= -->
@@ -406,6 +388,8 @@
 <script src="saldos.js"></script>
 <script src="planilha-telas.js"></script>
 <script src="cartoes.js"></script>
+<script src="trabalhos-mock.js"></script>
+<script src="dashboard.js"></script>
 <script src="shell.js"></script>
 </body>
 </html>
