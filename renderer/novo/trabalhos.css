@@ -60,3 +60,7 @@
 .rb-atalhos { display: flex; gap: .375rem; padding-top: .625rem; }
 .rb-atalhos .btn { flex: 1; height: 1.75rem; font-size: .75rem; }
 @media (max-width: 1280px) { .tb-quadro { grid-template-columns: repeat(2, minmax(15rem, 1fr)); } .tb-topo-grade { grid-template-columns: 1fr; } }
+
+/* a lente no cabeçalho não encolhe nem quebra */
+.pagina-topo .seg { flex: none; }
+.pagina-topo .seg button { white-space: nowrap; padding: 0 .75rem; }
