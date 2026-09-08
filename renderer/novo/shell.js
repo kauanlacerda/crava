@@ -150,6 +150,7 @@
     if (window.PlanilhaTelas) window.PlanilhaTelas.mostrar(alvo);
     if (window.PlanilhaCartoes) window.PlanilhaCartoes.mostrar(alvo);
     if (alvo === 'dashboard' && window.Dashboard) window.Dashboard.render();
+    if (alvo === 'saldos') window.Saldos.renderMeses(); // a grade pode ter ficado pra trás (ex.: entrada automática de um trabalho)
     if (window.Economia) window.Economia.mostrar(alvo);
     if (alvo === 'trabalhos' && window.Trabalhos) window.Trabalhos.render();
   }
