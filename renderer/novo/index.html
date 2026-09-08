@@ -237,6 +237,45 @@
       <div class="meses" id="meses" aria-label="Meses"></div>
     </section>
 
+    <!-- ================= PLANILHA · TOTAIS ================= -->
+    <section class="view" id="view-totais" hidden>
+      <div class="pagina-topo"><h1>Totais</h1><div class="periodo">
+          <button type="button" class="btn-icone" id="totaisAnt" aria-label="Mês anterior"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <span class="btn btn-contorno periodo-rotulo" id="totaisMes" style="min-width:8rem">—</span>
+          <button type="button" class="btn-icone" id="totaisProx" aria-label="Próximo mês"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div><div class="pagina-acoes"></div></div>
+      <div class="tot-corpo" id="totaisCorpo"></div>
+    </section>
+
+    <!-- ================= PLANILHA · TAGS ================= -->
+    <section class="view" id="view-tags" hidden>
+      <div class="pagina-topo"><h1>Tags</h1><div class="periodo">
+          <button type="button" class="btn-icone" id="tagsAnt" aria-label="Mês anterior"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <span class="btn btn-contorno periodo-rotulo" id="tagsMes" style="min-width:8rem">—</span>
+          <button type="button" class="btn-icone" id="tagsProx" aria-label="Próximo mês"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div><div class="pagina-acoes"><button type="button" class="btn btn-primario" id="btnNovaTag"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nova tag</button></div></div>
+      <div class="tags-corpo">
+        <label class="sb-busca tags-busca"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" id="tagsFiltro" placeholder="filtrar tags" aria-label="Filtrar tags"></label>
+        <div class="card tags-lista" id="tagsLista"></div>
+      </div>
+    </section>
+
+    <!-- ================= PLANILHA · HORIZONTE ================= -->
+    <section class="view" id="view-horizonte" hidden>
+      <div class="pagina-topo">
+        <h1>Horizonte</h1>
+        <div class="periodo">
+          <button type="button" class="btn-icone" id="horizonteAnoAnt" aria-label="Ano anterior"><svg viewBox="0 0 24 24"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/></svg></button>
+          <button type="button" class="btn-icone" id="horizonteMesAnt" aria-label="Mês anterior"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <span class="btn btn-contorno periodo-rotulo" id="horizonteRotulo">—</span>
+          <button type="button" class="btn-icone" id="horizonteMesProx" aria-label="Próximo mês"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button type="button" class="btn-icone" id="horizonteAnoProx" aria-label="Próximo ano"><svg viewBox="0 0 24 24"><path d="m13 17 5-5-5-5M6 17l5-5-5-5"/></svg></button>
+        </div>
+        <div class="pagina-acoes"><span class="sub">12 meses de saldo, dia a dia. Clique num dia pra abrir na grade.</span></div>
+      </div>
+      <div class="hz-corpo" id="horizonteCorpo"></div>
+    </section>
+
     <section class="view" id="view-outra" hidden>
       <div class="pagina-topo"><h1 id="outraTitulo">Em construção</h1></div>
       <p class="sub" id="outraTexto">Esta tela ainda não foi construída.</p>
@@ -280,6 +319,22 @@
   </form>
 </div>
 
+<!-- ================= TAG ================= -->
+<div class="ov" id="ovTag" hidden>
+  <form class="modal modal-p" id="tgForm" role="dialog" aria-modal="true" aria-labelledby="tgTitulo">
+    <div class="modal-cab"><h2 id="tgTitulo">nova tag</h2><button type="button" class="btn-icone" id="tgFechar" aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="modal-corpo">
+      <label class="linha-campo"><svg viewBox="0 0 24 24"><path d="M20 12 12 20 3 11V3h8l9 9Z"/><circle cx="7.5" cy="7.5" r="1"/></svg><input id="tgNome" placeholder="nome da tag" aria-label="Nome da tag" maxlength="40"></label>
+      <div class="campo-tags"><div class="cab">cor</div><div class="chips cores" id="tgCores"></div></div>
+      <div class="modal-acoes">
+        <button type="submit" class="btn btn-primario">salvar</button>
+        <button type="button" class="btn btn-contorno" id="tgCancelar">cancelar</button>
+        <button type="button" class="btn btn-contorno" id="tgExcluir" style="color:var(--negativo)" hidden>excluir tag</button>
+      </div>
+    </div>
+  </form>
+</div>
+
 <!-- ================= PERSONALIZAR ================= -->
 <div class="veu" id="veuPersonalizar" hidden></div>
 <aside class="folha" id="folhaPersonalizar" role="dialog" aria-modal="true" aria-labelledby="folhaTitulo" hidden>
@@ -304,6 +359,7 @@
 
 <script src="planilha.js"></script>
 <script src="saldos.js"></script>
+<script src="planilha-telas.js"></script>
 <script src="shell.js"></script>
 </body>
 </html>

@@ -230,5 +230,8 @@
     });
   }
 
-  window.Saldos = { montar, irParaHoje, abrirNovo, renderMeses, get estado() { return E; } };
+  // abre a grade num mês / dia (usado por Totais, Tags e Horizonte)
+  function irParaMes(a, m) { if (!mesesVisiveis().some(x => x.a === a && x.m === m)) { inicio = { a, m }; renderMeses(); } setTimeout(() => rolarAte(P.chave(a, m, 1)), 30); }
+  function irParaDia(data) { const { a, m } = P.partes(data); if (!mesesVisiveis().some(x => x.a === a && x.m === m)) { inicio = { a, m }; renderMeses(); } setTimeout(() => rolarAte(data, true), 30); }
+  window.Saldos = { montar, irParaHoje, irParaMes, irParaDia, abrirNovo, renderMeses, gravar, get estado() { return E; } };
 })();

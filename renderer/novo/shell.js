@@ -144,6 +144,7 @@
     if (alvo === 'outra') { $('outraTitulo').textContent = (TITULOS[nome] || nome).split(' · ').pop(); $('outraTexto').textContent = 'A tela ' + (TITULOS[nome] || nome) + ' ainda não foi construída.'; }
     document.getElementById('main').scrollTop = 0;
     aplicarZoom();
+    if (window.PlanilhaTelas) window.PlanilhaTelas.mostrar(alvo);
   }
   // ações da barra lateral: abrem a tela Saldos e agem nela
   document.querySelectorAll('[data-acao]').forEach(b => {
@@ -188,6 +189,7 @@
   aplicar();
   desenharGraficos();
   window.Saldos.montar();
+  window.PlanilhaTelas.montar();
   aplicarZoom();
   if (q.get('folha') === '1') abrirFolha(true);
   if (q.get('view')) { const b = document.querySelector('[data-view="' + q.get('view') + '"]'); if (b) b.click(); }
