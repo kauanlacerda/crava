@@ -159,7 +159,7 @@ input:focus-visible, select:focus-visible { outline: none; border-color: var(--a
 /* barra recolhida em ícones */
 [data-sidebar="icon"] .sidebar { width: 3.5rem; }
 [data-sidebar="icon"] .sb-busca, [data-sidebar="icon"] .sb-marca-txt, [data-sidebar="icon"] .sb-rotulo,
-[data-sidebar="icon"] .sb-item span, [data-sidebar="icon"] .sb-seta, [data-sidebar="icon"] .sb-sub,
+[data-sidebar="icon"] .sb-item span, [data-sidebar="icon"] .sb-seta, [data-sidebar="icon"] .sb-recolhivel.aberto > .sb-sub,
 [data-sidebar="icon"] .sb-usuario-txt, [data-sidebar="icon"] .sb-seta-v { display: none; }
 [data-sidebar="icon"] .sb-item, [data-sidebar="icon"] .sb-marca, [data-sidebar="icon"] .sb-usuario { justify-content: center; padding: 0; }
 [data-sidebar="hidden"] .sidebar { display: none; }
