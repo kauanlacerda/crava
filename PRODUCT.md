@@ -6,93 +6,85 @@
 
 web
 
-(App desktop Electron 33 para Windows 10/11. A interface é HTML/CSS/JS renderizada pelo Chromium do Electron — linguagem de design web, não nativa. macOS e Linux não são alvo hoje.)
+(App desktop Electron 33 para Windows 10/11. A interface é HTML/CSS/JS renderizada pelo Chromium do Electron. macOS e Linux não são alvo hoje.)
 
 ## Users
 
-**Primário: freelancers de GFX para Roblox** — thumbnails, ícones e banners por comissão. Confirmado pelo autor em 2026-09-03: o produto mira **qualquer freelancer de GFX Roblox**, não só o círculo de amigos.
+**Freelancers de GFX para Roblox** (thumbnails, ícones, banners por comissão) e, por extensão, quem vive de comissão online. Confirmado em 2026-09-03 que o alvo é a comunidade, não só o círculo de amigos; e em 2026-09-08 que o autor pretende usar o app **por anos**, como ferramenta de trabalho de verdade.
 
-Situação típica: Photoshop ou Blender em tela cheia, pedidos chegando por DM do Discord, várias comissões abertas ao mesmo tempo, pagamento em Pix, Robux ou PayPal, muitas vezes adiantado (sinal) ou muito depois da entrega. Grande parte desse público tem dificuldade de foco; o autor tem TDAH e construiu o app a partir da própria dor.
+Situação típica: Photoshop ou Blender em tela cheia, pedidos por DM do Discord, várias comissões abertas, pagamento em Pix, Robux ou PayPal, às vezes adiantado, às vezes muito depois. Dinheiro que entra costuma evaporar; o autor já tentou controlar em app de terceiro (o "app do Breno") e quer isso dentro da própria ferramenta.
 
-O trabalho que essa pessoa está tentando fazer: **terminar uma comissão por vez, saber exatamente quem deve o quê, e não deixar o dinheiro evaporar**.
-
-Hoje quem usa é o autor (sak / Kauan Lacerda) e amigos freelancers, que também servem de testadores — o Zakyen mandou três gravações de tela que viraram as correções da v1.3.2 e é agradecido dentro do app na v1.3.4.
+Quem usa hoje: o autor (sak / Kauan Lacerda) e amigos freelancers, que também testam.
 
 ## Product Purpose
 
-O Crava existe porque dá para faturar bem com GFX de Roblox e mesmo assim **não terminar nada e não sobrar dinheiro no fim do mês**. Ele resolve as duas pontas:
+Uma ferramenta de trabalho para quem vive de comissão: **o que estou fazendo, quem me deve, quanto entrou, quanto saiu, quanto sobra.**
 
-- **Foco:** um trabalho ativo por vez ("cravar" em um pausa o outro), captura rápida de pedidos sem sair do que se está fazendo, widget sempre por cima, meta diária com recompensa.
-- **Dinheiro:** cada centavo rastreado por estado real — não pago → sinal → pago → vendido/caiu na conta — em três moedas, com cofre para separar uma porcentagem e cobrador para quem está devendo.
+- **Trabalhos:** um por vez, quadro por etapa, prazos, pagamento em três moedas com estados honestos (não pago, sinal, recebido, caiu na conta), cobrador de quem deve.
+- **Finanças:** uma grade por dia com entradas, saídas, gastos diários, economias e cartão, saldo acumulado que atravessa meses, lançamentos com repetição e tags; e um dashboard que resume tudo isso pra decidir.
 
-Sucesso, para o usuário: entregas concluídas no prazo, clientes cobrados, e uma parte do dinheiro guardada sem esforço de vontade. Sucesso, para o produto: ser o app que um freelancer de GFX Roblox abre junto com o Photoshop, todo dia.
+Sucesso para o usuário: entregar no prazo, cobrar quem deve, saber o saldo real, guardar uma parte. Sucesso para o produto: ser aberto todo dia junto com o Photoshop, por anos, sem parecer brinquedo.
 
 ## Positioning
 
-**Feito por quem tem TDAH, para quem tem TDAH.** Confirmado pelo autor como o coração do produto (2026-09-03).
+**Ferramenta de trabalho, não jogo.** Decisão de 2026-09-08 que substitui o posicionamento anterior ("feito por quem tem TDAH pra quem tem TDAH", com recompensa como princípio): a versão gamificada foi copiada por terceiros e o autor concluiu que a cara de jogo desfigurava o trabalho, fazendo-o parecer fútil. O app novo trata comissão online como o negócio que é.
 
-Um Locked In, Notion ou Trello pode copiar um quadro kanban ou um cronômetro. Não pode copiar honestamente a premissa de que, para essa cabeça, terminar e não gastar são o mesmo problema — e que a resposta é **recompensa imediata como princípio, não enfeite**: streak, "jogo liberado" ao bater a meta, macaco comemorando, insígnias que evoluem. As regras duras (um ativo por vez, fila com teto) existem para tirar a paralisia de escolha, não para disciplinar.
+Segue distinto de um Notion ou Trello pela mecânica: trabalho e dinheiro no mesmo lugar, com pagamento em três moedas e estado real (Robux e dólar "a converter" até virarem real), pagamento recebido virando entrada na grade financeira sozinho.
 
-Segundo pilar, derivado do primeiro: **dinheiro com estado honesto**. Robux e PayPal ficam "a converter" até virarem real na conta; ninguém rastreia comissão de GFX assim.
+**Princípio de filtro:** nada que alimente ego ou FOMO. O app mede dinheiro para decidir, não para exibir. Sem card de faturamento pra postar, sem troféu, sem streak.
 
 ## Operating Context
 
-- **Entrada de pedidos:** Discord. A captura rápida (`Ctrl+Shift+N`) lê o título da janela do Discord e a área de transferência para sugerir cliente, valor, moeda e prazo. Esse rastreio é opcional nas configurações.
-- **Ambiente de trabalho:** Windows, Photoshop/Blender em tela cheia. O widget flutuante e a captura precisam funcionar por cima disso. O app vive na bandeja.
-- **Dinheiro:** Pix (R$), Robux (RBX) e PayPal (US$). Cotação do dólar buscada online a cada 5 minutos; cotação de Robux definida pelo usuário. Cofre com porcentagem escolhida; retiradas registradas.
-- **Distribuição:** grátis, código aberto (MIT), instalador NSIS publicado em releases do GitHub com auto-update via electron-updater. O instalador **não tem assinatura digital**: o Windows mostra o aviso azul do SmartScreen e o README ensina a passar por ele.
-- **Dados:** offline-first. JSON local é a verdade; Supabase (Auth + Postgres jsonb + RLS) é espelho, sincronizado a cada 5 minutos e no fechamento, último-a-escrever-vence com carimbos de tempo. Backup local diário dos últimos 14 dias. Também funciona sem conta.
-- **Idiomas:** PT-BR (primário, informal, "você") e EN com paridade total via dicionário `i18n.js`.
-- **Ritual de release:** bump → entrada em `docs/novidades.json` → tag → GitHub Actions builda → notas ricas escritas via API. A tela de novidades abre no app após atualizar e pode carregar um recado em destaque (`nota`).
+- **Entrada de pedidos:** Discord. Captura rápida (`Ctrl+Shift+N`) com sugestão a partir da janela do Discord e da área de transferência (opcional).
+- **Ambiente:** Windows, Photoshop/Blender em tela cheia; widget flutuante por cima; app na bandeja.
+- **Dinheiro:** Pix (R$), Robux, PayPal (US$); cotação do dólar online a cada 5 min; Robux com cotação definida pelo usuário. Grade financeira em R$.
+- **Distribuição:** grátis, MIT, instalador NSIS sem assinatura digital (aviso do SmartScreen), auto-update por releases do GitHub. A versão atual em produção é o Crava v1.3.7; o app novo nasce na branch `reestruturacao` e será publicado com outro nome.
+- **Dados:** offline-first, JSON local como verdade, Supabase como espelho (último-a-escrever-vence com carimbos), backup local diário. Funciona sem conta.
+- **Idiomas:** PT-BR (primário) e EN, paridade total.
 
 ## Capabilities and Constraints
 
-**Funciona hoje (v1.3.4):** Hoje / Trabalhos (quadro por etapa: Esperando pagamento → Na fila → Fazendo → Entregue, arrastar e soltar, lentes) / Finanças (calendário de lucro, gráfico de fluxo mensal, rosquinha de moedas, carteira, conversor, card do mês exportável como PNG ou GIF) / Cofre / Insígnias (51, com meta escolhida na barra lateral) / Configurações. Widget flutuante, captura rápida com autofill do Discord, notificações de prazo, cobrador, streak, celebração, tutorial de primeira vez, tela de novidades e histórico de patches, conta e sincronização.
+**Vem do Crava, intacto por baixo:** trabalhos (quadro, estados, prazos, lentes), pagamento em 3 moedas, liquidação parcial com entradas datadas, cotação ao vivo, cobrador, captura rápida, widget, conta e sincronização, backup, i18n, gravação silenciosa de preferências, botões acessíveis, sistema de tokens de CSS.
 
-**Restrições técnicas assumidas:**
-- Electron + HTML/CSS/JS **puro**: sem framework, sem build step, sem bundler. Um `app.js` grande com `render()` central; gráficos, card e calendário em canvas 2D.
-- Infraestrutura de **custo zero** (Supabase free tier). Nada de servidor próprio.
-- Sem telemetria ou analytics (nenhuma dependência do tipo no projeto).
-- Windows apenas.
+**Nasce agora:** coleção de movimentações (tipo, valor, nome, data, repetição, tags), tags, cartões, check-in por dia, previsão de diário; telas Planilha (Saldos, Totais, Tags, Cartões, Previsão de diário, Horizonte, ações Adicionar e Ir pra hoje), Economia e Finance Dashboard; painel de personalização (cor do tema, cor dos gráficos, fonte, fonte de destaque, escala, raio, claro/escuro, layout, barra lateral).
 
-**Vocabulário do produto** (não traduzir para termos genéricos): *Cravar* (tornar ativo), *Na fila*, *Esperando* (pagamento), *Fazendo*, *Entregue*, *Cofre*, *Cobrador*, *Meta diária*, *Streak*, *Jogo liberado*, *Card do mês*, *Insígnia*, *Macaco* (mascote), *Lente* (filtro do quadro).
+**Sai:** mascote, insígnias, celebração, streak, meta diária, glow, share card e exportação de imagem, calendário de lucro.
 
-**Decidido mas não construído / em aberto:**
-- Como alcançar a comunidade GFX além dos amigos: não existe site, página ou material de divulgação. Em aberto.
-- Assinatura digital do instalador: descartada por custo (~R$ 400/ano).
-- Recebido em Robux com regra de "a converter": implementado; R$/hora a partir do tempo acumulado por trabalho: dado coletado (`tempoTotalMs`), tela não construída.
-- Um bug relatado pelo Zakyen (botão "Recebi" piscando) não foi reproduzido e segue em aberto.
+**Navegação:** Dashboard · Trabalhos · Planilha ▾ · Economia · Configurações. Primeira tela é o Dashboard.
+
+**Restrições técnicas:** Electron + HTML/CSS/JS puro, sem framework, sem build step; infraestrutura de custo zero; sem telemetria; Windows apenas. Fontes e ativos viajam dentro do app (sem rede em tempo de execução além de cotação e sincronização).
+
+**Vocabulário:** *Trabalho*, *Na fila*, *Fazendo*, *Entregue*, *Cobrar*, *Caiu na conta*, *A converter*, *Entrada*, *Saída*, *Diário*, *Economia*, *Cartão*, *Saldo*, *Horizonte*, *Check-in*, *Tag*, *Lançamento*.
+
+**Em aberto:** nome do app (o brainstorm anterior está descartado com o nome Crava); trabalho pago vira entrada sozinho por padrão, com chave pra desligar (decidido); meta opcional de economia.
 
 ## Brand Commitments
 
-Travados pelo autor em 2026-09-03 — trabalho futuro preserva, não propõe alternativa:
+Decididos em 2026-09-08:
 
-- **Nome: Crava.** O brainstorm de renomear está encerrado.
-- **Mascote: o macaco em 6 cores** (azul, vermelho, verde, roxo, laranja, branco), pixel art, em `assets/macaco/<cor>/macaco-0N.png`. A cor escolhida muda o app inteiro. O crocodilo em `assets/croc` é histórico, não é mascote.
-- **Base visual herdada do Cube Graphics** (app da agência do autor, uso autorizado): Manrope, cantos de 16–20px, slate escuro (#0b0e13 / #12161d), azul #339dff, verde #2fd39c. Existe tema claro, tema azul e um modo sem glow; a base tipográfica e a linguagem de forma não mudam.
-- **Voz: recompensa, nunca culpa.** O app comemora, libera o jogo, cobra o *cliente* — nunca pune o usuário. Vale para todo texto, notificação e estado vazio, nos dois idiomas.
-- Wordmark CRAVA em fonte pixel (Press Start 2P) registrado na spec de 2026-09-01; confirmar no código antes de estender.
+- **Referência visual pinada:** o Finance Dashboard do Shadcn UI Kit (https://shadcnuikit.com/dashboard/finance), copiado "praticamente igual" em estrutura, tema escuro, tipografia (DM Sans), raios, espaçamento, barra lateral com grupos recolhíveis e painel de personalização. Tokens medidos em `docs/specs/2026-09-08-referencia-finance-dashboard.md`. Copiamos o desenho; o código é nosso.
+- **Referência de mecânica pinada:** o app do Breno para a parte financeira (`docs/specs/2026-09-08-planilha-modelo.md`).
+- **Voz:** direta, adulta, de ferramenta de trabalho. Sem comemoração, sem mascote, sem gíria de jogo. PT-BR informal ("você") continua.
+- **Nome:** a definir. "Crava" e o macaco ficam com a versão antiga.
+- **Compromissos antigos revogados:** Manrope, cantos 16–20px, slate azul do Cube Graphics, macaco em 6 cores, "recompensa nunca culpa".
 
 ## Evidence on Hand
 
-- `README.md` e `LEIA-ME-AMIGOS.md`: copy real do produto, lista de funcionalidades, perguntas frequentes.
-- `docs/specs/2026-09-01-cravado-v1-design.md`: spec de design da v1.
-- Mockups aprovados (2026-09-01): https://claude.ai/code/artifact/f48d4cae-c512-45eb-8fa0-30913b877340
-- `docs/novidades.json`: changelog completo, v1.0.1 → v1.3.4, nos dois idiomas.
-- `assets/`: macaco em 6 cores, 51 artes de insígnia, ícones por cor, `clipboard-sheet.png`.
-- Releases públicas: https://github.com/kauanlacerda/crava/releases — a v1.3.4 foi publicada em 2026-09-02 e ainda não tinha downloads na manhã de 2026-09-03.
-- Relatos reais de bug em vídeo (Zakyen, 2026-09-02), já analisados e transformados em correções.
+- `docs/specs/2026-09-08-referencia-finance-dashboard.md` — tokens, tipografia, composição e painel da referência visual, medidos ao vivo.
+- `docs/specs/2026-09-08-planilha-modelo.md` — modelo de dados e telas do app do Breno, lidos da conta do usuário; navegação decidida.
+- `docs/specs/2026-09-01-cravado-v1-design.md`, `README.md`, `docs/novidades.json` — o Crava como está.
+- Dados reais do usuário no app do Breno: saídas fixas (R$ 3.000 dia 10, cartão R$ 916,08 dia 9), horizonte set/2026–ago/2027.
 
-**Não existe** (não inventar): depoimentos, número de usuários, casos de sucesso, imprensa, benchmarks, preço (é grátis), avaliações.
+**Não existe** (não inventar): depoimentos, número de usuários, benchmarks, preço (é grátis), imprensa.
 
 ## Product Principles
 
-1. **Recompensa, nunca culpa.** Cada feedback do app é uma comemoração ou uma informação; nunca uma bronca. Quem leva bronca é o cliente devedor.
-2. **Um por vez.** A interface reduz escolhas, não as amplia. Onde houver lista, há um "próximo" claro. Regras duras existem para eliminar paralisia, e sempre têm saída explícita.
-3. **Dinheiro só é dinheiro quando cai.** Nenhum número finge certeza que não tem: "a converter", "sinal", "a liquidar" são estados de primeira classe, não notas de rodapé.
-4. **Entrada sem custo de atenção.** Anotar um pedido nunca pode tirar a pessoa do trabalho atual: captura em segundos, sugestões prontas, sem trocar de janela.
-5. **Calma visual é requisito funcional.** Para essa cabeça, tela piscando ou recarregando é distração real, não detalhe de acabamento. Nada re-renderiza sem motivo; toda mudança de estado é local, suave e previsível.
+1. **Ferramenta, não jogo.** Cada tela parece um sistema de gestão que um profissional abre todo dia. Nada comemora.
+2. **Medir pra decidir, não pra exibir.** Nenhum número existe pra ser mostrado a terceiros.
+3. **Dinheiro só é dinheiro quando cai.** Estados honestos: a converter, sinal, na conta.
+4. **Um dado, um lugar.** Pagamento recebido no trabalho é a entrada na grade; não se digita duas vezes.
+5. **Calma visual é requisito funcional.** Nada re-renderiza sem motivo; toda mudança é local e previsível.
 
 ## Accessibility & Inclusion
 
-O público-alvo tem TDAH como traço central. Isso se traduz em requisitos concretos já assumidos: zero flicker e zero recarga espontânea de tela; feedback imediato; carga de escolha baixa; modo sem glow para quem prefere discreto; textos curtos e diretos. Não há padrão formal (WCAG) adotado e o código atual não usa atributos ARIA — decisão em aberto, não uma escolha feita.
+Teclado em tudo, foco visível, contraste AA nos dois temas (herdado da v1.3.5), `prefers-reduced-motion` respeitado. O público segue com dificuldade de foco; o app responde com sobriedade e previsibilidade, não com recompensa.
