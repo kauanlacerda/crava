@@ -106,5 +106,19 @@ ok('retirada: saldo dia 3 = 800 (voltou pro saldo)', si.dias[2].saldo === 800, s
 ok('retirada: economias do mês = 200 (líquido)', si.totais.economia === 200, si.totais.economia);
 ok('retirada: célula do dia 3 mostra -100', si.dias[2].economia === -100, si.dias[2].economia);
 
+// termômetro do saldo: quantos meses de custo de vida o saldo cobre
+const T = P.estadoVazio();
+P.adicionar(T, { tipo: 'saida', valor: 1000, nome: 'Aluguel', data: '2026-07-05', repete: { tipo: 'mensal' } });
+P.adicionar(T, { tipo: 'cartao', valor: 200, nome: 'Fone', data: '2026-08-10' });
+T.previsaoDiario = 10; // 10/dia -> ~300/mês
+const cv = P.custoDeVida(T, 2026, 9);
+ok('custo de vida: média dos últimos 3 meses com gastos ≈ 1.373', Math.round(cv) === 1373, cv);
+ok('faixa: negativo é neg', P.faixaSaldo(-1, cv) === 'neg');
+ok('faixa: menos de 1 mês é amarelo', P.faixaSaldo(1000, cv) === 'amarelo');
+ok('faixa: entre 1 e 2 meses é verde', P.faixaSaldo(2000, cv) === 'verde');
+ok('faixa: mais de 2 meses é verde-forte', P.faixaSaldo(3000, cv) === 'verde-forte');
+ok('faixa: sem custo conhecido, positivo é verde', P.faixaSaldo(500, 0) === 'verde');
+ok('faixa: zero fica sem cor', P.faixaSaldo(0, cv) === '');
+
 console.log(falhas ? `\n>> ${falhas} FALHA(S)` : '\n>> tudo passou');
 process.exit(falhas ? 1 : 0);

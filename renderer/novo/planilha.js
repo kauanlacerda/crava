@@ -210,17 +210,33 @@
     return out;
   }
 
-  // Termômetro do saldo: vermelho abaixo de zero; acima, três faixas em
-  // relação ao maior saldo do período visto — amarelo (menos de um quarto),
-  // verde claro (até 60%) e verde forte (o resto). Lê-se de longe, como semáforo.
-  function faixaSaldo(saldo, maxPos) {
+  // Custo de vida mensal de referência: média de saídas + cartão + diários dos
+  // últimos 3 meses com gastos (olhando até 6 meses pra trás, a partir de
+  // ano/mes). O diário de cada mês conta pelo menos a previsão × dias, pra
+  // um mês recém-começado não parecer barato. Sem gasto nenhum, devolve 0.
+  function custoDeVida(estado, ano, mes) {
+    const usados = [];
+    for (let i = 0; i < 6 && usados.length < 3; i++) {
+      const t = ano * 12 + (mes - 1) - i; const a = Math.floor(t / 12), m = t % 12 + 1;
+      const r = resumoMes(estado, a, m).totais;
+      const diario = Math.max(r.diario, (Number(estado.previsaoDiario) || 0) * diasNoMes(a, m));
+      const custo = r.saida + r.cartao + diario;
+      if (custo > 0) usados.push(custo);
+    }
+    return usados.length ? usados.reduce((s, v) => s + v, 0) / usados.length : 0;
+  }
+  // Termômetro do saldo: "quantos meses eu aguento". Vermelho abaixo de zero;
+  // amarelo cobre menos de 1 mês de custo de vida; verde claro de 1 a 2; verde
+  // forte mais de 2. Sem custo de vida conhecido, positivo fica verde claro.
+  function faixaSaldo(saldo, custoMensal) {
     if (saldo < 0) return 'neg';
     if (!(saldo > 0)) return '';
-    const p = saldo / Math.max(1, maxPos);
-    return p < .25 ? 'amarelo' : p < .6 ? 'verde' : 'verde-forte';
+    if (!(custoMensal > 0)) return 'verde';
+    const meses = saldo / custoMensal;
+    return meses < 1 ? 'amarelo' : meses < 2 ? 'verde' : 'verde-forte';
   }
 
-  const api = { faixaSaldo, TIPOS, SINAL, NOMES, PLURAL, chave, partes, diasNoMes, hoje, addDias, addMeses, diaSemana, fmtBRL, fmtCompacto, novoId, estadoVazio, ocorrencias, materializar, saldoAntes, resumoMes, adicionar, editar, excluir, encerrarEm, alternarCheckin, novaTag, entradasDeTrabalhos, CORES_TAG, periodoFatura, faturaCartao, valorLiquido };
+  const api = { faixaSaldo, custoDeVida, TIPOS, SINAL, NOMES, PLURAL, chave, partes, diasNoMes, hoje, addDias, addMeses, diaSemana, fmtBRL, fmtCompacto, novoId, estadoVazio, ocorrencias, materializar, saldoAntes, resumoMes, adicionar, editar, excluir, encerrarEm, alternarCheckin, novaTag, entradasDeTrabalhos, CORES_TAG, periodoFatura, faturaCartao, valorLiquido };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   raiz.Planilha = api;
 })(typeof window !== 'undefined' ? window : globalThis);

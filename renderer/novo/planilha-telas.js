@@ -150,11 +150,11 @@
     if (!E().movimentacoes.length) { cont.innerHTML = `<div class="vazio-planilha" style="width:100%">Nenhuma movimentação ainda.</div>`; return; }
     const meses = v.map(({ a, m }) => P.resumoMes(E(), a, m));
     const maxAbs = Math.max(1, ...meses.flatMap(r => r.dias.map(d => Math.abs(d.saldo))));
-    const maxPos = Math.max(1, ...meses.flatMap(r => r.dias.map(d => d.saldo)));
+    const custo = P.custoDeVida(E(), +hj.slice(0, 4), +hj.slice(5, 7));
     cont.innerHTML = `<div class="hz-grade">${meses.map(r => `
       <div class="hz-mes">
         <div class="hz-titulo">${MES3[r.mes - 1]}/${String(r.ano).slice(2)}</div>
-        ${r.dias.map(d => { const f = d.saldo < 0 ? (0.18 + 0.55 * Math.abs(d.saldo) / maxAbs).toFixed(2) : (0.06 + 0.25 * Math.abs(d.saldo) / maxAbs).toFixed(2); return `<button type="button" class="hz-dia ${P.faixaSaldo(d.saldo, maxPos)} ${d.data === hj ? 'hoje' : ''} ${d.fimDeSemana ? 'fds' : ''}" style="--f:${f}" data-data="${d.data}" title="${d.data}: ${P.fmtBRL(d.saldo)}"><span class="hz-n">${d.dia}</span><span class="hz-v">${P.fmtCompacto(d.saldo)}</span></button>`; }).join('')}
+        ${r.dias.map(d => { const f = d.saldo < 0 ? (0.18 + 0.55 * Math.abs(d.saldo) / maxAbs).toFixed(2) : (0.06 + 0.25 * Math.abs(d.saldo) / maxAbs).toFixed(2); return `<button type="button" class="hz-dia ${P.faixaSaldo(d.saldo, custo)} ${d.data === hj ? 'hoje' : ''} ${d.fimDeSemana ? 'fds' : ''}" style="--f:${f}" data-data="${d.data}" title="${d.data}: ${P.fmtBRL(d.saldo)}"><span class="hz-n">${d.dia}</span><span class="hz-v">${P.fmtCompacto(d.saldo)}</span></button>`; }).join('')}
       </div>`).join('')}</div>`;
     cont.querySelectorAll('.hz-dia').forEach(b => { b.onclick = () => { document.querySelector('[data-view="saldos"]').click(); window.Saldos.irParaDia(b.dataset.data); }; });
   }
