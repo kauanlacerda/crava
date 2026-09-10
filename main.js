@@ -9,6 +9,7 @@ let store = null;
 let isQuitting = false;
 
 const ICON = path.join(__dirname, 'assets', 'icon.png');
+const ICON_ICO = path.join(__dirname, 'assets', 'icon.ico'); // a janela prefere .ico no Windows (varios tamanhos)
 
 // ---------- Janelas ----------
 
@@ -16,7 +17,7 @@ function createMain() {
   mainWin = new BrowserWindow({
     width: 1280, height: 820, minWidth: 1020, minHeight: 660,
     backgroundColor: '#0a0a0a',
-    icon: ICON,
+    icon: ICON_ICO,
     show: false,
     webPreferences: { preload: path.join(__dirname, 'preload.js') }
   });
@@ -146,6 +147,9 @@ if (!lock) {
   app.on('second-instance', () => { if (mainWin) { mainWin.show(); mainWin.focus(); } });
 
   app.whenReady().then(() => {
+    // Identidade do app pro Windows (barra de tarefas, notificações). Sem isso o
+    // Electron usa uma identidade genérica, e a barra guardava o ícone antigo em cache.
+    app.setAppUserModelId('com.sak.consistency');
     // Migração: o app já se chamou GRND, Cravado e Crava, e cada nome tinha a
     // própria pasta em %APPDATA%. Na primeira abertura sem dados, copia da
     // pasta mais recente que existir: o arquivo de dados, o login (Local
