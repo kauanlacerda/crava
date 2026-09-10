@@ -146,18 +146,25 @@ if (!lock) {
   app.on('second-instance', () => { if (mainWin) { mainWin.show(); mainWin.focus(); } });
 
   app.whenReady().then(() => {
-    // migração: dados das eras "GRND" e "Cravado" seguem valendo no Crava
+    // Migração: o app já se chamou GRND, Cravado e Crava, e cada nome tinha a
+    // própria pasta em %APPDATA%. Na primeira abertura sem dados, copia da
+    // pasta mais recente que existir: o arquivo de dados, o login (Local
+    // Storage) e os backups. A pasta antiga fica intacta.
     try {
       const fs = require('fs');
-      const novo = path.join(app.getPath('userData'), 'cravado-data.json');
+      const destino = app.getPath('userData');
+      const novo = path.join(destino, 'cravado-data.json');
       if (!fs.existsSync(novo)) {
-        for (const antigoNome of ['GRND', 'Cravado']) {
-          const antigo = path.join(app.getPath('appData'), antigoNome, 'cravado-data.json');
-          if (fs.existsSync(antigo)) {
-            fs.mkdirSync(app.getPath('userData'), { recursive: true });
-            fs.copyFileSync(antigo, novo);
-            break;
+        for (const antigoNome of ['Crava', 'Cravado', 'GRND']) {
+          const origem = path.join(app.getPath('appData'), antigoNome);
+          if (!fs.existsSync(path.join(origem, 'cravado-data.json'))) continue;
+          fs.mkdirSync(destino, { recursive: true });
+          fs.copyFileSync(path.join(origem, 'cravado-data.json'), novo);
+          for (const pasta of ['Local Storage', 'backups']) {
+            try { if (fs.existsSync(path.join(origem, pasta))) fs.cpSync(path.join(origem, pasta), path.join(destino, pasta), { recursive: true, force: false, errorOnExist: false }); } catch { /* sem essa pasta, segue */ }
           }
+          console.log('[migracao] dados copiados de ' + origem);
+          break;
         }
       }
     } catch { /* sem dados antigos, segue */ }

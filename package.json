@@ -1,6 +1,6 @@
 {
   "name": "crava",
-  "productName": "Crava",
+  "productName": "Consistency",
   "version": "1.5.0",
   "description": "Foco e trabalhos para freelancers de GFX Roblox",
   "main": "main.js",
@@ -25,8 +25,8 @@
     "gifenc": "^1.0.3"
   },
   "build": {
-    "appId": "com.sak.crava",
-    "productName": "Crava",
+    "appId": "com.sak.consistency",
+    "productName": "Consistency",
     "copyright": "Copyright © 2026 sak",
     "directories": {
       "output": "dist",
@@ -53,23 +53,24 @@
         }
       ],
       "icon": "assets/icon.ico",
-      "artifactName": "Crava-${version}-instalador.${ext}"
+      "artifactName": "Consistency-${version}-instalador.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Crava",
+      "shortcutName": "Consistency",
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico",
       "installerHeaderIcon": "assets/icon.ico",
       "deleteAppDataOnUninstall": false,
       "runAfterFinish": true,
-      "perMachine": false
+      "perMachine": false,
+      "include": "assets/installer.nsh"
     },
     "portable": {
-      "artifactName": "Crava-${version}-portatil.${ext}"
+      "artifactName": "Consistency-${version}-portatil.${ext}"
     },
     "publish": [
       {
