@@ -1,4 +1,16 @@
 {
+  "1.5.0": {
+    "pt": [
+      "O app agora se chama Consistency e ganhou a logo definitiva: o rabisco. Ela aparece na barra lateral, na tela de entrar, no ícone da janela e na bandeja.",
+      "A logo acompanha o tema: branca no escuro, preta no claro, laranja no \"Branco e laranja\", e assim por diante — inclusive o ícone da janela e da bandeja.",
+      "O nome interno do instalador continua \"Crava\" por enquanto, pra atualização automática e os dados ficarem onde estão."
+    ],
+    "en": [
+      "The app is now called Consistency and got its final logo: the scribble. It shows in the sidebar, on the sign-in screen, in the window icon and in the tray.",
+      "The logo follows the theme: white on dark, black on light, orange on \"White & orange\", and so on — including the window and tray icon.",
+      "The installer's internal name stays \"Crava\" for now, so auto-update and your data stay where they are."
+    ]
+  },
   "1.4.1": {
     "pt": [
       "Temas prontos no Personalizar: Escuro, Claro e o novo \"Branco e laranja\" (fundo branco, item ativo e gráficos em laranja). Também dá pra escolher \"Fundo no claro\": cinza ou branco.",
