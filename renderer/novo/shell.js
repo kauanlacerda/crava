@@ -38,6 +38,7 @@
   try { pref = { ...PADRAO, ...JSON.parse(localStorage.getItem('pref-casca') || '{}') }; } catch { }
   let persistindo = false; // só depois do boot: o que o usuário muda vai pro estado
   let modoIcone = false;
+  let corIconeEnviada = '';
 
   function aplicar() {
     raiz.dataset.theme = pref.tema;
@@ -74,6 +75,8 @@
       seg.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === String(pref[k])));
     });
     document.querySelectorAll('.predef').forEach(b => b.classList.toggle('sel', b.dataset.predef === predefAtivo()));
+    // ícone da janela e da bandeja na mesma cor da marca
+    try { const c = getComputedStyle(raiz).getPropertyValue('--primario').trim(); if (window.api && window.api.pintarIcone && c !== corIconeEnviada) { corIconeEnviada = c; window.api.pintarIcone(c); } } catch { }
     $('btnSidebar').setAttribute('aria-expanded', String(pref.sidebar === 'expanded'));
     // recolhida: só ícones, com o nome na dica; os grupos fecham e viram menu flutuante ao clicar
     const icone = pref.sidebar === 'icon';

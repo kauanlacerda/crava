@@ -87,10 +87,27 @@ function toggleWidget() {
   else widgetWin.show();
 }
 
-// icone da janela/bandeja: a logo (assets/icon.png)
+// Ícone da janela e da bandeja: o rabisco (assets/logo/marca.png, branco com
+// alfa) pintado com a cor do tema que a tela mandar. Até ela mandar, azul.
+let corIcone = '#000dd6';
+let mascaraIcone = null;
+function iconePintado(hex) {
+  if (!mascaraIcone) {
+    const m = nativeImage.createFromPath(path.join(__dirname, 'assets', 'logo', 'marca.png'));
+    mascaraIcone = { bmp: m.toBitmap(), ...m.getSize() };
+  }
+  const h = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+  const n = h ? parseInt(h[1], 16) : 0x000dd6;
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const { bmp, width, height } = mascaraIcone; const out = Buffer.alloc(bmp.length);
+  for (let i = 0; i < bmp.length; i += 4) { // BGRA pré-multiplicado: o alfa da máscara escala a cor
+    const a = bmp[i + 3] / 255; out[i] = Math.round(b * a); out[i + 1] = Math.round(g * a); out[i + 2] = Math.round(r * a); out[i + 3] = bmp[i + 3];
+  }
+  return nativeImage.createFromBitmap(out, { width, height });
+}
 function atualizarIcones() {
   try {
-    const img = nativeImage.createFromPath(ICON);
+    const img = iconePintado(corIcone);
     if (tray) tray.setImage(img.resize({ width: 16, height: 16 }));
     if (mainWin && !mainWin.isDestroyed()) mainWin.setIcon(img);
   } catch { /* segue com o icone padrao */ }
@@ -300,6 +317,7 @@ ipcMain.on('update:instalar', () => {
   autoUpdater.quitAndInstall(false, true);
 });
 ipcMain.handle('update:versao', () => app.getVersion());
+ipcMain.on('icone:cor', (_e, hex) => { corIcone = hex; atualizarIcones(); });
 ipcMain.handle('update:checar', async () => {
   if (!app.isPackaged) return false;
   try { const r = await autoUpdater.checkForUpdates(); return !!(r && r.updateInfo && r.updateInfo.version !== app.getVersion()); } catch { return false; }

@@ -33,5 +33,6 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.on('update:pronto', (_e, d) => cb('pronto', d));
     ipcRenderer.on('update:erro', (_e, d) => cb('erro', d));
   },
+  pintarIcone: (hex) => ipcRenderer.send('icone:cor', hex), // ícone da janela e da bandeja na cor do tema
   quit: () => ipcRenderer.send('app:quit')
 });
