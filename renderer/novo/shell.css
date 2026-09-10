@@ -98,10 +98,13 @@ input:focus-visible, select:focus-visible { outline: none; border-color: var(--a
   width: 100%; color: var(--texto);
 }
 .sb-marca:hover { background: var(--sidebar-ativo); }
-.sb-logo {
-  width: 2rem; height: 2rem; border-radius: calc(var(--raio) - 2px); background: var(--primario); color: var(--primario-texto);
-  display: grid; place-items: center; flex: none;
+.sb-logo { width: 2rem; height: 2rem; display: grid; place-items: center; flex: none; }
+/* a marca é o rabisco (assets/logo/marca.png) usado como máscara: a cor vem do tema */
+.logo-marca {
+  display: block; width: 2rem; height: 2rem; background: var(--primario);
+  -webkit-mask: url(../../assets/logo/marca.png) center / contain no-repeat; mask: url(../../assets/logo/marca.png) center / contain no-repeat;
 }
+.login-marca .sb-logo, .login-marca .logo-marca { width: 2.75rem; height: 2.75rem; }
 .sb-marca-txt { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
 .sb-marca-txt b { font-weight: 600; font-size: .875rem; }
 .sb-marca-txt small { font-size: .75rem; color: var(--texto-2); font-weight: 500; }
@@ -424,7 +427,7 @@ input:focus-visible, select:focus-visible { outline: none; border-color: var(--a
 [data-theme="light"][data-paleta="branca"] .sb-item.ativo, [data-theme="light"][data-paleta="branca"] .sb-subitem.ativo { background: none; color: var(--sidebar-ativo-texto); font-weight: 700; }
 [data-theme="light"][data-paleta="branca"] .sb-item.ativo svg { color: var(--sidebar-ativo-texto); }
 [data-theme="light"][data-paleta="branca"] .sb-acao svg, [data-theme="light"][data-paleta="branca"] .sb-dia { color: var(--sidebar-ativo-texto); }
-[data-theme="light"][data-paleta="branca"] .sb-logo { background: var(--primario); color: #fff; }
+
 
 /* ---------- temas prontos (painel Personalizar) ---------- */
 .predefs { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }

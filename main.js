@@ -71,9 +71,9 @@ function createTray() {
   let img;
   try { img = nativeImage.createFromPath(ICON); } catch { img = nativeImage.createEmpty(); }
   tray = new Tray(img.resize({ width: 16, height: 16 }));
-  tray.setToolTip('Crava');
+  tray.setToolTip('Consistency');
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: 'Abrir o Crava', click: () => { mainWin.show(); mainWin.focus(); } },
+    { label: 'Abrir o Consistency', click: () => { mainWin.show(); mainWin.focus(); } },
     { label: 'Mostrar/ocultar widget', click: toggleWidget },
     { type: 'separator' },
     { label: 'Sair de verdade', click: () => { isQuitting = true; app.quit(); } }
@@ -87,12 +87,10 @@ function toggleWidget() {
   else widgetWin.show();
 }
 
-// icone da janela/bandeja acompanha o mascote escolhido
+// icone da janela/bandeja: a logo (assets/icon.png)
 function atualizarIcones() {
   try {
-    const cores = ['azul', 'vermelho', 'verde', 'roxo', 'laranja', 'branco'];
-    const c = cores.includes(store.get().config.cor) ? store.get().config.cor : 'azul';
-    const img = nativeImage.createFromPath(path.join(__dirname, 'assets', `icon-${c}.png`));
+    const img = nativeImage.createFromPath(ICON);
     if (tray) tray.setImage(img.resize({ width: 16, height: 16 }));
     if (mainWin && !mainWin.isDestroyed()) mainWin.setIcon(img);
   } catch { /* segue com o icone padrao */ }

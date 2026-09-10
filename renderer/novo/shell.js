@@ -138,7 +138,7 @@
       document.querySelectorAll('[data-view]').forEach(x => { x.classList.remove('ativo'); x.removeAttribute('aria-current'); });
       b.classList.add('ativo'); b.setAttribute('aria-current', 'page');
       $('topoTitulo').textContent = TITULOS[b.dataset.view] || b.textContent.trim();
-      document.title = TITULOS[b.dataset.view] || 'App';
+      document.title = 'Consistency · ' + (TITULOS[b.dataset.view] || b.textContent.trim());
       mostrarView(b.dataset.view);
     };
   });
