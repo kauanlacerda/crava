@@ -1,4 +1,16 @@
 {
+  "1.6.0": {
+    "pt": [
+      "Agora é Consistency por inteiro: o nome no Windows (menu Iniciar, barra de tarefas, pesquisa), o instalador e a pasta de dados. O ícone do rabisco vale em todo lugar.",
+      "Quem atualiza a partir do Crava não precisa fazer nada: o instalador remove o Crava antigo e o Consistency copia seus dados, seu login e os backups na primeira abertura. A pasta antiga fica intacta, por garantia.",
+      "O atalho na área de trabalho e no menu Iniciar passa a se chamar Consistency."
+    ],
+    "en": [
+      "Consistency all the way now: the name in Windows (Start menu, taskbar, search), the installer and the data folder. The scribble icon shows everywhere.",
+      "Updating from Crava needs nothing from you: the installer removes the old Crava and Consistency copies your data, sign-in and backups on first launch. The old folder is left untouched, just in case.",
+      "The desktop and Start menu shortcut is now called Consistency."
+    ]
+  },
   "1.5.0": {
     "pt": [
       "O app agora se chama Consistency e ganhou a logo definitiva: o rabisco. Ela aparece na barra lateral, na tela de entrar, no ícone da janela e na bandeja.",
