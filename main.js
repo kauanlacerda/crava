@@ -24,7 +24,7 @@ function createMain() {
   mainWin.setMenuBarVisibility(false);
   mainWin.loadFile(path.join(__dirname, 'renderer', 'novo', 'index.html'));
   mainWin.once('ready-to-show', () => mainWin.show());
-  // Fechar minimiza pra bandeja — o app continua vivo (widget, atalho, alertas)
+  // Fechar minimiza pra bandeja — o app continua vivo (widget, alertas)
   mainWin.on('close', (e) => {
     if (!isQuitting) { e.preventDefault(); mainWin.hide(); }
   });
@@ -178,34 +178,11 @@ if (!lock) {
 
     createMain();
     createWidget();
-    createCapture();
     createTray();
     atualizarIcones();
 
-    const atalho = store.get().config.atalho || 'CommandOrControl+Shift+N';
-    try {
-      globalShortcut.register(atalho, () => {
-        // ORDEM IMPORTA: o título tem que ser lido antes do show, senão a
-        // janela em foco passa a ser o próprio Crava e o palpite vira "Crava".
-        const ligado = store.get().config.palpiteCaptura !== false;
-        const promessa = ligado ? lerJanelaEmFoco() : Promise.resolve(null);
-        const texto = ligado ? (() => { try { return clipboard.readText(); } catch { return ''; } })() : '';
-
-        captureWin.center();
-        captureWin.show();
-        captureWin.focus();
-
-        // e o palpite chega depois, sem segurar a abertura
-        promessa.then((info) => {
-          if (!captureWin || captureWin.isDestroyed()) return;
-          captureWin.webContents.send('capture:contexto', {
-            titulo: (info && info.titulo) || '',
-            processo: (info && info.processo) || '',
-            clipboard: texto
-          });
-        });
-      });
-    } catch { /* atalho em uso por outro app — segue sem */ }
+    // A captura rápida por atalho global (Ctrl+Shift+N) foi removida a pedido:
+    // trabalho novo entra pelo botão da tela de Trabalhos.
 
     checarPrazos();
     setInterval(checarPrazos, 30 * 60 * 1000);
@@ -383,7 +360,7 @@ ipcMain.on('capture:save', (_e, job) => {
   if (cravar) s.stats.cravarPendente = job.id;
   store.set(s);
   broadcast();
-  captureWin.hide();
+  if (captureWin) captureWin.hide();
   new Notification({
     title: cravar ? 'Trabalho ativado' : 'Trabalho salvo na fila',
     body: job.titulo, icon: ICON
