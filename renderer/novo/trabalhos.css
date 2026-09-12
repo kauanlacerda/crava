@@ -26,7 +26,8 @@
 .cb-item { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .5rem 0; border-top: 1px solid var(--borda); font-size: .8125rem; }
 .cb-item b { font-weight: 600; }
 
-.tb-quadro { display: grid; grid-template-columns: repeat(4, minmax(15rem, 1fr)); gap: 1rem; align-items: start; overflow-x: auto; }
+/* sem overflow proprio: o quadro cresce e a pagina inteira rola (o topo nao fica fixo) */
+.tb-quadro { display: grid; grid-template-columns: repeat(4, minmax(15rem, 1fr)); gap: 1rem; align-items: start; }
 .tb-col { background: var(--card); border-radius: var(--raio-card); box-shadow: var(--sombra-card); display: flex; flex-direction: column; min-height: 12rem; transition: box-shadow .12s ease; }
 .tb-col.alvo { box-shadow: 0 0 0 2px var(--anel); }
 .tb-col-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: .5rem; padding: .875rem 1rem .625rem; border-bottom: 1px solid var(--borda); }
