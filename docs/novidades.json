@@ -1,4 +1,12 @@
 {
+  "1.6.2": {
+    "pt": [
+      "Botão Duplicar no card do trabalho (aparece ao passar o mouse, ao lado de editar e excluir). A cópia leva cliente, título, valor e moeda, entra na fila sem pagamento nem prazo, e o formulário já abre pra você ajustar."
+    ],
+    "en": [
+      "Duplicate button on the job card (shows on hover, next to edit and delete). The copy carries client, title, amount and currency, lands in the queue with no payment or deadline, and the form opens right away so you can adjust it."
+    ]
+  },
   "1.6.1": {
     "pt": [
       "Trabalhos: a página inteira rola. O quadro não tem mais rolagem própria, então o trabalho ativo e o \"Cobrar\" sobem junto.",
