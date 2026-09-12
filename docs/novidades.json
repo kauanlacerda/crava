@@ -1,4 +1,16 @@
 {
+  "1.6.1": {
+    "pt": [
+      "Trabalhos: a página inteira rola. O quadro não tem mais rolagem própria, então o trabalho ativo e o \"Cobrar\" sobem junto.",
+      "O atalho global Ctrl+Shift+N e a janela de captura rápida foram removidos. Trabalho novo entra pelo botão \"Novo trabalho\".",
+      "Ícone da barra de tarefas: o app passa a ter identidade própria no Windows, o que evita a barra mostrar o ícone antigo guardado em cache."
+    ],
+    "en": [
+      "Jobs: the whole page scrolls. The board no longer scrolls on its own, so the active job and \"Collect\" move along with it.",
+      "The global Ctrl+Shift+N shortcut and the quick-capture window were removed. New jobs come in through the \"New job\" button.",
+      "Taskbar icon: the app now has its own identity on Windows, which stops the taskbar from showing the old cached icon."
+    ]
+  },
   "1.6.0": {
     "pt": [
       "Agora é Consistency por inteiro: o nome no Windows (menu Iniciar, barra de tarefas, pesquisa), o instalador e a pasta de dados. O ícone do rabisco vale em todo lugar.",
