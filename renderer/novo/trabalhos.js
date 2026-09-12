@@ -92,6 +92,14 @@
     if (status === 'entregue' && !entregueJa(j)) { j.entregueEm = new Date().toISOString(); }
     j.status = status; j.pausado = false; gravar(); render();
   }
+  // Duplicar: mesmo cliente, titulo, valor e moeda; entra na fila sem pagamento nem prazo.
+  // O historico (recebido, liquidacoes, datas) e do trabalho original e nao vem junto.
+  function duplicar(id) {
+    const j = jobs.find(x => x.id === id); if (!j) return;
+    const novo = { id: P.novoId(), titulo: j.titulo, cliente: j.cliente || '', valor: { q: Number(j.valor.q), m: j.valor.m }, status: 'aceito', pagamento: 'nao_pago', recebido: 0, prazo: '', criadoEm: new Date().toISOString() };
+    jobs.push(novo); gravar(); render();
+    abrirTrabalho(novo); // ja abre pra ajustar o que mudou (prazo, valor)
+  }
   function cobrei(id) { const j = jobs.find(x => x.id === id); if (j) { j.cobradoEm = hj; gravar(); render(); } }
   function excluir(id) { const j = jobs.find(x => x.id === id); if (!j) return; if (!confirm(`Excluir "${j.titulo}"?`)) return; jobs.splice(jobs.findIndex(x => x.id === id), 1); gravar(); render(); }
   const aCobrar = () => jobs.filter(j => entregueJa(j) && faltaDe(j) > 0 && diasDesde(j.entregueEm) >= DIAS_COBRAR && j.cobradoEm !== hj).sort((a, b) => diasDesde(b.entregueEm) - diasDesde(a.entregueEm));
@@ -198,7 +206,7 @@
     if (precisaLiquidar(j)) acoes.push(`<button type="button" class="btn btn-contorno btn-p verde" data-acao="liquidar" data-id="${j.id}">${j.valor.m === 'RBX' ? 'Vendi' : 'Caiu na conta'}</button>`);
     return `<article class="tb-card ${pz.cls}" draggable="${lente === 'etapa'}" data-id="${j.id}">
       <div class="tb-topo"><div class="tb-titulo">${esc(j.titulo)}${j.status === 'aprovado' ? '<span class="chip chip-neutro">aprovado</span>' : ''}</div>
-        <div class="tb-menu"><button type="button" class="btn-icone btn-ghost" data-acao="editar" data-id="${j.id}" aria-label="Editar"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button><button type="button" class="btn-icone btn-ghost" data-acao="excluir" data-id="${j.id}" aria-label="Excluir"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></div>
+        <div class="tb-menu"><button type="button" class="btn-icone btn-ghost" data-acao="editar" data-id="${j.id}" aria-label="Editar"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button><button type="button" class="btn-icone btn-ghost" data-acao="duplicar" data-id="${j.id}" aria-label="Duplicar" title="Duplicar"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button type="button" class="btn-icone btn-ghost" data-acao="excluir" data-id="${j.id}" aria-label="Excluir"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></div>
       <div class="tb-meta"><span>${esc(j.cliente || 'sem cliente')}</span>${pz.txt ? `<span class="tb-prazo ${pz.cls}">${pz.txt}</span>` : ''}</div>
       <button type="button" class="tb-din ${est}" data-acao="receber" data-id="${j.id}" title="Registrar recebimento">
         <span class="tb-din-valor">${est === 'parcial' ? `${fmtValor({ q: rec, m: j.valor.m })} / ${fmtValor(j.valor)}` : fmtValor(j.valor)}</span>
@@ -254,7 +262,7 @@
     const id = b.dataset.id; const a = b.dataset.acao;
     if (a === 'ativar') ativar(id); else if (a === 'avancar') avancar(id); else if (a === 'pausar') pausar(id); else if (a === 'fila') devolverFila(id);
     else if (a === 'receber') abrirRecebimento(id); else if (a === 'liquidar') abrirLiquidacao(id); else if (a === 'cobrei') cobrei(id);
-    else if (a === 'editar') abrirTrabalho(jobs.find(x => x.id === id)); else if (a === 'excluir') excluir(id);
+    else if (a === 'editar') abrirTrabalho(jobs.find(x => x.id === id)); else if (a === 'excluir') excluir(id); else if (a === 'duplicar') duplicar(id);
   }
   function montar() {
     ['tbAtivo', 'tbCobrar', 'tbQuadro'].forEach(id => $(id).addEventListener('click', acao));
